@@ -249,7 +249,6 @@ export function SignUpForm() {
         {mutation.isError && <FieldError>{mutation.error.message}</FieldError>}
 
         <Button type="submit" disabled={mutation.isPending} className="w-full">
-          {mutation.isPending ? 'Mendaftar...' : 'Daftar'}
           {mutation.isPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
