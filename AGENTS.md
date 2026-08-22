@@ -19,6 +19,15 @@ The backend (`backend/src`) is organized by **feature modules**, not by technica
 - `src/utils/` — shared utilities (e.g. `api-response.ts`).
 - `src/app.ts` wires feature routers into the app; `src/index.ts` starts the server.
 
+## Frontend UI (shadcn)
+
+The frontend uses **shadcn/ui**. For UI consistency, always use the shadcn component from `frontend/src/components/ui/` when one exists for the element you need (button, input, dialog, etc.) — do not hand-roll custom UI elements or use raw HTML elements with ad-hoc styling instead. If a needed component does not exist yet, add it via the shadcn CLI rather than building a one-off version.
+
+## Frontend Components (Single Responsibility)
+
+- Every component must follow the **single responsibility principle**: one component does one job. Keep components small and focused — if a component grows large or handles multiple concerns, split it into smaller components.
+- **Pages and layouts are orchestrators**: they compose components and wire them together (routing, data flow, placement). They must not contain detailed UI implementation or complex logic — that belongs in the components they orchestrate.
+
 ## Code Style
 
 - **Function names use PascalCase** (e.g. `SendError`, `CreateApp`, `GetCampaignById`). This applies to declared functions and arrow functions assigned to variables. Non-function values (router instances, config objects, plain constants) stay in camelCase (e.g. `healthRouter`).
