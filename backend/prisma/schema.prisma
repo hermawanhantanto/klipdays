@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  BRAND
+  CREATOR
+
+  @@map("role")
+}
+
+enum Status {
+  ACTIVE
+  DELETED
+
+  @@map("status")
+}
+
+model Account {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  passwordHash    String   @map("password_hash")
+  role            Role
+  isEmailVerified Boolean  @default(false) @map("is_email_verified")
+  status          Status   @default(ACTIVE)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  brand   Brand?
+  creator Creator?
+
+  @@map("accounts")
+}
+
+model Brand {
+  id          String   @id @default(uuid())
+  companyName String   @map("company_name")
+  phoneNumber String?  @map("phone_number")
+  industry    String?
+  status      Status   @default(ACTIVE)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  account   Account @relation(fields: [accountId], references: [id])
+  accountId String  @unique @map("account_id")
+
+  @@map("brands")
+}
+
+model Creator {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name")
+  status    Status   @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  account   Account @relation(fields: [accountId], references: [id])
+  accountId String  @unique @map("account_id")
+
+  @@map("creators")
+}
