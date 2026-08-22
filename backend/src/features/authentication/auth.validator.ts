@@ -2,6 +2,28 @@ import { z } from 'zod';
 
 import { Role } from '../../generated/prisma/enums.js';
 
+export const INDUSTRY_OPTIONS = [
+  'E-Commerce',
+  'Food & Beverage',
+  'Fashion & Beauty',
+  'Technology',
+  'Finance',
+  'Health & Wellness',
+  'Entertainment',
+  'Education',
+  'Travel & Hospitality',
+  'Other',
+] as const;
+
+export type Industry = (typeof INDUSTRY_OPTIONS)[number];
+
+/**
+ * Regex for validating Indonesian mobile phone numbers.
+ * Validates prefixes 08, +628, or 628 followed by a non-zero digit and 7-10 trailing digits.
+ * Supports total length of 10-13 digits for 08xx format.
+ */
+export const INDONESIAN_PHONE_REGEX = /^(\+62|62|0)8[1-9][0-9]{7,10}$/;
+
 const MIN_PASSWORD_LENGTH = 8;
 
 // Register-only strength rules; login uses min(1) so old or weaker passwords
@@ -21,6 +43,24 @@ const emailField = z
   .toLowerCase()
   .pipe(z.email({ error: 'A valid email is required.' }));
 
+const phoneNumberField = z
+  .string()
+  .trim()
+  .min(1, 'Phone number is required for brand accounts.')
+  .refine((val) => INDONESIAN_PHONE_REGEX.test(val.replace(/[\s-]/g, '')), {
+    message:
+      'Invalid phone number. Must be a valid Indonesian phone number (e.g. 08123456789 or +628123456789).',
+  })
+  .transform((val) => val.replace(/[\s-]/g, ''));
+
+const industryField = z
+  .string()
+  .trim()
+  .min(1, 'Industry is required for brand accounts.')
+  .refine((val) => INDUSTRY_OPTIONS.includes(val as Industry), {
+    message: 'Invalid industry selected.',
+  });
+
 const credentialFields = {
   email: emailField,
   password: passwordField,
@@ -30,8 +70,8 @@ const registerBrandSchema = z.object({
   role: z.literal(Role.BRAND),
   ...credentialFields,
   companyName: z.string().trim().min(1, 'Company name is required for brand accounts.'),
-  phoneNumber: z.string().trim().min(1, 'Phone number is required for brand accounts.'),
-  industry: z.string().trim().min(1, 'Industry is required for brand accounts.'),
+  phoneNumber: phoneNumberField,
+  industry: industryField,
 });
 
 const registerCreatorSchema = z.object({
