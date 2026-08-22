@@ -24,6 +24,8 @@ The backend (`backend/src`) is organized by **feature modules**, not by technica
 - **Function names use PascalCase** (e.g. `SendError`, `CreateApp`, `GetCampaignById`). This applies to declared functions and arrow functions assigned to variables. Non-function values (router instances, config objects, plain constants) stay in camelCase (e.g. `healthRouter`).
 - **Every function must have a JSDoc comment** describing what it does, its `@param`s, and its `@returns` where applicable.
 - All API responses must use the shared helpers (`SendSuccess` / `SendError` in `backend/src/utils/api-response.ts`) so every response has the shape `{ status, data, message }`. Never call `res.json(...)` directly in route handlers.
+- Prefer simple, readable code over clever or complex code. Use clear, descriptive names; keep logic flat and easy to follow.
+- Only add comments that explain *why*, and only where the code is non-obvious or tricky. Do not narrate what the code already says.
 
 ## General Rules
 
