@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { Toaster } from '@/components/ui/sonner'
 import AuthLayout from './layouts/AuthLayout'
 import Home from './pages/Home'
+import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 
 /**
@@ -17,7 +18,7 @@ function App() {
       <Routes>
         <Route index element={<Home />} />
         <Route element={<AuthLayout />}>
-          <Route path="signin" />
+          <Route path="signin" element={<SignIn />} />
           <Route path="login" element={<Navigate to="/signin" replace />} />
           <Route path="signup" element={<SignUp />} />
         </Route>
