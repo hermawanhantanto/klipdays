@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -23,6 +24,7 @@ export function CreateApp() {
     }),
   );
   app.use(express.json());
+  app.use(cookieParser());
 
   app.use('/health', healthRouter);
   app.use('/auth', authRouter);

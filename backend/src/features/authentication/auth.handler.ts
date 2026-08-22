@@ -145,3 +145,25 @@ export async function LoginAccount(req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
+
+/**
+ * Handles `POST /auth/logout`: clears the JWT cookie. The cookie options must
+ * match the ones used when it was set, otherwise the browser keeps it.
+ *
+ * @param req - Express request object.
+ * @param res - Express response object.
+ * @param next - Express next function, used to forward unexpected errors.
+ */
+export async function LogoutAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
+    SendSuccess(res, null, 'Logged out successfully.');
+  } catch (err) {
+    next(err);
+  }
+}

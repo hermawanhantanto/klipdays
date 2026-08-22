@@ -15,6 +15,7 @@ datasource db {
 enum Role {
   BRAND
   CREATOR
+  ADMIN
 
   @@map("role")
 }
@@ -38,6 +39,7 @@ model Account {
 
   brand   Brand?
   creator Creator?
+  admin   Admin?
 
   @@map("accounts")
 }
@@ -68,4 +70,17 @@ model Creator {
   accountId String  @unique @map("account_id")
 
   @@map("creators")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  fullName  String   @map("full_name")
+  status    Status   @default(ACTIVE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  account   Account @relation(fields: [accountId], references: [id])
+  accountId String  @unique @map("account_id")
+
+  @@map("admins")
 }
