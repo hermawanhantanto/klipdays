@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { Controller, useForm } from 'react-hook-form'
+import { useSearchParams } from 'react-router'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -36,10 +37,14 @@ import { RoleSlider } from './RoleSlider'
  * @returns The sign up form component.
  */
 export function SignUpForm() {
+  const [searchParams] = useSearchParams()
+  const queryRole = searchParams.get('role')?.toUpperCase()
+  const initialRole = queryRole === 'BRAND' ? 'BRAND' : 'CREATOR'
+
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      role: 'CREATOR',
+      role: initialRole,
       email: '',
       password: '',
       fullName: '',
