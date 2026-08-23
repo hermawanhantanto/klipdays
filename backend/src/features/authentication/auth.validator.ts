@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { Role } from '../../generated/prisma/enums.js';
+import { Industry, Role } from '../../generated/prisma/enums.js';
 
 export const INDUSTRY_OPTIONS = [
   'E-Commerce',
@@ -15,7 +15,21 @@ export const INDUSTRY_OPTIONS = [
   'Other',
 ] as const;
 
-export type Industry = (typeof INDUSTRY_OPTIONS)[number];
+export type IndustryLabel = (typeof INDUSTRY_OPTIONS)[number];
+
+// Frontend submits display labels; Prisma stores the enum member names.
+const INDUSTRY_ENUM_BY_LABEL: Record<IndustryLabel, Industry> = {
+  'E-Commerce': Industry.E_COMMERCE,
+  'Food & Beverage': Industry.FOOD_AND_BEVERAGE,
+  'Fashion & Beauty': Industry.FASHION_AND_BEAUTY,
+  Technology: Industry.TECHNOLOGY,
+  Finance: Industry.FINANCE,
+  'Health & Wellness': Industry.HEALTH_AND_WELLNESS,
+  Entertainment: Industry.ENTERTAINMENT,
+  Education: Industry.EDUCATION,
+  'Travel & Hospitality': Industry.TRAVEL_AND_HOSPITALITY,
+  Other: Industry.OTHER,
+};
 
 /**
  * Regex for validating Indonesian mobile phone numbers.
@@ -57,9 +71,10 @@ const industryField = z
   .string()
   .trim()
   .min(1, 'Industry is required for brand accounts.')
-  .refine((val) => INDUSTRY_OPTIONS.includes(val as Industry), {
+  .refine((val): val is IndustryLabel => INDUSTRY_OPTIONS.includes(val as IndustryLabel), {
     message: 'Invalid industry selected.',
-  });
+  })
+  .transform((val) => INDUSTRY_ENUM_BY_LABEL[val]);
 
 const credentialFields = {
   email: emailField,
