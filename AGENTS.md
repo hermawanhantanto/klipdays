@@ -14,8 +14,9 @@ This applies to any action that requires documentation: new installs, version bu
 
 The backend (`backend/src`) is organized by **feature modules**, not by technical layer:
 
-- `src/features/<feature>/` — one folder per feature (e.g. `authentication`, `health`). Everything belonging to a feature lives in its folder: routes (`auth.routes.ts`), handlers (`auth.handler.ts`), helpers, validators, feature-specific middleware (e.g. `auth.rate-limiter.ts`), etc. Do not create top-level `routes/`, `controllers/`, or `services/` folders.
-- `src/middleware/` — shared, cross-feature middleware only (e.g. the centralized `ErrorHandler`).
+- `src/features/<feature>/` — one folder per feature (e.g. `authentication`, `health`). Everything belonging to a feature lives in its folder: routes (`auth.routes.ts`), handlers (`auth.handler.ts`), helpers, validators, etc. Do not create top-level `routes/`, `controllers/`, or `services/` folders.
+- `src/middleware/` — all middleware, both shared cross-feature (e.g. the centralized `ErrorHandler`) and feature-oriented (e.g. `auth.middleware.ts`).
+- `src/rate-limiter/` — rate limiters (e.g. `auth.rate-limiter.ts`).
 - `src/utils/` — shared utilities (e.g. `api-response.ts`).
 - `src/app.ts` wires feature routers into the app; `src/index.ts` starts the server.
 

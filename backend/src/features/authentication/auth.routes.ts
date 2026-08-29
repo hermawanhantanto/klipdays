@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { LoginAccount, LogoutAccount, RegisterAccount } from './auth.handler.js';
-import { AuthRateLimiter } from './auth.rate-limiter.js';
+import { LoginAccount, LogoutAccount, RegisterAccount } from './auth.handlers.js';
+import { AuthRateLimiter } from '../../rate-limiter/auth.rate-limiter.js';
 
 export const authRouter = Router();
 

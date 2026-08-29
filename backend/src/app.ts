@@ -5,7 +5,7 @@ import helmet from 'helmet';
 
 import { authRouter } from './features/authentication/auth.routes.js';
 import { healthRouter } from './features/health/health.routes.js';
-import { ErrorHandler } from './middleware/error-handler.js';
+import { ErrorHandler } from './middleware/error.middleware.js';
 
 /**
  * Builds the Express application with security middleware (Helmet, CORS),
