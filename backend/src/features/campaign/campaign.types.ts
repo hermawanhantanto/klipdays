@@ -1,4 +1,4 @@
 import { z } from 'zod';
-import { campaignStep1Schema } from './campaign.schemas.js';
+import { campaignEditSchema } from './campaign.schemas.js';
 
-export type CampaignStep1Input = z.infer<typeof campaignStep1Schema>;
+export type CampaignEditInput = z.infer<typeof campaignEditSchema>;

@@ -35,7 +35,20 @@ The frontend uses **shadcn/ui**. For UI consistency, always use the shadcn compo
 - **Every function must have a JSDoc comment** describing what it does, its `@param`s, and its `@returns` where applicable.
 - All API responses must use the shared helpers (`SendSuccess` / `SendError` in `backend/src/utils/api-response.ts`) so every response has the shape `{ status, data, message }`. Never call `res.json(...)` directly in route handlers.
 - Prefer simple, readable code over clever or complex code. Use clear, descriptive names; keep logic flat and easy to follow.
+- **Store function results in variables first**: do not call a function inline inside an object literal (e.g. `data: BuildCampaignEditFields(input)`); assign the result to a named variable, then reference it.
 - Only add comments that explain *why*, and only where the code is non-obvious or tricky. Do not narrate what the code already says.
+## Fast-Fail & Single-Query Guards
+
+- **Always return fast** in API handlers: fail with an early `return` the moment a check fails — never defer rejection into nested conditionals.
+- Resolve permission boundaries before any other work, in this guard order: auth (401) → role from the JWT (403, no DB hit) → ownership (404) → body validation (400) → the write.
+- Combine "record exists AND belongs to the requester" into a single Prisma query using a relation filter in `where` (e.g. `findFirst({ where: { id, brand: { accountId: account.sub } } })`) instead of separate lookups and in-code comparisons. `account.sub` is the account id — compare it against `brand.accountId` via the relation filter, never against `campaign.brandId` directly.
+- Return a 404 "not found" for ownership mismatches so record existence is never leaked.
+
+## Prisma Conventions
+
+- **Every Prisma query whose `where` targets a model with the soft-delete `Status` enum** (`Account`, `Brand`, `Creator`, `CampaignMaterial`) **must filter `status: ACTIVE`** so soft-deleted rows are never returned. When a unique lookup needs an extra non-unique filter, use `findFirst` instead of `findUnique`.
+- `Campaign` is exempt: it has no soft-delete state (`CampaignStatus` has no `DELETED` value).
+- The register handler maps Prisma error **P2002** to a 409 `Email is already registered` (a soft-deleted account still holds its email via the unique index).
 
 ## General Rules
 

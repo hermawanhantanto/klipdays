@@ -225,6 +225,9 @@ model Campaign {
   // platform is the platform of the campaign, and is required. Currently only TIKTOK is supported.
   platform     Platform       @default(TIKTOK)
 
+  // mainMediaUrl is the URL of the main media for the campaign, and is optional. It can be a URL of a product, service or content.
+  mainMediaUrl String?        @map("main_media_url")  
+  
   // cpm is the cost per mille (CPM) of the campaign, and is optional. It is stored as a decimal with 12 digits and 2 decimal places.
   cpm          Decimal?       @db.Decimal(12, 2)
 
@@ -325,6 +328,10 @@ model CampaignMaterial {
 
   // url is the URL of the campaign material, and is required.
   url       String
+
+  // status is used to determine if the material is active or soft-deleted. Old materials are marked DELETED
+  // instead of being removed, so any data still referencing them keeps working.
+  status    Status       @default(ACTIVE)
 
   // createdAt and updatedAt are used to track when the campaign material was created and last updated.
   createdAt DateTime     @default(now()) @map("created_at")

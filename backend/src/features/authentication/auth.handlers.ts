@@ -3,7 +3,8 @@ import jwt from 'jsonwebtoken';
 import type { NextFunction, Request, Response } from 'express';
 
 import { prisma } from '../../utils/prisma.js';
-import { Role } from '../../generated/prisma/enums.js';
+import { Prisma } from '../../generated/prisma/client.js';
+import { Role, Status } from '../../generated/prisma/enums.js';
 
 import { SendError, SendSuccess } from '../../utils/api-response.js';
 
@@ -33,8 +34,10 @@ export async function RegisterAccount(req: Request, res: Response, next: NextFun
       return;
     }
 
-    const existingAccount = await prisma.account.findUnique({
-      where: { email: input.email },
+    // findFirst instead of findUnique so the filter can also exclude
+    // soft-deleted accounts; only active accounts count as registered.
+    const existingAccount = await prisma.account.findFirst({
+      where: { email: input.email, status: Status.ACTIVE },
     });
 
     if (existingAccount) {
@@ -77,6 +80,13 @@ export async function RegisterAccount(req: Request, res: Response, next: NextFun
 
     SendSuccess(res, account, 'Account registered successfully.', 201);
   } catch (err) {
+    // A soft-deleted account still holds its email, so the unique index can
+    // fire even after the findFirst check above; map it to the same 409.
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      SendError(res, 'Email is already registered.', 409);
+      return;
+    }
+
     next(err);
   }
 }
@@ -101,8 +111,10 @@ export async function LoginAccount(req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const account = await prisma.account.findUnique({
-      where: { email: input.email },
+    // Only active accounts can log in; soft-deleted accounts get the same
+    // generic response as unknown emails.
+    const account = await prisma.account.findFirst({
+      where: { email: input.email, status: Status.ACTIVE },
     });
 
     if (!account) {

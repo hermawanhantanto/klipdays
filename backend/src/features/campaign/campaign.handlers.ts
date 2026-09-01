@@ -1,13 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import type { Prisma } from '../../generated/prisma/client.js';
-import { CampaignStatus, Role } from '../../generated/prisma/enums.js';
+import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
 
 import { SendError, SendSuccess } from '../../utils/api-response.js';
 import { prisma } from '../../utils/prisma.js';
 
-import { BuildCampaignStep1Fields } from './campaign.helper.js';
-import { ValidateCampaignStep1Body } from './campaign.validators.js';
+import { BuildCampaignEditFields } from './campaign.helper.js';
+import { ValidateCampaignEditBody } from './campaign.validators.js';
 
 /**
  * Handles `POST /campaigns`: creates an empty draft campaign for the
@@ -35,9 +34,11 @@ export async function InitializeCampaign(req: Request, res: Response, next: Next
     }
 
     // The brand row supplies the brandId the campaign needs. A BRAND account
-    // without a brand row is a data-integrity gap, so still guard against it.
-    const brand = await prisma.brand.findUnique({
-      where: { accountId: account.sub },
+    // without an active brand row is a data-integrity gap, so still guard
+    // against it. findFirst instead of findUnique so the filter can also
+    // exclude soft-deleted brands.
+    const brand = await prisma.brand.findFirst({
+      where: { accountId: account.sub, status: Status.ACTIVE },
     });
 
     if (!brand) {
@@ -60,11 +61,12 @@ export async function InitializeCampaign(req: Request, res: Response, next: Next
 }
 
 /**
- * Handles `PATCH /campaigns/:id/edit?step=N`: the single edit endpoint of the
- * creation wizard. It dispatches the body to the builder for the requested
- * step and runs exactly one update with the fields the builder returns.
+ * Handles `PATCH /campaigns/:id/edit`: the single edit endpoint of the
+ * creation wizard. The body carries only the fields of the current wizard
+ * step: every field is optional, and only the sent fields are validated
+ * and written in one update.
  *
- * @param req - Express request with the authenticated account, `?step=` and the step body.
+ * @param req - Express request with the authenticated account and the edit body.
  * @param res - Express response object.
  * @param next - Express next function, used to forward unexpected errors.
  */
@@ -87,11 +89,11 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     // The route pattern `/:id/edit` guarantees a single string id.
     const campaignId = req.params.id as string;
 
-    // Ownership check right after auth, before the step pipe: one query for
-    // existence + ownership via a relation filter. 404 (not 403) when it
-    // does not match, so the response does not reveal whether the id exists.
+    // Ownership check right after auth: one query for existence + ownership
+    // via a relation filter. 404 (not 403) when it does not match, so the
+    // response does not reveal whether the id exists.
     const ownedCampaign = await prisma.campaign.findFirst({
-      where: { id: campaignId, brand: { accountId: account.sub } },
+      where: { id: campaignId, brand: { accountId: account.sub, status: Status.ACTIVE } },
       select: { id: true },
     });
 
@@ -100,33 +102,18 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    // Step pipe: dispatch by `?step=`. Each case validates its own body and
-    // builds the fields object for the final update.
-    const step = req.query.step as string | undefined;
+    // The validator returns the error message as a string on failure and the
+    // parsed input object on success, so the typeof check tells the two apart.
+    const input = ValidateCampaignEditBody(req.body);
 
-    let fields: Prisma.CampaignUpdateInput;
-
-    switch (step) {
-      case '1': {
-        const input = ValidateCampaignStep1Body(req.body);
-
-        // The validator returns the error message as a string on failure and
-        // the parsed input object on success, so the typeof check tells the
-        // two apart.
-        if (typeof input === 'string') {
-          SendError(res, input, 400);
-          return;
-        }
-
-        fields = BuildCampaignStep1Fields(input);
-        break;
-      }
-      default:
-        SendError(res, 'Invalid wizard step.', 400);
-        return;
+    if (typeof input === 'string') {
+      SendError(res, input, 400);
+      return;
     }
 
-    // The one write of the whole pipeline: every step goes through here.
+    // The one write of the whole endpoint: only the sent fields are updated.
+    const fields = BuildCampaignEditFields(input);
+
     const updated = await prisma.campaign.update({
       where: { id: ownedCampaign.id },
       data: fields,
