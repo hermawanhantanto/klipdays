@@ -242,9 +242,6 @@ model Campaign {
   // status is the status of the campaign, and is required. It is stored as an enum with the following values: DRAFT, IN_REVIEW, REVISION, REJECTED, ACTIVE, FINISHED.
   status       CampaignStatus @default(DRAFT)
 
-  // currentStep is the current step of the campaign creation wizard, and is required. It is stored as an integer with a default value of 1.
-  currentStep  Int            @default(1) @map("current_step") 
-
   // adminNote is the feedback from the admin for revision or rejection, and is optional.
   adminNote    String?        @map("admin_note") 
 
