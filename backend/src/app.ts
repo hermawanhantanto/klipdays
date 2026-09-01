@@ -4,6 +4,7 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { authRouter } from './features/authentication/auth.routes.js';
+import { campaignRouter } from './features/campaign/campaign.routes.js';
 import { healthRouter } from './features/health/health.routes.js';
 import { ErrorHandler } from './middleware/error.middleware.js';
 
@@ -28,6 +29,7 @@ export function CreateApp() {
 
   app.use('/health', healthRouter);
   app.use('/auth', authRouter);
+  app.use('/campaigns', campaignRouter);
 
   app.use(ErrorHandler);
 

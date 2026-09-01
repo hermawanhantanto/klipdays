@@ -74,6 +74,29 @@ enum MaterialType {
   @@map("material_type")
 }
 
+enum CampaignType {
+  PRODUCT
+  SERVICE
+  CONTENT
+
+  @@map("campaign_type")
+}
+
+enum Category {
+  BEAUTY_SKINCARE @map("Beauty & Skincare")
+  FASHION_STYLE @map("Fashion & Style")
+  FOOD_BEVERAGE @map("Food & Beverage")
+  HEALTH_FITNESS @map("Health & Fitness")
+  TECHNOLOGY_GADGETS @map("Technology & Gadgets")
+  LIFESTYLE @map("Lifestyle")
+  GAMING @map("Gaming")
+  TRAVEL @map("Travel")
+  ENTERTAINMENT @map("Entertainment")
+  OTHER @map("Other")
+
+  @@map("category")
+}
+
 model Account {
   // id is the primary key for the account, and is generated as a UUID.
   id              String   @id @default(uuid())
@@ -184,11 +207,20 @@ model Campaign {
   // id is the primary key for the campaign, and is generated as a UUID.
   id           String         @id @default(uuid())
 
-  // title is the title of the campaign, and is required.
-  title        String
+  // title is the title of the campaign, and is optional until the creation wizard fills it in.
+  title        String?
 
-  // description is the description of the campaign, and is required.
-  description  String
+  // description is the description of the campaign, and is optional until the creation wizard fills it in.
+  description  String?
+
+  // campaignType is the type of campaign, and is required. It is stored as an enum with the following values: PRODUCT, SERVICE, CONTENT.
+  campaignType CampaignType   @map("campaign_type") @default(PRODUCT)
+
+  // campaignCategory is the category of the campaign, and is required.
+  campaignCategory Category @map("category") @default(OTHER)
+
+  // thumbnailUrl is the URL of the thumbnail for the campaign, and is optional.
+  thumbnailUrl String?        @map("thumbnail_url")
 
   // platform is the platform of the campaign, and is required. Currently only TIKTOK is supported.
   platform     Platform       @default(TIKTOK)
@@ -206,9 +238,6 @@ model Campaign {
   // startDate and endDate are the start and end dates for the campaign, and are optional.
   startDate    DateTime?      @map("start_date")
   endDate      DateTime?      @map("end_date")
-
-  // thumbnailUrl is the URL of the thumbnail for the campaign, and is optional.
-  thumbnailUrl String?        @map("thumbnail_url")
 
   // status is the status of the campaign, and is required. It is stored as an enum with the following values: DRAFT, IN_REVIEW, REVISION, REJECTED, ACTIVE, FINISHED.
   status       CampaignStatus @default(DRAFT)
