@@ -6,7 +6,19 @@ import type { CampaignBriefInput, CampaignEditInput, CampaignMaterialsInput } fr
 
 // Scalar fields copied 1:1 from the edit body into the update. This list is
 // the whitelist: only fields named here can ever be written.
-const SCALAR_FIELDS = ['title', 'description', 'campaignType', 'campaignCategory', 'thumbnailUrl', 'platform', 'mainMediaUrl'] as const;
+const SCALAR_FIELDS = [
+  'title',
+  'description',
+  'campaignType',
+  'campaignCategory',
+  'thumbnailUrl',
+  'platform',
+  'mainMediaUrl',
+  'cpm',
+  'minViews',
+  'maxViews',
+  'budget',
+] as const;
 
 /**
  * Copies `value` into `target[key]` when it is defined, so only the fields
@@ -83,10 +95,11 @@ export function BuildCampaignMaterialsUpdate(
 
 /**
  * Builds the Prisma update object for the edit endpoint. Fields the body did
- * not send stay absent, so only the sent fields are written. When materials
- * is sent, the current active materials are soft deleted (status DELETED)
- * and the new list is created, all inside the same campaign update so the
- * replacement is atomic. When brief is sent, it is upserted into the
+ * not send stay absent, so only the sent fields are written. Scalar attributes
+ * (such as basic campaign info, CPM, minViews, maxViews, and budget) are copied
+ * directly. When materials is sent, the current active materials are soft deleted
+ * (status DELETED) and the new list is created, all inside the same campaign
+ * update so the replacement is atomic. When brief is sent, it is upserted into the
  * campaign brief relation.
  *
  * @param input - The validated edit body.

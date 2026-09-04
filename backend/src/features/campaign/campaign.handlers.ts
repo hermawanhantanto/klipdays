@@ -1,12 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 
+import { prisma } from '../../utils/prisma.js';
 import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
 
-import { SendError, SendSuccess } from '../../utils/api-response.js';
-import { prisma } from '../../utils/prisma.js';
-
 import { BuildCampaignEditFields } from './campaign.helper.js';
-import { ValidateCampaignEditBody } from './campaign.validators.js';
+import { ValidateCampaignEditBody, ValidateCampaignRewardLogic } from './campaign.validators.js';
+
+import { SendError, SendSuccess } from '../../utils/api-response.js';
 
 /**
  * Handles `POST /campaigns`: creates an empty draft campaign for the
@@ -94,7 +94,7 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     // response does not reveal whether the id exists.
     const ownedCampaign = await prisma.campaign.findFirst({
       where: { id: campaignId, brand: { accountId: account.sub, status: Status.ACTIVE } },
-      select: { id: true },
+      select: { id: true, minViews: true, maxViews: true, budget: true, cpm: true },
     });
 
     if (!ownedCampaign) {
@@ -102,18 +102,24 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    // The validator returns the error message as a string on failure and the
-    // parsed input object on success, so the typeof check tells the two apart.
+    // Validate schema and get parsed input
     const input = ValidateCampaignEditBody(req.body);
-
     if (typeof input === 'string') {
       SendError(res, input, 400);
       return;
     }
 
-    // The one write of the whole endpoint: only the sent fields are updated.
+    // Validate reward and pricing rules
+    const rewardError = ValidateCampaignRewardLogic(input, ownedCampaign);
+    if (rewardError) {
+      SendError(res, rewardError, 400);
+      return;
+    }
+
+    // Build fields for update
     const fields = BuildCampaignEditFields(input);
 
+    // Update campaign
     const updated = await prisma.campaign.update({
       where: { id: ownedCampaign.id },
       data: fields,
