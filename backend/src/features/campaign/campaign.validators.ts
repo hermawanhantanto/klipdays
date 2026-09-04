@@ -4,12 +4,16 @@ import { campaignEditSchema } from './campaign.schemas.js';
 
 import type { CampaignEditInput } from './campaign.types.js';
 
-export interface CampaignExistingRewardFields {
+export interface CampaignExistingFields {
   minViews?: number | null;
   maxViews?: number | null;
   budget?: Prisma.Decimal | number | null;
   cpm?: Prisma.Decimal | number | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
 }
+
+export type CampaignExistingRewardFields = CampaignExistingFields;
 
 /**
  * Validates the campaign edit request body against the edit schema.
@@ -37,7 +41,7 @@ export function ValidateCampaignEditBody(body: unknown): CampaignEditInput | str
  * @param existing - Optional existing campaign fields from the database.
  * @returns An error message string if a rule is violated, otherwise null.
  */
-export function ValidateCampaignRewardLogic(input: CampaignEditInput, existing?: CampaignExistingRewardFields): string | null {
+export function ValidateCampaignRewardLogic(input: CampaignEditInput, existing?: CampaignExistingFields): string | null {
   const effectiveMinViews = input.minViews ?? existing?.minViews ?? 0;
   const effectiveMaxViews = input.maxViews ?? existing?.maxViews ?? 0;
 
@@ -50,6 +54,32 @@ export function ValidateCampaignRewardLogic(input: CampaignEditInput, existing?:
 
   if (effectiveBudget < effectiveCpm) {
     return 'Budget cannot be less than CPM.';
+  }
+
+  return null;
+}
+
+/**
+ * Validates campaign schedule and date rules for edit input.
+ * Ensures that start date cannot be less than today, and end date must be strictly greater than start date.
+ *
+ * @param input - The parsed campaign edit input.
+ * @param existing - Optional existing campaign fields from the database.
+ * @returns An error message string if a rule is violated, otherwise null.
+ */
+export function ValidateCampaignDateLogic(input: CampaignEditInput, existing?: CampaignExistingFields): string | null {
+  if (!input.startDate || !input.endDate) return null;
+
+  const effectiveStartDate = new Date(input.startDate);
+  const effectiveEndDate = new Date(input.endDate);
+
+  const today = new Date();
+  if (effectiveStartDate < today) {
+    return 'Start date cannot be less than today.';
+  }
+
+  if (effectiveEndDate <= effectiveStartDate) {
+    return 'End date must be greater than start date.';
   }
 
   return null;

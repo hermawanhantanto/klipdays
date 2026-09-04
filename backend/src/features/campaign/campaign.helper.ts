@@ -18,6 +18,8 @@ const SCALAR_FIELDS = [
   'minViews',
   'maxViews',
   'budget',
+  'startDate',
+  'endDate',
 ] as const;
 
 /**
@@ -96,7 +98,7 @@ export function BuildCampaignMaterialsUpdate(
 /**
  * Builds the Prisma update object for the edit endpoint. Fields the body did
  * not send stay absent, so only the sent fields are written. Scalar attributes
- * (such as basic campaign info, CPM, minViews, maxViews, and budget) are copied
+ * (such as basic campaign info, CPM, views, budget, and campaign dates) are copied
  * directly. When materials is sent, the current active materials are soft deleted
  * (status DELETED) and the new list is created, all inside the same campaign
  * update so the replacement is atomic. When brief is sent, it is upserted into the

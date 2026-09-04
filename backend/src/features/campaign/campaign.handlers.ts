@@ -4,7 +4,11 @@ import { prisma } from '../../utils/prisma.js';
 import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
 
 import { BuildCampaignEditFields } from './campaign.helper.js';
-import { ValidateCampaignEditBody, ValidateCampaignRewardLogic } from './campaign.validators.js';
+import {
+  ValidateCampaignDateLogic,
+  ValidateCampaignEditBody,
+  ValidateCampaignRewardLogic,
+} from './campaign.validators.js';
 
 import { SendError, SendSuccess } from '../../utils/api-response.js';
 
@@ -94,7 +98,15 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     // response does not reveal whether the id exists.
     const ownedCampaign = await prisma.campaign.findFirst({
       where: { id: campaignId, brand: { accountId: account.sub, status: Status.ACTIVE } },
-      select: { id: true, minViews: true, maxViews: true, budget: true, cpm: true },
+      select: {
+        id: true,
+        minViews: true,
+        maxViews: true,
+        budget: true,
+        cpm: true,
+        startDate: true,
+        endDate: true,
+      },
     });
 
     if (!ownedCampaign) {
@@ -113,6 +125,13 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     const rewardError = ValidateCampaignRewardLogic(input, ownedCampaign);
     if (rewardError) {
       SendError(res, rewardError, 400);
+      return;
+    }
+
+    // Validate date and schedule rules
+    const dateError = ValidateCampaignDateLogic(input, ownedCampaign);
+    if (dateError) {
+      SendError(res, dateError, 400);
       return;
     }
 

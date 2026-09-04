@@ -34,6 +34,30 @@ const budgetField = z
   .number({ error: 'Budget must be a number.' })
   .positive('Budget must be greater than 0.');
 
+const startDateField = z.union(
+  [
+    z.date(),
+    z
+      .string({ error: 'A valid start date is required.' })
+      .trim()
+      .min(1, 'Start date cannot be empty.')
+      .pipe(z.coerce.date({ error: 'A valid start date is required.' })),
+  ],
+  { error: 'A valid start date is required.' }
+);
+
+const endDateField = z.union(
+  [
+    z.date(),
+    z
+      .string({ error: 'A valid end date is required.' })
+      .trim()
+      .min(1, 'End date cannot be empty.')
+      .pipe(z.coerce.date({ error: 'A valid end date is required.' })),
+  ],
+  { error: 'A valid end date is required.' }
+);
+
 export const campaignMaterialItemSchema = z.object({
   type: z.enum(MaterialType, { error: 'Invalid material type selected.' }),
   name: z.string().trim().min(1, 'Material name is required.'),
@@ -76,5 +100,7 @@ export const campaignEditSchema = z.object({
   minViews: minViewsField.optional(),
   maxViews: maxViewsField.optional(),
   budget: budgetField.optional(),
+  startDate: startDateField.optional(),
+  endDate: endDateField.optional(),
 });
 
