@@ -117,6 +117,12 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     const updated = await prisma.campaign.update({
       where: { id: ownedCampaign.id },
       data: fields,
+      include: {
+        materials: {
+          where: { status: Status.ACTIVE },
+        },
+        brief: true,
+      },
     });
 
     SendSuccess(res, updated, 'Campaign updated successfully.');

@@ -50,6 +50,13 @@ The frontend uses **shadcn/ui**. For UI consistency, always use the shadcn compo
 - `Campaign` is exempt: it has no soft-delete state (`CampaignStatus` has no `DELETED` value).
 - The register handler maps Prisma error **P2002** to a 409 `Email is already registered` (a soft-deleted account still holds its email via the unique index).
 
+## Lessons Learned & Query Helper Patterns
+
+- **Extract step query builders**: Each creation wizard step targeting related models (e.g. `CampaignMaterial`, `CampaignBrief`) must encapsulate its query logic in a dedicated helper function (e.g. `BuildCampaignMaterialsUpdate`, `BuildCampaignBriefUpsert`). The orchestrating `BuildCampaignEditFields` function simply dispatches to them.
+- **Avoid repetitive `if` blocks in relational upserts**: When constructing `create` and `update` payloads for nested relations with shared properties, define `createData` and loop over its entries with `SetField` to populate `updateData` for defined values, rather than writing repetitive manual `if` checks for each field.
+- **Match schema names directly**: Keep request payload properties and Zod validation schemas aligned directly with Prisma model field names (e.g. `callToAction` instead of shorthand aliases like `cta`) to eliminate unnecessary normalization layers.
+- **Always store query objects in variables before return**: Assign query and upsert objects to a named variable (`const upsert: ...`, `const materialsQuery: ...`) before returning or passing them into parent queries.
+
 ## General Rules
 
 - Keep changes minimal and scoped to the task; no speculative abstractions or opportunistic refactors.
@@ -57,3 +64,4 @@ The frontend uses **shadcn/ui**. For UI consistency, always use the shadcn compo
 - Do not commit, push, or perform other git mutations unless the user explicitly asks.
 - Verify changes before reporting completion: run the relevant build/tests/checks and look at the results.
 - Product requirements live in `PRD.md` — keep code aligned with it, and update the PRD if scope decisions change.
+
