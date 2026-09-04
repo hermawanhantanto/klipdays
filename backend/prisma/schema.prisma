@@ -242,8 +242,11 @@ model Campaign {
   startDate    DateTime?      @map("start_date")
   endDate      DateTime?      @map("end_date")
 
-  // status is the status of the campaign, and is required. It is stored as an enum with the following values: DRAFT, IN_REVIEW, REVISION, REJECTED, ACTIVE, FINISHED.
-  status       CampaignStatus @default(DRAFT)
+  // status is used to determine if the campaign is active or deleted.
+  status         Status         @default(ACTIVE)
+
+  // campaignStatus is the lifecycle status of the campaign, and is required. It is stored as an enum with the following values: DRAFT, IN_REVIEW, REVISION, REJECTED, ACTIVE, FINISHED.
+  campaignStatus CampaignStatus @default(DRAFT) @map("campaign_status")
 
   // adminNote is the feedback from the admin for revision or rejection, and is optional.
   adminNote    String?        @map("admin_note") 

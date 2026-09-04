@@ -84,3 +84,7 @@ export function ValidateCampaignDateLogic(input: CampaignEditInput, existing?: C
 
   return null;
 }
+
+// TODO: Implement cleaner campaign data completeness validation for submission.
+
+

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import {
   campaignBriefSchema,
   campaignEditSchema,
@@ -10,5 +11,3 @@ export type CampaignMaterialItemInput = z.infer<typeof campaignMaterialItemSchem
 export type CampaignMaterialsInput = z.infer<typeof campaignMaterialsSchema>;
 export type CampaignBriefInput = z.infer<typeof campaignBriefSchema>;
 export type CampaignEditInput = z.infer<typeof campaignEditSchema>;
-
-

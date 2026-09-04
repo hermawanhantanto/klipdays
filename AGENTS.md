@@ -46,8 +46,8 @@ The frontend uses **shadcn/ui**. For UI consistency, always use the shadcn compo
 
 ## Prisma Conventions
 
-- **Every Prisma query whose `where` targets a model with the soft-delete `Status` enum** (`Account`, `Brand`, `Creator`, `CampaignMaterial`) **must filter `status: ACTIVE`** so soft-deleted rows are never returned. When a unique lookup needs an extra non-unique filter, use `findFirst` instead of `findUnique`.
-- `Campaign` is exempt: it has no soft-delete state (`CampaignStatus` has no `DELETED` value).
+- **Every Prisma query whose `where` targets a model with the soft-delete `Status` enum** (`Account`, `Brand`, `Creator`, `Campaign`, `CampaignMaterial`) **must filter `status: ACTIVE`** so soft-deleted rows are never returned. When a unique lookup needs an extra non-unique filter, use `findFirst` instead of `findUnique`.
+- On `Campaign`, `status` is the soft-delete `Status` enum (`ACTIVE` / `DELETED`), while `campaignStatus` is the lifecycle enum (`CampaignStatus`: `DRAFT`, `IN_REVIEW`, `REVISION`, `REJECTED`, `ACTIVE`, `FINISHED`).
 - The register handler maps Prisma error **P2002** to a 409 `Email is already registered` (a soft-deleted account still holds its email via the unique index).
 
 ## Lessons Learned & Query Helper Patterns
