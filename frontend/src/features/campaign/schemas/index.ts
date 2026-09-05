@@ -9,3 +9,7 @@ export {
 } from './basic-info-schema';
 
 export type { BasicInfoFormValues, CampaignCategoryOption, CampaignPlatformOption, CampaignTypeOption } from './basic-info-schema';
+
+export { materialItemSchema, materialsFormSchema, MATERIAL_TYPE_LABELS, MATERIAL_TYPE_OPTIONS } from './materials-schema';
+
+export type { MaterialItemFormValues, MaterialsFormValues, MaterialTypeOption } from './materials-schema';

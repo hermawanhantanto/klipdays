@@ -21,7 +21,7 @@ interface DashboardTopBarProps {
  */
 export function DashboardTopBar({ userName, userEmail, userRole, avatarUrl, onToggleMobileSidebar }: DashboardTopBarProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleMobileSidebar} aria-label="Buka menu navigasi">
           <Menu className="h-5 w-5" />

@@ -143,7 +143,7 @@ export function DashboardSidebar({
       {/* Desktop Persistent Full-Height Sidebar */}
       <aside
         className={cn(
-          'hidden h-screen shrink-0 flex-col border-r bg-sidebar transition-[width] duration-200 md:flex',
+          'sticky top-0 hidden h-full shrink-0 flex-col border-r bg-sidebar transition-[width] duration-200 md:flex',
           isCollapsed ? 'w-20' : 'w-64'
         )}>
         {renderSidebarContent(isCollapsed, false)}

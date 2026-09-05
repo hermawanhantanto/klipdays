@@ -35,10 +35,7 @@ function Step1BasicInfo() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">Langkah 1: Informasi Dasar</CardTitle>
-          {id && <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-mono text-muted-foreground">ID: {id}</span>}
-        </div>
+        <CardTitle className="text-xl">Langkah 1: Informasi Dasar</CardTitle>
         <CardDescription>Tentukan identitas dasar kampanye seperti judul, kategori produk, platform, dan aset media utama.</CardDescription>
       </CardHeader>
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, Info, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -198,7 +198,7 @@ export function BasicInfoForm({
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor={field.name}>Platform Promosi</FieldLabel>
                 <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
-                  <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className="w-full bg-muted/40 cursor-not-allowed">
+                  <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className="w-full">
                     <SelectValue placeholder="Pilih platform">{selectedPlatformLabel}</SelectValue>
                   </SelectTrigger>
                   <SelectContent position="popper">
@@ -212,7 +212,7 @@ export function BasicInfoForm({
                     })}
                   </SelectContent>
                 </Select>
-                <FieldDescription>Saat ini Klipday memprioritaskan promosi video pendek pada platform TikTok.</FieldDescription>
+                <FieldDescription>Pilih platform yang sesuai untuk kampanye.</FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             );
@@ -257,15 +257,6 @@ export function BasicInfoForm({
                 aria-invalid={fieldState.invalid}
                 disabled={isPending}
               />
-
-              {/* Note callout for manual URL input */}
-              <div className="flex items-start gap-2.5 rounded-xl border border-border/80 bg-muted/40 p-3 text-xs text-muted-foreground">
-                <Info className="h-4 w-4 shrink-0 text-primary mt-0.5" />
-                <span>
-                  <strong>Catatan:</strong> Fitur unggah file langsung ke cloud storage akan segera hadir. Untuk sementara, silakan masukkan
-                  URL gambar thumbnail secara langsung dari CDN, website, atau layanan image hosting Anda.
-                </span>
-              </div>
 
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>

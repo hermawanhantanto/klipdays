@@ -34,7 +34,7 @@ function DashboardLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="fixed inset-0 flex overflow-hidden bg-background text-foreground">
       <DashboardSidebar
         role={displayRole}
         isCollapsed={isSidebarCollapsed}
@@ -42,14 +42,14 @@ function DashboardLayout() {
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={handleCloseMobileMenu}
       />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col h-full min-h-0 overflow-hidden">
         <DashboardTopBar
           userName={displayName}
           userEmail={displayEmail}
           userRole={displayRole}
           onToggleMobileSidebar={handleToggleMobileMenu}
         />
-        <main className="flex-1 overflow-y-auto bg-muted/20 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 min-h-0 overflow-y-auto bg-muted/20 p-4 sm:p-6 lg:p-8">
           <div className="w-full">
             <Outlet context={{ user: userProfile }} />
           </div>

@@ -8,7 +8,9 @@ import { ResolveCampaignWizardStepPath } from '../utils';
 
 export type InitializeCampaignMutationOptions = Omit<UseMutationOptions<InitializeCampaignResponse, Error, void>, 'mutationFn'>;
 
-export type EditCampaignMutationOptions = Omit<UseMutationOptions<Campaign, Error, CampaignEditInput>, 'mutationFn'>;
+export type EditCampaignMutationOptions = Omit<UseMutationOptions<Campaign, Error, CampaignEditInput>, 'mutationFn'> & {
+  successMessage?: string;
+};
 
 /**
  * Mutation hook for initiating a new draft campaign.
@@ -68,7 +70,7 @@ export function UseInitializeCampaignMutation(
  * @returns TanStack Query mutation object for editing a campaign.
  */
 export function UseEditCampaignMutation(
-  campaignId: string,
+  campaignId?: string,
   options?: EditCampaignMutationOptions
 ): UseMutationResult<Campaign, Error, CampaignEditInput> {
   const navigate = useNavigate();
@@ -77,16 +79,24 @@ export function UseEditCampaignMutation(
 
   const mutation = useMutation({
     ...restOptions,
-    mutationFn: (data: CampaignEditInput) => EditCampaign(campaignId, data),
+    mutationFn: (data: CampaignEditInput) => {
+      if (!campaignId) {
+        throw new Error('Campaign ID is required.');
+      }
+      return EditCampaign(campaignId, data);
+    },
     onSuccess: (updatedCampaign, variables, onMutateResult, context) => {
-      queryClient.setQueryData(['campaign', campaignId], updatedCampaign);
+      if (campaignId) {
+        queryClient.setQueryData(['campaign', campaignId], updatedCampaign);
+      }
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
 
-      toast.success('Informasi dasar berhasil disimpan.');
+      const message = options?.successMessage ?? 'Informasi dasar berhasil disimpan.';
+      toast.success(message);
 
       const targetPath = ResolveCampaignWizardStepPath(updatedCampaign);
       navigate(targetPath, {
-        state: { campaignId },
+        state: { campaignId: updatedCampaign.id },
       });
 
       onSuccess?.(updatedCampaign, variables, onMutateResult, context);

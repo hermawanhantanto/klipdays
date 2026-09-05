@@ -1,4 +1,6 @@
-import type { BasicInfoFormValues } from './schemas';
+import type { Control } from 'react-hook-form';
+
+import type { BasicInfoFormValues, MaterialsFormValues } from './schemas';
 
 export interface ApiResponse<T> {
   status: string;
@@ -109,4 +111,21 @@ export interface BasicInfoFormProps {
   isPending?: boolean;
   isLoading?: boolean;
   isSubmitting?: boolean;
+}
+
+export interface MaterialsFormProps {
+  initialData?: Partial<Campaign> | null;
+  onSubmit: (values: MaterialsFormValues) => void;
+  isPending?: boolean;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
+  onBack?: () => void;
+}
+
+export interface MaterialFieldGroupProps {
+  index: number;
+  control: Control<MaterialsFormValues>;
+  canRemove: boolean;
+  onRemove: (index: number) => void;
+  disabled?: boolean;
 }

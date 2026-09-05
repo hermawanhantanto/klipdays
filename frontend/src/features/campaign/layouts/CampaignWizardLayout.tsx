@@ -16,7 +16,7 @@ function CampaignWizardLayout() {
   return (
     <div className="w-full max-w-5xl space-y-6 pb-12">
       {/* Top Navigation & Header */}
-      <div className="flex flex-col gap-4 border-b pb-6">
+      <div className="flex flex-col gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground">
             <Link to="/dashboard/campaigns" className="flex items-center gap-1.5">
@@ -40,7 +40,7 @@ function CampaignWizardLayout() {
       </div>
 
       {/* Dynamic Active Step Content Outlet */}
-      <div className="min-h-[400px]">
+      <div>
         <Outlet />
       </div>
     </div>
