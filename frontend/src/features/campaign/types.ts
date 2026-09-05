@@ -1,3 +1,5 @@
+import type { BasicInfoFormValues } from './schemas';
+
 export interface ApiResponse<T> {
   status: string;
   data: T;
@@ -77,4 +79,34 @@ export interface Campaign {
   materials?: CampaignMaterial[];
   brief?: CampaignBrief | null;
   brand?: CampaignBrand;
+}
+
+export interface CampaignEditInput {
+  title?: string;
+  description?: string;
+  campaignType?: string;
+  campaignCategory?: string;
+  thumbnailUrl?: string;
+  platform?: string;
+  mainMediaUrl?: string;
+  materials?: Array<{
+    type: string;
+    name: string;
+    url: string;
+  }>;
+  brief?: Record<string, unknown>;
+  cpm?: number;
+  minViews?: number;
+  maxViews?: number;
+  budget?: number;
+  startDate?: string | Date;
+  endDate?: string | Date;
+}
+
+export interface BasicInfoFormProps {
+  initialData?: Partial<Campaign> | null;
+  onSubmit: (values: BasicInfoFormValues) => void;
+  isPending?: boolean;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
 }

@@ -1,5 +1,5 @@
 import { apiClient, ExtractApiError } from '@/lib/api-client';
-import type { ApiResponse, Campaign, InitializeCampaignResponse } from './types';
+import type { ApiResponse, Campaign, CampaignEditInput, InitializeCampaignResponse } from './types';
 
 /**
  * Sends a POST request to `/campaigns` to initialize an empty draft campaign.
@@ -36,6 +36,29 @@ export async function GetCampaignById(id?: string): Promise<Campaign> {
     return result;
   } catch (error) {
     const apiError = ExtractApiError(error, 'Gagal memuat informasi kampanye. Silakan coba lagi.');
+    throw apiError;
+  }
+}
+
+/**
+ * Sends a PATCH request to `/campaigns/:id/edit` to update specific fields of a campaign.
+ *
+ * @param id - The UUID of the campaign to edit.
+ * @param data - The partial fields to update.
+ * @returns The updated campaign details.
+ * @throws Error if id is missing or standardized API error if the request fails.
+ */
+export async function EditCampaign(id: string, data: CampaignEditInput): Promise<Campaign> {
+  if (!id) {
+    throw new Error('Campaign ID is required.');
+  }
+
+  try {
+    const response = await apiClient.patch<ApiResponse<Campaign>>(`/campaigns/${id}/edit`, data);
+    const result = response.data.data;
+    return result;
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal menyimpan perubahan kampanye. Silakan coba lagi.');
     throw apiError;
   }
 }

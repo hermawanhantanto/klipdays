@@ -2,11 +2,13 @@ import { useMutation, useQueryClient, type UseMutationOptions, type UseMutationR
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
-import { GetCampaignById, InitializeCampaign } from '../api';
-import type { InitializeCampaignResponse } from '../types';
+import { GetCampaignById, EditCampaign, InitializeCampaign } from '../api';
+import type { Campaign, CampaignEditInput, InitializeCampaignResponse } from '../types';
 import { ResolveCampaignWizardStepPath } from '../utils';
 
 export type InitializeCampaignMutationOptions = Omit<UseMutationOptions<InitializeCampaignResponse, Error, void>, 'mutationFn'>;
+
+export type EditCampaignMutationOptions = Omit<UseMutationOptions<Campaign, Error, CampaignEditInput>, 'mutationFn'>;
 
 /**
  * Mutation hook for initiating a new draft campaign.
@@ -21,8 +23,10 @@ export function UseInitializeCampaignMutation(
 ): UseMutationResult<InitializeCampaignResponse, Error, void> {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { onSuccess, onError, ...restOptions } = options ?? {};
 
   const mutation = useMutation({
+    ...restOptions,
     mutationFn: InitializeCampaign,
     onSuccess: async (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
@@ -42,15 +46,56 @@ export function UseInitializeCampaignMutation(
         toast.error(message);
       }
 
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      onSuccess?.(data, variables, onMutateResult, context);
     },
 
     onError: (error, variables, onMutateResult, context) => {
       toast.error(error.message);
-      options?.onError?.(error, variables, onMutateResult, context);
+      onError?.(error, variables, onMutateResult, context);
+    },
+  });
+
+  return mutation;
+}
+
+/**
+ * Mutation hook for editing an existing campaign.
+ * Calls `PATCH /campaigns/:id/edit`, updates the query cache, shows user feedback,
+ * and navigates to the next appropriate wizard step based on updated campaign state.
+ *
+ * @param campaignId - The UUID of the campaign being edited.
+ * @param options - Optional mutation options to extend default behavior.
+ * @returns TanStack Query mutation object for editing a campaign.
+ */
+export function UseEditCampaignMutation(
+  campaignId: string,
+  options?: EditCampaignMutationOptions
+): UseMutationResult<Campaign, Error, CampaignEditInput> {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { onSuccess, onError, ...restOptions } = options ?? {};
+
+  const mutation = useMutation({
+    ...restOptions,
+    mutationFn: (data: CampaignEditInput) => EditCampaign(campaignId, data),
+    onSuccess: (updatedCampaign, variables, onMutateResult, context) => {
+      queryClient.setQueryData(['campaign', campaignId], updatedCampaign);
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+
+      toast.success('Informasi dasar berhasil disimpan.');
+
+      const targetPath = ResolveCampaignWizardStepPath(updatedCampaign);
+      navigate(targetPath, {
+        state: { campaignId },
+      });
+
+      onSuccess?.(updatedCampaign, variables, onMutateResult, context);
     },
 
-    ...options,
+    onError: (error, variables, onMutateResult, context) => {
+      toast.error(error.message);
+      onError?.(error, variables, onMutateResult, context);
+    },
   });
 
   return mutation;
