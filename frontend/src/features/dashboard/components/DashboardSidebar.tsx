@@ -9,9 +9,9 @@ import { GetNavItemsForRole } from '../config/nav-config';
 interface DashboardSidebarProps {
   role?: string | null;
   isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
+  onToggleCollapse: () => void;
   isMobileOpen?: boolean;
-  onCloseMobile?: () => void;
+  onCloseMobile: () => void;
 }
 
 /**
@@ -46,17 +46,15 @@ export function DashboardSidebar({
         {/* Top Header of the Sidebar with Brand Title and Minimize Button */}
         <div className={cn('flex h-16 shrink-0 items-center border-b', collapsed ? 'justify-center px-2' : 'justify-between px-4 sm:px-5')}>
           {collapsed ? (
-            onToggleCollapse ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onToggleCollapse}
-                className="size-11 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Perluas sidebar"
-                title="Perluas sidebar">
-                <PanelLeftOpen className="h-5 w-5" />
-              </Button>
-            ) : null
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleCollapse}
+              className="size-11 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Perluas sidebar"
+              title="Perluas sidebar">
+              <PanelLeftOpen className="h-5 w-5" />
+            </Button>
           ) : (
             <>
               <Link to="/dashboard" onClick={onCloseMobile} className="flex items-center gap-2 transition-opacity hover:opacity-90">
@@ -74,7 +72,7 @@ export function DashboardSidebar({
                   aria-label="Tutup menu">
                   <X className="h-5 w-5" />
                 </Button>
-              ) : onToggleCollapse ? (
+              ) : (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -84,7 +82,7 @@ export function DashboardSidebar({
                   title="Kecilkan sidebar">
                   <PanelLeftClose className="h-5 w-5" />
                 </Button>
-              ) : null}
+              )}
             </>
           )}
         </div>

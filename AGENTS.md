@@ -12,13 +12,21 @@ This applies to any action that requires documentation: new installs, version bu
 
 ## Project Structure
 
-The backend (`backend/src`) is organized by **feature modules**, not by technical layer:
+Both backend (`backend/src`) and frontend (`frontend/src`) are organized by **feature modules**, not by technical layer:
 
+### Backend Structure
 - `src/features/<feature>/` — one folder per feature (e.g. `authentication`, `health`). Everything belonging to a feature lives in its folder: routes (`auth.routes.ts`), handlers (`auth.handler.ts`), helpers, validators, etc. Do not create top-level `routes/`, `controllers/`, or `services/` folders.
 - `src/middleware/` — all middleware, both shared cross-feature (e.g. the centralized `ErrorHandler`) and feature-oriented (e.g. `auth.middleware.ts`).
 - `src/rate-limiter/` — rate limiters (e.g. `auth.rate-limiter.ts`).
 - `src/utils/` — shared utilities (e.g. `api-response.ts`).
 - `src/app.ts` wires feature routers into the app; `src/index.ts` starts the server.
+
+### Frontend Structure
+- `src/features/<feature>/` — one folder per feature (e.g. `authentication`, `dashboard`, `home`). Everything belonging to a feature lives in its folder: `components/`, `hooks/`, `layouts/`, `pages/`, `schemas/`, `api.ts`, and `types.ts`.
+- **Do not create top-level `pages/` or `layouts/` folders** in frontend — pages and layouts belong strictly to their feature modules.
+- `src/components/ui/` — shared design system primitives from shadcn/ui.
+- `src/lib/` — shared client utilities and instances (e.g. `api-client.ts`, `utils.ts`).
+- `src/App.tsx` configures routes importing from feature pages and layouts.
 
 ## Frontend UI (shadcn)
 
@@ -56,6 +64,14 @@ The frontend uses **shadcn/ui**. For UI consistency, always use the shadcn compo
 - **Avoid repetitive `if` blocks in relational upserts**: When constructing `create` and `update` payloads for nested relations with shared properties, define `createData` and loop over its entries with `SetField` to populate `updateData` for defined values, rather than writing repetitive manual `if` checks for each field.
 - **Match schema names directly**: Keep request payload properties and Zod validation schemas aligned directly with Prisma model field names (e.g. `callToAction` instead of shorthand aliases like `cta`) to eliminate unnecessary normalization layers.
 - **Always store query objects in variables before return**: Assign query and upsert objects to a named variable (`const upsert: ...`, `const materialsQuery: ...`) before returning or passing them into parent queries.
+
+## Lessons Learned & Frontend Patterns
+
+- **No defensive callback checks for guaranteed props**: Avoid adding unnecessary existence checks (`onToggle ? <Button onClick={onToggle}> : null`) for callback props that are always provided by parent orchestrators. Make standard callbacks required on component prop interfaces and only branch on actual UI state flags (e.g. `isCollapsed`, `isDrawer`).
+- **Centralize API error extraction**: Use `ExtractApiError` from `@/lib/api-client` to decode `{ message }` responses from the backend, falling back to Axios network errors, then localized defaults. Never duplicate repetitive `if (axios.isAxiosError)` blocks across feature API files.
+- **Pure types vs. schema-derived types**: Keep `types.ts` strictly for pure compile-time TypeScript contracts (DTOs, domain interfaces, API responses) with zero runtime footprint. Colocate derived types (`z.infer`, `as const` indexed access tuples like `(typeof OPTIONS)[number]`) with their runtime schemas or arrays, and re-export them in `types.ts` if a unified import entry point is desired.
+- **Cache invalidation vs. cache clearing**: Use `queryClient.invalidateQueries` after mutations (login, create, update) to mark specific query keys as stale and trigger immediate active background refetches without UI flicker. Use `queryClient.clear()` strictly upon logout to purge all cached data and tenant state from browser memory.
+- **Radix `Slot` / `asChild` styling gotcha**: Never pass dynamic functions into `className` (e.g. `className={({ isActive }) => ...}`) on components passed into Radix primitives using `asChild` (e.g. `TooltipTrigger asChild` with `Link`). Radix's `SlotClone` serializes the function code into the DOM `class` attribute as a string, breaking styles. Instead, precalculate active states with `useLocation()` and pass static strings.
 
 ## General Rules
 

@@ -9,7 +9,7 @@ interface DashboardTopBarProps {
   userEmail?: string | null;
   userRole?: string | null;
   avatarUrl?: string | null;
-  onToggleMobileSidebar?: () => void;
+  onToggleMobileSidebar: () => void;
 }
 
 /**
@@ -23,11 +23,9 @@ export function DashboardTopBar({ userName, userEmail, userRole, avatarUrl, onTo
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
       <div className="flex items-center gap-3">
-        {onToggleMobileSidebar ? (
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleMobileSidebar} aria-label="Buka menu navigasi">
-            <Menu className="h-5 w-5" />
-          </Button>
-        ) : null}
+        <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleMobileSidebar} aria-label="Buka menu navigasi">
+          <Menu className="h-5 w-5" />
+        </Button>
 
         <Link to="/dashboard" className="flex items-center gap-2 transition-opacity hover:opacity-90 md:hidden">
           <span className="font-heading text-xl font-bold tracking-tight">
