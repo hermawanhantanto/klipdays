@@ -1,10 +1,12 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
-import { Toaster } from '@/components/ui/sonner'
-import AuthLayout from './layouts/AuthLayout'
-import Home from './pages/Home'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
+import { Toaster } from '@/components/ui/sonner';
+import AuthLayout from '@/features/authentication/layouts/AuthLayout';
+import SignIn from '@/features/authentication/pages/SignIn';
+import SignUp from '@/features/authentication/pages/SignUp';
+import DashboardLayout from '@/features/dashboard/layouts/DashboardLayout';
+import Dashboard from '@/features/dashboard/pages/Dashboard';
+import Home from '@/features/home/pages/Home';
 
 /**
  * Root application component configuring routing and global toast notifications.
@@ -22,9 +24,12 @@ function App() {
           <Route path="login" element={<Navigate to="/signin" replace />} />
           <Route path="signup" element={<SignUp />} />
         </Route>
+        <Route path="dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+        </Route>
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -181,3 +181,81 @@ export async function LogoutAccount(req: Request, res: Response, next: NextFunct
     next(err);
   }
 }
+
+/**
+ * Handles `GET /auth/me`: retrieves the authenticated user's profile details
+ * based on their active session token.
+ *
+ * @param req - Express request with `req.account` populated by `RequireAuth`.
+ * @param res - Express response object.
+ * @param next - Express next function, used to forward unexpected errors.
+ */
+export async function GetCurrentAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const accountPayload = req.account;
+
+    if (!accountPayload?.sub) {
+      SendError(res, 'Authentication required.', 401);
+      return;
+    }
+
+    const account = await prisma.account.findFirst({
+      where: { id: accountPayload.sub, status: Status.ACTIVE },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isEmailVerified: true,
+        brand: {
+          select: {
+            id: true,
+            companyName: true,
+            phoneNumber: true,
+            industry: true,
+          },
+        },
+        creator: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        admin: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    if (!account) {
+      SendError(res, 'Account not found.', 404);
+      return;
+    }
+
+    let displayName = '';
+    if (account.role === Role.BRAND && account.brand?.companyName) {
+      displayName = account.brand.companyName;
+    } else if (account.role === Role.CREATOR && account.creator?.fullName) {
+      displayName = account.creator.fullName;
+    } else if (account.role === Role.ADMIN && account.admin?.fullName) {
+      displayName = account.admin.fullName;
+    }
+
+    const profileData = {
+      id: account.id,
+      email: account.email,
+      role: account.role,
+      name: displayName,
+      isEmailVerified: account.isEmailVerified,
+      brand: account.brand,
+      creator: account.creator,
+      admin: account.admin,
+    };
+
+    SendSuccess(res, profileData, 'Account retrieved successfully.');
+  } catch (err) {
+    next(err);
+  }
+}

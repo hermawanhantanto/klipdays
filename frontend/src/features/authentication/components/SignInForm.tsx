@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 
-import { UseLoginMutation } from '../mutations'
-import { signInSchema, type SignInFormValues } from '../sign-in-schema'
+import { UseLoginMutation } from '../hooks'
+import { signInSchema, type SignInFormValues } from '../schemas'
 
 /**
  * Sign in form allowing registered Creators and Brands to authenticate with email and password.

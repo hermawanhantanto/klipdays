@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { SignInForm } from '@/features/authentication/components/SignInForm'
+import { SignInForm } from '../components/SignInForm'
 
 /**
  * Sign in page. Orchestrates the card sections and the sign in form inside
@@ -36,4 +36,3 @@ function SignIn() {
 }
 
 export default SignIn
-

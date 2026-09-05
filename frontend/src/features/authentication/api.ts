@@ -1,45 +1,26 @@
-import axios from 'axios'
-import { apiClient } from '@/lib/api-client'
+import { apiClient, ExtractApiError } from '@/lib/api-client'
+import type {
+  ApiResponse,
+  CurrentAccountProfile,
+  LoggedInAccount,
+  LoginInput,
+  RegisteredAccount,
+  RegisterInput,
+} from './types'
 
-export type RegisterInput =
-  | {
-      role: 'BRAND'
-      email: string
-      password: string
-      companyName: string
-      phoneNumber: string
-      industry: string
-    }
-  | {
-      role: 'CREATOR'
-      email: string
-      password: string
-      fullName: string
-    }
-
-export interface LoginInput {
-  email: string
-  password: string
-}
-
-interface ApiResponse<T> {
-  status: string
-  data: T
-  message: string
-}
-
-export interface RegisteredAccount {
-  id: string
-  email: string
-  role: string
-  createdAt: string
-}
-
-export interface LoggedInAccount {
-  id: string
-  email: string
-  role: string
-}
+export type {
+  ApiResponse,
+  AuthRole,
+  BrandProfile,
+  BrandRegisterInput,
+  CreatorProfile,
+  CreatorRegisterInput,
+  CurrentAccountProfile,
+  LoggedInAccount,
+  LoginInput,
+  RegisteredAccount,
+  RegisterInput,
+} from './types'
 
 /**
  * Sends a register request to the backend `POST /auth/register` endpoint using Axios.
@@ -51,13 +32,11 @@ export interface LoggedInAccount {
 export async function RegisterAccount(input: RegisterInput): Promise<RegisteredAccount> {
   try {
     const response = await apiClient.post<ApiResponse<RegisteredAccount>>('/auth/register', input)
-    return response.data.data
+    const result = response.data.data
+    return result
   } catch (error) {
-    if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
-      const message = error.response?.data?.message ?? error.message ?? 'Registrasi gagal. Coba lagi.'
-      throw new Error(message)
-    }
-    throw error instanceof Error ? error : new Error('Registrasi gagal. Coba lagi.')
+    const apiError = ExtractApiError(error, 'Registrasi gagal. Coba lagi.')
+    throw apiError
   }
 }
 
@@ -71,12 +50,44 @@ export async function RegisterAccount(input: RegisterInput): Promise<RegisteredA
 export async function LoginAccount(input: LoginInput): Promise<LoggedInAccount> {
   try {
     const response = await apiClient.post<ApiResponse<LoggedInAccount>>('/auth/login', input)
-    return response.data.data
+    const result = response.data.data
+    return result
   } catch (error) {
-    if (axios.isAxiosError<ApiResponse<unknown>>(error)) {
-      const message = error.response?.data?.message ?? error.message ?? 'Masuk gagal. Coba lagi.'
-      throw new Error(message)
-    }
-    throw error instanceof Error ? error : new Error('Masuk gagal. Coba lagi.')
+    const apiError = ExtractApiError(error, 'Masuk gagal. Coba lagi.')
+    throw apiError
   }
 }
+
+/**
+ * Sends a request to the backend `GET /auth/me` endpoint to retrieve
+ * the authenticated account's profile details based on active session cookies.
+ *
+ * @returns The active user's account and profile data.
+ * @throws Error with the backend message when session is invalid or missing.
+ */
+export async function GetCurrentAccount(): Promise<CurrentAccountProfile> {
+  try {
+    const response = await apiClient.get<ApiResponse<CurrentAccountProfile>>('/auth/me')
+    const result = response.data.data
+    return result
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal memuat profil akun.')
+    throw apiError
+  }
+}
+
+/**
+ * Sends a logout request to the backend `POST /auth/logout` endpoint to clear the session cookie.
+ *
+ * @returns A promise that resolves when the session cookie is removed.
+ * @throws Error with the backend message when logout fails.
+ */
+export async function LogoutAccount(): Promise<void> {
+  try {
+    await apiClient.post('/auth/logout')
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal keluar.')
+    throw apiError
+  }
+}
+

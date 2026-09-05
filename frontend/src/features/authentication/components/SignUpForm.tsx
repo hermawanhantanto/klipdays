@@ -21,12 +21,12 @@ import {
 } from '@/components/ui/select'
 
 import { type RegisterInput } from '../api'
-import { UseRegisterMutation } from '../mutations'
+import { UseRegisterMutation } from '../hooks'
 import {
   INDUSTRY_OPTIONS,
   signUpSchema,
   type SignUpFormValues,
-} from '../sign-up-schema'
+} from '../schemas'
 import { RoleSlider } from './RoleSlider'
 
 /**

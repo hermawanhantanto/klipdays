@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { SignUpForm } from '@/features/authentication/components/SignUpForm'
+import { SignUpForm } from '../components/SignUpForm'
 
 /**
  * Sign up page. Orchestrates the card sections and the sign up form inside
