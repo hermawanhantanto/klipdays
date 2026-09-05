@@ -27,6 +27,7 @@ import {
   signUpSchema,
   type SignUpFormValues,
 } from '../schemas'
+import { FormatIndustryLabel, INDUSTRY_LABELS } from '../utils'
 import { RoleSlider } from './RoleSlider'
 
 /**
@@ -178,32 +179,44 @@ export function SignUpForm() {
             <Controller
               name="industry"
               control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Bidang industri</FieldLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={mutation.isPending}
-                  >
-                    <SelectTrigger
-                      id={field.name}
-                      aria-invalid={fieldState.invalid}
-                      className="w-full"
+              render={({ field, fieldState }) => {
+                const selectedLabel = field.value
+                  ? FormatIndustryLabel(field.value)
+                  : undefined
+
+                return (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor={field.name}>Bidang industri</FieldLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={mutation.isPending}
                     >
-                      <SelectValue placeholder="Pilih industri" />
-                    </SelectTrigger>
-                    <SelectContent position="popper">
-                      {INDUSTRY_OPTIONS.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
+                      <SelectTrigger
+                        id={field.name}
+                        aria-invalid={fieldState.invalid}
+                        className="w-full"
+                      >
+                        <SelectValue placeholder="Pilih industri">
+                          {selectedLabel}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent position="popper">
+                        {INDUSTRY_OPTIONS.map((item) => {
+                          const itemLabel = INDUSTRY_LABELS[item]
+
+                          return (
+                            <SelectItem key={item} value={item}>
+                              {itemLabel}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  </Field>
+                )
+              }}
             />
           </>
         )}

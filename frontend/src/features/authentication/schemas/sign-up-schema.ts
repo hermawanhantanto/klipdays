@@ -1,16 +1,16 @@
 import { z } from 'zod';
 
 export const INDUSTRY_OPTIONS = [
-  'E-Commerce',
-  'Food & Beverage',
-  'Fashion & Beauty',
-  'Technology',
-  'Finance',
-  'Health & Wellness',
-  'Entertainment',
-  'Education',
-  'Travel & Hospitality',
-  'Other',
+  'E_COMMERCE',
+  'FOOD_AND_BEVERAGE',
+  'FASHION_AND_BEAUTY',
+  'TECHNOLOGY',
+  'FINANCE',
+  'HEALTH_AND_WELLNESS',
+  'ENTERTAINMENT',
+  'EDUCATION',
+  'TRAVEL_AND_HOSPITALITY',
+  'OTHER',
 ] as const;
 
 export type Industry = (typeof INDUSTRY_OPTIONS)[number];

@@ -50,7 +50,7 @@ function DashboardLayout() {
           onToggleMobileSidebar={handleToggleMobileMenu}
         />
         <main className="flex-1 overflow-y-auto bg-muted/20 p-4 sm:p-6 lg:p-8">
-          <div className="mx-auto max-w-7xl">
+          <div className="w-full">
             <Outlet context={{ user: userProfile }} />
           </div>
         </main>
