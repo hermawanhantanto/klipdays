@@ -11,18 +11,18 @@ export const CAMPAIGN_WIZARD_STEPS: WizardStepItem[] = [
     description: 'Judul, platform & media utama',
   },
   {
-    id: 'brief',
+    id: 'materials',
     slug: 'step-2',
     stepNumber: 2,
-    title: 'Brief & Panduan',
-    description: 'Tujuan, instruksi, do & donts',
-  },
-  {
-    id: 'materials',
-    slug: 'step-3',
-    stepNumber: 3,
     title: 'Materi & Aset',
     description: 'Video, gambar & dokumen pendukung',
+  },
+  {
+    id: 'brief',
+    slug: 'step-3',
+    stepNumber: 3,
+    title: 'Brief & Panduan',
+    description: 'Tujuan, instruksi, do & donts',
   },
   {
     id: 'reward-budget',

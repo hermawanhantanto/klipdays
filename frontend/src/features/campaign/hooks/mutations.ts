@@ -2,15 +2,16 @@ import { useMutation, useQueryClient, type UseMutationOptions, type UseMutationR
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
-import { InitializeCampaign } from '../api';
+import { GetCampaignById, InitializeCampaign } from '../api';
 import type { InitializeCampaignResponse } from '../types';
+import { ResolveCampaignWizardStepPath } from '../utils';
 
 export type InitializeCampaignMutationOptions = Omit<UseMutationOptions<InitializeCampaignResponse, Error, void>, 'mutationFn'>;
 
 /**
  * Mutation hook for initiating a new draft campaign.
- * Calls `POST /campaigns`, invalidates relevant queries,
- * shows user feedback toasts, and navigates to step 1 upon success.
+ * Calls `POST /campaigns`, shows a success toast, retrieves campaign details via
+ * `GET /campaigns/:id`, and navigates to the appropriate wizard step based on campaign data.
  *
  * @param options - Optional mutation options to extend default behavior.
  * @returns TanStack Query mutation object for initializing a campaign.
@@ -23,13 +24,23 @@ export function UseInitializeCampaignMutation(
 
   const mutation = useMutation({
     mutationFn: InitializeCampaign,
-    onSuccess: (data, variables, onMutateResult, context) => {
+    onSuccess: async (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      toast.success('Campaign created successfully');
 
-      toast.success('Draft kampanye baru berhasil dibuat.');
-      navigate(`/dashboard/campaigns/${data.id}/create/step-1`, {
-        state: { campaignId: data.id },
-      });
+      try {
+        const campaign = await GetCampaignById(data.id);
+
+        queryClient.setQueryData(['campaign', data.id], campaign);
+        const targetPath = ResolveCampaignWizardStepPath(campaign);
+
+        navigate(targetPath, {
+          state: { campaignId: data.id },
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Gagal memuat detail kampanye.';
+        toast.error(message);
+      }
 
       options?.onSuccess?.(data, variables, onMutateResult, context);
     },
