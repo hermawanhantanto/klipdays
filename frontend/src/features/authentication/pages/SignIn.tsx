@@ -1,13 +1,6 @@
-import { Link } from 'react-router'
-
-import {
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { SignInForm } from '../components/SignInForm'
+import { Link } from 'react-router';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { SignInForm } from '../components';
 
 /**
  * Sign in page. Orchestrates the card sections and the sign in form inside
@@ -17,7 +10,7 @@ import { SignInForm } from '../components/SignInForm'
  */
 function SignIn() {
   return (
-    <>
+    <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle className="text-xl">Masuk</CardTitle>
         <CardDescription>Masuk dengan email dan kata sandi akun Anda.</CardDescription>
@@ -31,8 +24,8 @@ function SignIn() {
           Daftar
         </Link>
       </CardFooter>
-    </>
-  )
+    </Card>
+  );
 }
 
-export default SignIn
+export default SignIn;

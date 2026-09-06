@@ -1,12 +1,11 @@
-import { Link, Outlet } from 'react-router'
-import { Card } from '@/components/ui/card'
+import { Link, Outlet } from 'react-router';
 
 /**
  * Layout for the authentication pages (sign in / sign up).
  * Shows the Klipday brand logo on the top-left linking to home and renders
- * the active auth form inside a card centered on the screen.
+ * the active auth page inside a centered container.
  *
- * @returns The auth layout wrapper with a centered card outlet.
+ * @returns The auth layout wrapper with a centered outlet.
  */
 function AuthLayout() {
   return (
@@ -19,12 +18,10 @@ function AuthLayout() {
         </Link>
       </header>
       <div className="flex flex-1 items-center justify-center p-6">
-        <Card className="w-full max-w-sm">
-          <Outlet />
-        </Card>
+        <Outlet />
       </div>
     </main>
-  )
+  );
 }
 
-export default AuthLayout
+export default AuthLayout;

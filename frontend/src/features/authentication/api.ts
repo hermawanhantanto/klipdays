@@ -1,13 +1,5 @@
-import { apiClient, ExtractApiError } from '@/lib/api-client'
-import type {
-  ApiResponse,
-  CurrentAccountProfile,
-  LoggedInAccount,
-  LoginInput,
-  RegisteredAccount,
-  RegisterInput,
-} from './types'
-
+import { apiClient, ExtractApiError } from '@/lib/api-client';
+import type { ApiResponse, CurrentAccountProfile, LoggedInAccount, LoginInput, RegisteredAccount, RegisterInput } from './types';
 export type {
   ApiResponse,
   AuthRole,
@@ -20,7 +12,7 @@ export type {
   LoginInput,
   RegisteredAccount,
   RegisterInput,
-} from './types'
+} from './types';
 
 /**
  * Sends a register request to the backend `POST /auth/register` endpoint using Axios.
@@ -31,12 +23,12 @@ export type {
  */
 export async function RegisterAccount(input: RegisterInput): Promise<RegisteredAccount> {
   try {
-    const response = await apiClient.post<ApiResponse<RegisteredAccount>>('/auth/register', input)
-    const result = response.data.data
-    return result
+    const response = await apiClient.post<ApiResponse<RegisteredAccount>>('/auth/register', input);
+    const result = response.data.data;
+    return result;
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Registrasi gagal. Coba lagi.')
-    throw apiError
+    const apiError = ExtractApiError(error, 'Registrasi gagal. Coba lagi.');
+    throw apiError;
   }
 }
 
@@ -49,12 +41,12 @@ export async function RegisterAccount(input: RegisterInput): Promise<RegisteredA
  */
 export async function LoginAccount(input: LoginInput): Promise<LoggedInAccount> {
   try {
-    const response = await apiClient.post<ApiResponse<LoggedInAccount>>('/auth/login', input)
-    const result = response.data.data
-    return result
+    const response = await apiClient.post<ApiResponse<LoggedInAccount>>('/auth/login', input);
+    const result = response.data.data;
+    return result;
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Masuk gagal. Coba lagi.')
-    throw apiError
+    const apiError = ExtractApiError(error, 'Masuk gagal. Coba lagi.');
+    throw apiError;
   }
 }
 
@@ -67,12 +59,12 @@ export async function LoginAccount(input: LoginInput): Promise<LoggedInAccount> 
  */
 export async function GetCurrentAccount(): Promise<CurrentAccountProfile> {
   try {
-    const response = await apiClient.get<ApiResponse<CurrentAccountProfile>>('/auth/me')
-    const result = response.data.data
-    return result
+    const response = await apiClient.get<ApiResponse<CurrentAccountProfile>>('/auth/me');
+    const result = response.data.data;
+    return result;
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Gagal memuat profil akun.')
-    throw apiError
+    const apiError = ExtractApiError(error, 'Gagal memuat profil akun.');
+    throw apiError;
   }
 }
 
@@ -84,10 +76,9 @@ export async function GetCurrentAccount(): Promise<CurrentAccountProfile> {
  */
 export async function LogoutAccount(): Promise<void> {
   try {
-    await apiClient.post('/auth/logout')
+    await apiClient.post('/auth/logout');
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Gagal keluar.')
-    throw apiError
+    const apiError = ExtractApiError(error, 'Gagal keluar.');
+    throw apiError;
   }
 }
-

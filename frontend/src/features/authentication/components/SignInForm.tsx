@@ -1,18 +1,12 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2 } from 'lucide-react'
-import { Controller, useForm } from 'react-hook-form'
-
-import { Button } from '@/components/ui/button'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-
-import { UseLoginMutation } from '../hooks'
-import { signInSchema, type SignInFormValues } from '../schemas'
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { UseLoginMutation } from '../hooks';
+import { signInSchema, type SignInFormValues } from '../schemas';
+import { Loader2 } from 'lucide-react';
+import { PasswordInput } from './PasswordInput';
 
 /**
  * Sign in form allowing registered Creators and Brands to authenticate with email and password.
@@ -27,9 +21,9 @@ export function SignInForm() {
       email: '',
       password: '',
     },
-  })
+  });
 
-  const mutation = UseLoginMutation()
+  const mutation = UseLoginMutation();
 
   /**
    * Submits the sign in form credentials to the login mutation.
@@ -37,7 +31,7 @@ export function SignInForm() {
    * @param values - Validated sign in form values containing email and password.
    */
   function OnSubmit(values: SignInFormValues) {
-    mutation.mutate(values)
+    mutation.mutate(values);
   }
 
   return (
@@ -69,10 +63,9 @@ export function SignInForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor={field.name}>Kata sandi</FieldLabel>
-              <Input
+              <PasswordInput
                 {...field}
                 id={field.name}
-                type="password"
                 placeholder="••••••••"
                 aria-invalid={fieldState.invalid}
                 autoComplete="current-password"
@@ -87,13 +80,15 @@ export function SignInForm() {
 
         <Button type="submit" disabled={mutation.isPending} className="w-full">
           {mutation.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
+            <span className="flex items-center gap-2">
+              <Loader2 className="size-4 animate-spin" />
+              <span>Memproses...</span>
+            </span>
           ) : (
             'Masuk'
           )}
         </Button>
       </FieldGroup>
     </form>
-  )
+  );
 }
-

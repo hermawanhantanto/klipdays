@@ -41,6 +41,7 @@ const signUpBaseSchema = z.object({
   role: z.enum(['CREATOR', 'BRAND']),
   email: z.string().trim().email('Email tidak valid.'),
   password: passwordField,
+  confirmPassword: z.string(),
   fullName: z.string().trim(),
   companyName: z.string().trim(),
   phoneNumber: z.string().trim(),
@@ -48,6 +49,20 @@ const signUpBaseSchema = z.object({
 });
 
 export const signUpSchema = signUpBaseSchema.superRefine((values, ctx) => {
+  if (!values.confirmPassword) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['confirmPassword'],
+      message: 'Konfirmasi kata sandi wajib diisi.',
+    });
+  } else if (values.password !== values.confirmPassword) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['confirmPassword'],
+      message: 'Kata sandi dan konfirmasi kata sandi tidak cocok.',
+    });
+  }
+
   // check field based on role
   if (values.role === 'CREATOR') {
     if (!values.fullName) {

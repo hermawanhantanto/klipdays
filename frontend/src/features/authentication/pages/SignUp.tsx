@@ -1,13 +1,6 @@
-import { Link } from 'react-router'
-
-import {
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { SignUpForm } from '../components/SignUpForm'
+import { Link } from 'react-router';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { SignUpForm } from '../components';
 
 /**
  * Sign up page. Orchestrates the card sections and the sign up form inside
@@ -17,7 +10,7 @@ import { SignUpForm } from '../components/SignUpForm'
  */
 function SignUp() {
   return (
-    <>
+    <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle className="text-xl">Buat akun</CardTitle>
         <CardDescription>Daftar sebagai Creator atau Brand untuk mulai menggunakan Klipday.</CardDescription>
@@ -31,8 +24,8 @@ function SignUp() {
           Masuk
         </Link>
       </CardFooter>
-    </>
-  )
+    </Card>
+  );
 }
 
-export default SignUp
+export default SignUp;

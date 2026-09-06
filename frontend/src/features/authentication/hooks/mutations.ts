@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-
 import {
   LoginAccount,
   type LoggedInAccount,
@@ -13,9 +12,7 @@ import {
 } from '../api';
 
 export type RegisterMutationOptions = Omit<UseMutationOptions<RegisteredAccount, Error, RegisterInput>, 'mutationFn'>;
-
 export type LoginMutationOptions = Omit<UseMutationOptions<LoggedInAccount, Error, LoginInput>, 'mutationFn'>;
-
 export type LogoutMutationOptions = Omit<UseMutationOptions<void, Error, void>, 'mutationFn'>;
 
 /**
@@ -28,16 +25,17 @@ export type LogoutMutationOptions = Omit<UseMutationOptions<void, Error, void>, 
  */
 export function UseRegisterMutation(options?: RegisterMutationOptions): UseMutationResult<RegisteredAccount, Error, RegisterInput> {
   const navigate = useNavigate();
+  const { onSuccess, ...mutationOptions } = options ?? {};
 
   const mutation = useMutation({
+    ...mutationOptions,
     mutationFn: RegisterAccount,
     onSuccess: (data, variables, onMutateResult, context) => {
       toast.success('Pendaftaran berhasil! Silakan masuk ke akun Anda.');
       navigate('/signin');
 
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      onSuccess?.(data, variables, onMutateResult, context);
     },
-    ...options,
   });
 
   return mutation;
@@ -54,8 +52,10 @@ export function UseRegisterMutation(options?: RegisterMutationOptions): UseMutat
 export function UseLoginMutation(options?: LoginMutationOptions): UseMutationResult<LoggedInAccount, Error, LoginInput> {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options ?? {};
 
   const mutation = useMutation({
+    ...mutationOptions,
     mutationFn: LoginAccount,
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: ['current-account'] });
@@ -63,9 +63,8 @@ export function UseLoginMutation(options?: LoginMutationOptions): UseMutationRes
       toast.success('Berhasil masuk!');
       navigate('/dashboard');
 
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      onSuccess?.(data, variables, onMutateResult, context);
     },
-    ...options,
   });
 
   return mutation;
@@ -81,8 +80,10 @@ export function UseLoginMutation(options?: LoginMutationOptions): UseMutationRes
 export function UseLogoutMutation(options?: LogoutMutationOptions): UseMutationResult<void, Error, void> {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { onSuccess, ...mutationOptions } = options ?? {};
 
   const mutation = useMutation({
+    ...mutationOptions,
     mutationFn: LogoutAccount,
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.clear();
@@ -90,9 +91,8 @@ export function UseLogoutMutation(options?: LogoutMutationOptions): UseMutationR
       toast.success('Berhasil keluar.');
       navigate('/signin');
 
-      options?.onSuccess?.(data, variables, onMutateResult, context);
+      onSuccess?.(data, variables, onMutateResult, context);
     },
-    ...options,
   });
 
   return mutation;

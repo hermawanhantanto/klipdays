@@ -1,4 +1,4 @@
-import { type Industry } from '../schemas/sign-up-schema'
+import { type Industry } from '../schemas/sign-up-schema';
 
 /**
  * Human-readable display labels for each industry option.
@@ -14,7 +14,7 @@ export const INDUSTRY_LABELS: Record<Industry, string> = {
   EDUCATION: 'Education',
   TRAVEL_AND_HOSPITALITY: 'Travel & Hospitality',
   OTHER: 'Other',
-}
+};
 
 /**
  * Formats an industry identifier into its normalized human-readable display label.
@@ -24,13 +24,13 @@ export const INDUSTRY_LABELS: Record<Industry, string> = {
  */
 export function FormatIndustryLabel(industry?: string | null): string {
   if (!industry) {
-    return ''
+    return '';
   }
 
-  const label = INDUSTRY_LABELS[industry as Industry]
+  const label = INDUSTRY_LABELS[industry as Industry];
   if (label) {
-    return label
+    return label;
   }
 
-  return industry
+  return industry;
 }

@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
 import { Toaster } from '@/components/ui/sonner';
+import { ProtectedRoute } from '@/features/authentication/components';
 import AuthLayout from '@/features/authentication/layouts/AuthLayout';
 import SignIn from '@/features/authentication/pages/SignIn';
 import SignUp from '@/features/authentication/pages/SignUp';
@@ -31,28 +32,30 @@ function App() {
           <Route path="login" element={<Navigate to="/signin" replace />} />
           <Route path="signup" element={<SignUp />} />
         </Route>
-        <Route path="dashboard" element={<DashboardLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="campaigns" element={<Campaigns />} />
-          <Route path="campaigns/create" element={<CampaignWizardLayout />}>
-            <Route index element={<Navigate to="step-1" replace />} />
-            <Route path="step-1" element={<Step1BasicInfo />} />
-            <Route path="step-2" element={<Step2Materials />} />
-            <Route path="step-3" element={<Step3Brief />} />
-            <Route path="step-4" element={<Step4Reward />} />
-            <Route path="step-5" element={<Step5Review />} />
-          </Route>
-          <Route path="campaigns/:id/create" element={<CampaignWizardLayout />}>
-            <Route index element={<Navigate to="step-1" replace />} />
-            <Route path="step-1" element={<Step1BasicInfo />} />
-            <Route path="step-2" element={<Step2Materials />} />
-            <Route path="step-3" element={<Step3Brief />} />
-            <Route path="step-4" element={<Step4Reward />} />
-            <Route path="step-5" element={<Step5Review />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="dashboard" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="campaigns" element={<Campaigns />} />
+            <Route path="campaigns/create" element={<CampaignWizardLayout />}>
+              <Route index element={<Navigate to="step-1" replace />} />
+              <Route path="step-1" element={<Step1BasicInfo />} />
+              <Route path="step-2" element={<Step2Materials />} />
+              <Route path="step-3" element={<Step3Brief />} />
+              <Route path="step-4" element={<Step4Reward />} />
+              <Route path="step-5" element={<Step5Review />} />
+            </Route>
+            <Route path="campaigns/:id/create" element={<CampaignWizardLayout />}>
+              <Route index element={<Navigate to="step-1" replace />} />
+              <Route path="step-1" element={<Step1BasicInfo />} />
+              <Route path="step-2" element={<Step2Materials />} />
+              <Route path="step-3" element={<Step3Brief />} />
+              <Route path="step-4" element={<Step4Reward />} />
+              <Route path="step-5" element={<Step5Review />} />
+            </Route>
+            <Route path="kampanye" element={<Navigate to="/dashboard/campaigns" replace />} />
           </Route>
           <Route path="kampanye" element={<Navigate to="/dashboard/campaigns" replace />} />
         </Route>
-        <Route path="kampanye" element={<Navigate to="/dashboard/campaigns" replace />} />
       </Routes>
     </BrowserRouter>
   );
