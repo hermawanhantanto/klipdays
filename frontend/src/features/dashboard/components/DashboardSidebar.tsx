@@ -5,34 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { GetNavItemsForRole } from '../config/nav-config';
-
-interface DashboardSidebarProps {
-  role?: string | null;
-  isCollapsed?: boolean;
-  onToggleCollapse: () => void;
-  isMobileOpen?: boolean;
-  onCloseMobile: () => void;
-}
+import { UseNavbar } from '../hooks';
+import type { DashboardSidebarProps, SidebarContentProps } from '../types';
 
 /**
- * Left sidebar navigation component running the full height of the viewport.
- * Features the Klipday brand logo and minimize toggle at the top of the sidebar,
- * and renders dynamic menu items with identical active/hover behaviors in expanded and collapsed states.
+ * Inner navigation and header layout for the dashboard sidebar.
+ * Adapts between desktop collapsed (icons only) and full expanded / mobile drawer states.
  *
- * @param props - Sidebar properties including role, collapsed state, and toggle handlers.
- * @returns The full-height left navigation sidebar.
+ * @param props - Component properties including role, collapsed state, and drawer mode.
+ * @returns The inner sidebar header and navigation menu structure.
  */
-export function DashboardSidebar({
-  role,
-  isCollapsed = false,
-  onToggleCollapse,
-  isMobileOpen = false,
-  onCloseMobile,
-}: DashboardSidebarProps) {
+function SidebarContent({ role, collapsed, isDrawer = false }: SidebarContentProps) {
   const location = useLocation();
+  const { ToggleSidebarCollapse, CloseMobileMenu } = UseNavbar();
   const navItems = GetNavItemsForRole(role);
 
-  const isLinkActive = (href: string) => {
+  const IsLinkActive = (href: string): boolean => {
     if (href === '/dashboard') {
       return location.pathname === '/dashboard';
     }
@@ -40,7 +28,7 @@ export function DashboardSidebar({
     return location.pathname.startsWith(href);
   };
 
-  const renderSidebarContent = (collapsed: boolean, isDrawer = false) => (
+  return (
     <TooltipProvider delayDuration={150}>
       <div className="flex h-full flex-col">
         {/* Top Header of the Sidebar with Brand Title and Minimize Button */}
@@ -49,7 +37,7 @@ export function DashboardSidebar({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onToggleCollapse}
+              onClick={ToggleSidebarCollapse}
               className="size-11 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Perluas sidebar"
               title="Perluas sidebar">
@@ -57,7 +45,7 @@ export function DashboardSidebar({
             </Button>
           ) : (
             <>
-              <Link to="/dashboard" onClick={onCloseMobile} className="flex items-center gap-2 transition-opacity hover:opacity-90">
+              <Link to="/dashboard" onClick={CloseMobileMenu} className="flex items-center gap-2 transition-opacity hover:opacity-90">
                 <span className="font-heading text-2xl font-bold tracking-tight sm:text-[1.65rem]">
                   Klip<span className="text-primary">day</span>
                 </span>
@@ -67,7 +55,7 @@ export function DashboardSidebar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onCloseMobile}
+                  onClick={CloseMobileMenu}
                   className="text-muted-foreground hover:bg-muted hover:text-foreground"
                   aria-label="Tutup menu">
                   <X className="h-5 w-5" />
@@ -76,7 +64,7 @@ export function DashboardSidebar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={onToggleCollapse}
+                  onClick={ToggleSidebarCollapse}
                   className="text-muted-foreground hover:bg-muted hover:text-foreground"
                   aria-label="Kecilkan sidebar"
                   title="Kecilkan sidebar">
@@ -92,7 +80,7 @@ export function DashboardSidebar({
           <nav className={cn('space-y-3', collapsed ? 'flex flex-col items-center' : '')}>
             {navItems.map((item) => {
               const IconComponent = item.icon;
-              const isActive = isLinkActive(item.href);
+              const isActive = IsLinkActive(item.href);
 
               if (collapsed) {
                 const collapsedItemClass = cn(
@@ -103,7 +91,7 @@ export function DashboardSidebar({
                 return (
                   <Tooltip key={item.href + item.title}>
                     <TooltipTrigger asChild>
-                      <Link to={item.href} onClick={onCloseMobile} className={collapsedItemClass} aria-label={item.title}>
+                      <Link to={item.href} onClick={CloseMobileMenu} className={collapsedItemClass} aria-label={item.title}>
                         <IconComponent className="h-5 w-5 shrink-0" />
                         <span className="sr-only">{item.title}</span>
                       </Link>
@@ -121,7 +109,7 @@ export function DashboardSidebar({
               );
 
               return (
-                <Link key={item.href + item.title} to={item.href} onClick={onCloseMobile} className={expandedItemClass}>
+                <Link key={item.href + item.title} to={item.href} onClick={CloseMobileMenu} className={expandedItemClass}>
                   <IconComponent className="h-5 w-5 shrink-0" />
                   <span className="truncate">{item.title}</span>
                   {item.badge ? (
@@ -137,6 +125,17 @@ export function DashboardSidebar({
       </div>
     </TooltipProvider>
   );
+}
+
+/**
+ * Left sidebar navigation component running the full height of the viewport.
+ * Consumes UseNavbar to manage desktop collapse and mobile drawer state without prop drilling.
+ *
+ * @param props - Sidebar properties including the user role.
+ * @returns The full-height left navigation sidebar.
+ */
+export function DashboardSidebar({ role }: DashboardSidebarProps) {
+  const { isSidebarCollapsed, isMobileOpen, CloseMobileMenu } = UseNavbar();
 
   return (
     <>
@@ -144,17 +143,21 @@ export function DashboardSidebar({
       <aside
         className={cn(
           'sticky top-0 hidden h-full shrink-0 flex-col border-r bg-sidebar transition-[width] duration-200 md:flex',
-          isCollapsed ? 'w-20' : 'w-64'
+          isSidebarCollapsed ? 'w-20' : 'w-64'
         )}>
-        {renderSidebarContent(isCollapsed, false)}
+        <SidebarContent role={role} collapsed={isSidebarCollapsed} isDrawer={false} />
       </aside>
 
       {/* Mobile Drawer Backdrop and Sidebar */}
       {isMobileOpen ? (
         <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-xs transition-opacity" onClick={onCloseMobile} aria-hidden="true" />
+          <div
+            className="fixed inset-0 bg-background/80 backdrop-blur-xs transition-opacity"
+            onClick={CloseMobileMenu}
+            aria-hidden="true"
+          />
           <aside className="relative flex h-full w-64 max-w-[80vw] flex-1 flex-col border-r bg-sidebar shadow-xl">
-            {renderSidebarContent(false, true)}
+            <SidebarContent role={role} collapsed={false} isDrawer={true} />
           </aside>
         </div>
       ) : null}

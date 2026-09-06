@@ -2,28 +2,25 @@ import { Menu } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { Button } from '@/components/ui/button';
+import { UseNavbar } from '../hooks';
+import type { DashboardTopBarProps } from '../types';
 import { UserNav } from './UserNav';
-
-interface DashboardTopBarProps {
-  userName?: string | null;
-  userEmail?: string | null;
-  userRole?: string | null;
-  avatarUrl?: string | null;
-  onToggleMobileSidebar: () => void;
-}
 
 /**
  * Top bar header component positioned to the right of the sidebar.
  * Displays mobile menu controls on mobile screens and the user profile menu on the right.
+ * Consumes UseNavbar to trigger mobile drawer visibility.
  *
- * @param props - Top bar properties including profile details and mobile menu callback.
+ * @param props - Top bar properties including profile details.
  * @returns The rendered dashboard header bar.
  */
-export function DashboardTopBar({ userName, userEmail, userRole, avatarUrl, onToggleMobileSidebar }: DashboardTopBarProps) {
+export function DashboardTopBar({ userName, userEmail, userRole, avatarUrl }: DashboardTopBarProps) {
+  const { ToggleMobileMenu } = UseNavbar();
+
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={onToggleMobileSidebar} aria-label="Buka menu navigasi">
+        <Button variant="ghost" size="icon" className="md:hidden" onClick={ToggleMobileMenu} aria-label="Buka menu navigasi">
           <Menu className="h-5 w-5" />
         </Button>
 

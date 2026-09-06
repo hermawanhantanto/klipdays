@@ -1,12 +1,7 @@
-import type { ComponentType } from 'react';
 import { Compass, FileCheck, LayoutDashboard, Megaphone, Settings, ShieldCheck, Video, Wallet } from 'lucide-react';
+import type { DashboardNavItem } from '../types';
 
-export interface DashboardNavItem {
-  title: string;
-  href: string;
-  icon: ComponentType<{ className?: string }>;
-  badge?: string;
-}
+export type { DashboardNavItem };
 
 const BRAND_NAV_ITEMS: DashboardNavItem[] = [
   {

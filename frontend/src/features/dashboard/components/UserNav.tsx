@@ -13,14 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UseLogoutMutation } from '@/features/authentication/hooks';
+import type { UserNavProps } from '../types';
 import { GetInitials } from '../utils/initials';
-
-interface UserNavProps {
-  name?: string | null;
-  email?: string | null;
-  role?: string | null;
-  avatarUrl?: string | null;
-}
 
 /**
  * User account navigation component rendering an avatar with fallback initials
@@ -35,7 +29,7 @@ export function UserNav({ name = 'Budi Santoso', email = 'budi@klipday.com', rol
   const displayEmail = email ?? 'budi@klipday.com';
   const initials = GetInitials(displayName);
 
-  const handleLogout = () => {
+  const HandleLogout = () => {
     logoutMutation.mutate();
   };
 
@@ -79,7 +73,7 @@ export function UserNav({ name = 'Budi Santoso', email = 'budi@klipday.com', rol
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+        <DropdownMenuItem variant="destructive" onClick={HandleLogout} className="cursor-pointer text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Keluar</span>
         </DropdownMenuItem>
