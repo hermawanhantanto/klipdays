@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router';
 import { UseCurrentAccountQuery } from '@/features/authentication/hooks';
-import { DashboardSidebar } from '@/features/dashboard/components/DashboardSidebar';
-import { DashboardTopBar } from '@/features/dashboard/components/DashboardTopBar';
+import { DashboardSidebar, DashboardTopBar } from '@/features/dashboard/components';
 import { NavbarProvider } from '@/features/dashboard/context';
 
 /**

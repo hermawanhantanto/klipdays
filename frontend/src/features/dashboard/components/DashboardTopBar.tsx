@@ -1,6 +1,5 @@
 import { Menu } from 'lucide-react';
 import { Link } from 'react-router';
-
 import { Button } from '@/components/ui/button';
 import { UseNavbar } from '../hooks';
 import type { DashboardTopBarProps } from '../types';
@@ -15,12 +14,18 @@ import { UserNav } from './UserNav';
  * @returns The rendered dashboard header bar.
  */
 export function DashboardTopBar({ userName, userEmail, userRole, avatarUrl }: DashboardTopBarProps) {
-  const { ToggleMobileMenu } = UseNavbar();
+  const { ToggleMobileMenu, isMobileOpen } = UseNavbar();
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 w-full items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={ToggleMobileMenu} aria-label="Buka menu navigasi">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={ToggleMobileMenu}
+          aria-label="Buka menu navigasi"
+          aria-expanded={isMobileOpen}>
           <Menu className="h-5 w-5" />
         </Button>
 

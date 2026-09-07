@@ -1,6 +1,5 @@
 import { LogOut, Settings, User } from 'lucide-react';
 import { Link } from 'react-router';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +13,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UseLogoutMutation } from '@/features/authentication/hooks';
 import type { UserNavProps } from '../types';
-import { GetInitials } from '../utils/initials';
+
+/**
+ * Extracts a 2-character initials string from a person or company name.
+ *
+ * @param name - The full name or company name to extract initials from.
+ * @returns An uppercase string with up to 2 characters representing the initials.
+ */
+function GetInitials(name?: string | null): string {
+  const cleanName = name?.trim();
+  if (!cleanName) {
+    return 'KD';
+  }
+
+  const words = cleanName.split(/\s+/);
+  if (words.length >= 2) {
+    const initials = `${words[0][0]}${words[1][0]}`.toUpperCase();
+    return initials;
+  }
+
+  const initials = cleanName.slice(0, 2).toUpperCase();
+  return initials;
+}
 
 /**
  * User account navigation component rendering an avatar with fallback initials
@@ -23,11 +43,11 @@ import { GetInitials } from '../utils/initials';
  * @param props - User profile properties including name, email, role, and avatarUrl.
  * @returns The user avatar trigger and dropdown menu.
  */
-export function UserNav({ name = 'Budi Santoso', email = 'budi@klipday.com', role = 'BRAND', avatarUrl }: UserNavProps) {
+export function UserNav({ name, email, role, avatarUrl }: UserNavProps) {
   const logoutMutation = UseLogoutMutation();
-  const displayName = name ?? 'Budi Santoso';
-  const displayEmail = email ?? 'budi@klipday.com';
-  const initials = GetInitials(displayName);
+  const displayName = name?.trim() || 'Pengguna';
+  const displayEmail = email?.trim() || '';
+  const initials = GetInitials(name);
 
   const HandleLogout = () => {
     logoutMutation.mutate();
@@ -46,7 +66,7 @@ export function UserNav({ name = 'Budi Santoso', email = 'budi@klipday.com', rol
           </Avatar>
           <div className="hidden flex-col items-start text-left md:flex">
             <span className="text-xs font-semibold leading-none">{displayName}</span>
-            <span className="mt-0.5 text-[10px] text-muted-foreground uppercase tracking-wider">{role}</span>
+            {role ? <span className="mt-0.5 text-[10px] text-muted-foreground uppercase tracking-wider">{role}</span> : null}
           </div>
         </Button>
       </DropdownMenuTrigger>
@@ -54,7 +74,7 @@ export function UserNav({ name = 'Budi Santoso', email = 'budi@klipday.com', rol
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{displayName}</p>
-            <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p>
+            {displayEmail ? <p className="text-xs leading-none text-muted-foreground">{displayEmail}</p> : null}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -73,7 +93,7 @@ export function UserNav({ name = 'Budi Santoso', email = 'budi@klipday.com', rol
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={HandleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+        <DropdownMenuItem variant="destructive" onClick={HandleLogout} className="cursor-pointer text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Keluar</span>
         </DropdownMenuItem>

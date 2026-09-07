@@ -48,6 +48,32 @@ export interface SidebarContentProps {
 }
 
 /**
+ * Props for the sidebar header component with brand title and toggle buttons.
+ */
+export interface SidebarHeaderProps {
+  collapsed: boolean;
+  isDrawer?: boolean;
+}
+
+/**
+ * Props for an individual sidebar navigation item.
+ */
+export interface SidebarNavItemProps {
+  item: DashboardNavItem;
+  collapsed: boolean;
+  isActive: boolean;
+  onItemClick: () => void;
+}
+
+/**
+ * Props for the sidebar navigation links list container.
+ */
+export interface SidebarNavListProps {
+  role?: string | null;
+  collapsed: boolean;
+}
+
+/**
  * Props for the DashboardTopBar header component.
  */
 export interface DashboardTopBarProps {

@@ -3,7 +3,7 @@ import type { DashboardNavItem } from '../types';
 
 export type { DashboardNavItem };
 
-const BRAND_NAV_ITEMS: DashboardNavItem[] = [
+export const BRAND_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
     href: '/dashboard',
@@ -31,7 +31,7 @@ const BRAND_NAV_ITEMS: DashboardNavItem[] = [
   },
 ];
 
-const CREATOR_NAV_ITEMS: DashboardNavItem[] = [
+export const CREATOR_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
     href: '/dashboard',
@@ -59,7 +59,7 @@ const CREATOR_NAV_ITEMS: DashboardNavItem[] = [
   },
 ];
 
-const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
+export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
     href: '/dashboard',
@@ -87,7 +87,7 @@ const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   },
 ];
 
-const DEFAULT_NAV_ITEMS: DashboardNavItem[] = [
+export const DEFAULT_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
     href: '/dashboard',
@@ -115,24 +115,3 @@ const DEFAULT_NAV_ITEMS: DashboardNavItem[] = [
   },
 ];
 
-/**
- * Returns the dynamic navigation menu items based on the user's role.
- *
- * @param role - The authenticated account role ('BRAND', 'CREATOR', 'ADMIN', or undefined).
- * @returns An array of DashboardNavItem configured for the specified role.
- */
-export function GetNavItemsForRole(role?: string | null): DashboardNavItem[] {
-  if (role === 'BRAND') {
-    return BRAND_NAV_ITEMS;
-  }
-
-  if (role === 'CREATOR') {
-    return CREATOR_NAV_ITEMS;
-  }
-
-  if (role === 'ADMIN') {
-    return ADMIN_NAV_ITEMS;
-  }
-
-  return DEFAULT_NAV_ITEMS;
-}
