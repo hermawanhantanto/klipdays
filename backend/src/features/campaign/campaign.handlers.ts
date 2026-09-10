@@ -1,16 +1,16 @@
+import { Readable } from 'node:stream';
+import { TransformStream } from 'node:stream/web';
 import type { NextFunction, Request, Response } from 'express';
 import type { Prisma } from '../../generated/prisma/client.js';
-
 import { prisma } from '../../utils/prisma.js';
 import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
-
 import { BuildCampaignEditFields } from './campaign.helper.js';
 import {
   ValidateCampaignDateLogic,
   ValidateCampaignEditBody,
   ValidateCampaignRewardLogic,
+  ValidateCampaignSubmitCompleteness,
 } from './campaign.validators.js';
-
 import { SendError, SendSuccess } from '../../utils/api-response.js';
 
 /**
@@ -249,16 +249,18 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
 
     const campaignId = req.params.id as string;
 
-    // Single query for existence + ownership via relation filter
+    // Single query for existence + ownership via relation filter with related materials and brief
     const ownedCampaign = await prisma.campaign.findFirst({
       where: {
         id: campaignId,
         status: Status.ACTIVE,
         brand: { accountId: account.sub, status: Status.ACTIVE },
       },
-      select: {
-        id: true,
-        campaignStatus: true,
+      include: {
+        materials: {
+          where: { status: Status.ACTIVE },
+        },
+        brief: true,
       },
     });
 
@@ -268,15 +270,17 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
     }
 
     // Fast fail if campaign is not in a submittable lifecycle status
-    if (
-      ownedCampaign.campaignStatus !== CampaignStatus.DRAFT &&
-      ownedCampaign.campaignStatus !== CampaignStatus.REVISION
-    ) {
+    if (ownedCampaign.campaignStatus !== CampaignStatus.DRAFT && ownedCampaign.campaignStatus !== CampaignStatus.REVISION) {
       SendError(res, 'Campaign cannot be submitted in its current status.', 400);
       return;
     }
 
-    // TODO: Implement cleaner campaign data completeness validation across wizard steps before submission.
+    // Validate mandatory data completeness across wizard steps before submission
+    const completenessError = ValidateCampaignSubmitCompleteness(ownedCampaign);
+    if (completenessError) {
+      SendError(res, completenessError, 400);
+      return;
+    }
 
     const updateData = { campaignStatus: CampaignStatus.IN_REVIEW };
     const updated = await prisma.campaign.update({
@@ -296,3 +300,127 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
   }
 }
 
+/**
+ * Handles `POST /campaigns/:id/thumbnail`: streams the raw binary image payload
+ * directly to Supabase Storage and returns the public asset URL without updating the database.
+ * The database record is persisted when the user submits the step form.
+ *
+ * @param req - Express request with the authenticated account from `RequireAuth`.
+ * @param res - Express response object.
+ * @param next - Express next function.
+ */
+export async function UploadCampaignThumbnail(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const account = req.account;
+
+    if (!account) {
+      SendError(res, 'Authentication required.', 401);
+      return;
+    }
+
+    if (account.role !== Role.BRAND) {
+      SendError(res, 'Only brands can upload campaign thumbnails.', 403);
+      return;
+    }
+
+    const campaignId = req.params.id as string;
+
+    const ownedCampaign = await prisma.campaign.findFirst({
+      where: {
+        id: campaignId,
+        status: Status.ACTIVE,
+        brand: { accountId: account.sub, status: Status.ACTIVE },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!ownedCampaign) {
+      SendError(res, 'Campaign not found.', 404);
+      return;
+    }
+
+    const allowedMimeTypes: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    };
+
+    const rawContentType = req.headers['content-type']?.split(';')[0].trim().toLowerCase() ?? '';
+    const fileExtension = allowedMimeTypes[rawContentType];
+
+    if (!fileExtension) {
+      SendError(res, 'Format file tidak didukung. Harap unggah gambar JPG, PNG, atau WEBP.', 400);
+      return;
+    }
+
+    const contentLength = Number(req.headers['content-length']);
+    const maxFileSize = 5 * 1024 * 1024; // 5 MB
+
+    if (!contentLength || Number.isNaN(contentLength)) {
+      SendError(res, 'Header Content-Length diperlukan.', 411);
+      return;
+    }
+
+    if (contentLength > maxFileSize) {
+      SendError(res, 'Ukuran file tidak boleh melebihi 5MB.', 400);
+      return;
+    }
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'campaign-thumbnails';
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      SendError(res, 'Layanan penyimpanan Supabase belum dikonfigurasi di server.', 500);
+      return;
+    }
+
+    let bytesReceived = 0;
+    const sizeLimiter = new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        bytesReceived += chunk.byteLength;
+        if (bytesReceived > maxFileSize) {
+          controller.error(new Error('FILE_SIZE_EXCEEDED'));
+        } else {
+          controller.enqueue(chunk);
+        }
+      },
+    });
+
+    const webStream = Readable.toWeb(req).pipeThrough(sizeLimiter);
+    const storagePath = `campaigns/${ownedCampaign.id}/thumbnail-${Date.now()}.${fileExtension}`;
+    const targetUrl = `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/${bucket}/${storagePath}`;
+
+    const supabaseResponse = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
+        'Content-Type': rawContentType,
+        'x-upsert': 'true',
+      },
+      body: webStream,
+      duplex: 'half',
+    });
+
+    if (!supabaseResponse.ok) {
+      const errorDetail = await supabaseResponse.text();
+      console.error('[Supabase Storage Upload Error]', supabaseResponse.status, errorDetail);
+      SendError(res, 'Gagal mengunggah thumbnail ke penyimpanan cloud.', 502);
+      return;
+    }
+
+    const publicUrl = `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/${bucket}/${storagePath}`;
+
+    SendSuccess(res, { url: publicUrl }, 'Thumbnail berhasil diunggah.');
+  } catch (error) {
+    if (error instanceof Error && error.message === 'FILE_SIZE_EXCEEDED') {
+      SendError(res, 'Ukuran file tidak boleh melebihi 5MB.', 400);
+      return;
+    }
+    next(error);
+  }
+}

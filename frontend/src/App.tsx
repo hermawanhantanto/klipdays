@@ -7,7 +7,7 @@ import SignIn from '@/features/authentication/pages/SignIn';
 import SignUp from '@/features/authentication/pages/SignUp';
 import Campaigns from '@/features/campaign/pages/Campaigns';
 import CampaignWizardLayout from '@/features/campaign/layouts/CampaignWizardLayout';
-import Step1BasicInfo from '@/features/campaign/pages/steps/Step1BasicInfo';
+import CampaignStep1 from '@/features/campaign/pages/steps/CampaignStep1';
 import Step2Materials from '@/features/campaign/pages/steps/Step2Materials';
 import Step3Brief from '@/features/campaign/pages/steps/Step3Brief';
 import Step4Reward from '@/features/campaign/pages/steps/Step4Reward';
@@ -38,7 +38,7 @@ function App() {
             <Route path="campaigns" element={<Campaigns />} />
             <Route path="campaigns/create" element={<CampaignWizardLayout />}>
               <Route index element={<Navigate to="step-1" replace />} />
-              <Route path="step-1" element={<Step1BasicInfo />} />
+              <Route path="step-1" element={<CampaignStep1 />} />
               <Route path="step-2" element={<Step2Materials />} />
               <Route path="step-3" element={<Step3Brief />} />
               <Route path="step-4" element={<Step4Reward />} />
@@ -46,7 +46,7 @@ function App() {
             </Route>
             <Route path="campaigns/:id/create" element={<CampaignWizardLayout />}>
               <Route index element={<Navigate to="step-1" replace />} />
-              <Route path="step-1" element={<Step1BasicInfo />} />
+              <Route path="step-1" element={<CampaignStep1 />} />
               <Route path="step-2" element={<Step2Materials />} />
               <Route path="step-3" element={<Step3Brief />} />
               <Route path="step-4" element={<Step4Reward />} />

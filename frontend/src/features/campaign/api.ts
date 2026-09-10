@@ -62,3 +62,60 @@ export async function EditCampaign(id: string, data: CampaignEditInput): Promise
     throw apiError;
   }
 }
+
+/**
+ * Sends a POST request to `/campaigns/:id/submit` to submit a campaign for admin review.
+ *
+ * @param id - The UUID of the campaign to submit.
+ * @returns The updated campaign details with IN_REVIEW status.
+ * @throws Error if id is missing or standardized API error if the request fails.
+ */
+export async function SubmitCampaign(id: string): Promise<Campaign> {
+  if (!id) {
+    throw new Error('Campaign ID is required.');
+  }
+
+  try {
+    const response = await apiClient.post<ApiResponse<Campaign>>(`/campaigns/${id}/submit`);
+    const result = response.data.data;
+    return result;
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal mengajukan kampanye untuk review. Silakan coba lagi.');
+    throw apiError;
+  }
+}
+
+/**
+ * Uploads a thumbnail image for a specific campaign using direct binary streaming.
+ *
+ * @param id - The UUID of the campaign.
+ * @param file - The image File to stream to the backend.
+ * @param onProgress - Optional callback notifying upload progress (0-100).
+ * @returns The public URL of the uploaded thumbnail in Supabase Storage.
+ * @throws Error if id is missing or standardized API error if upload fails.
+ */
+export async function UploadCampaignThumbnail(id: string, file: File, onProgress?: (percent: number) => void): Promise<string> {
+  if (!id) {
+    throw new Error('Campaign ID is required.');
+  }
+
+  try {
+    const response = await apiClient.post<ApiResponse<{ url: string }>>(`/campaigns/${id}/thumbnail`, file, {
+      headers: {
+        'Content-Type': file.type,
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress?.(percent);
+        }
+      },
+    });
+
+    const publicUrl = response.data.data.url;
+    return publicUrl;
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal mengunggah gambar thumbnail. Silakan coba lagi.');
+    throw apiError;
+  }
+}

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { EditCampaign, GetCampaignById, InitializeCampaign, SubmitCampaign } from './campaign.handlers.js';
+import { EditCampaign, GetCampaignById, InitializeCampaign, SubmitCampaign, UploadCampaignThumbnail } from './campaign.handlers.js';
 import { RequireAuth } from '../../middleware/auth.middleware.js';
 
 export const campaignRouter = Router();
@@ -12,4 +12,4 @@ campaignRouter.post('/', InitializeCampaign);
 campaignRouter.get('/:id', GetCampaignById);
 campaignRouter.patch('/:id/edit', EditCampaign);
 campaignRouter.post('/:id/submit', SubmitCampaign);
-
+campaignRouter.post('/:id/thumbnail', UploadCampaignThumbnail);

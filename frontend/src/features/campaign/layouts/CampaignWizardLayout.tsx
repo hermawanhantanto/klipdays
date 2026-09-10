@@ -1,47 +1,69 @@
-import { ArrowLeft } from 'lucide-react';
-import { Link, Outlet } from 'react-router';
-
-import { Button } from '@/components/ui/button';
-import { CampaignWizardStepper } from '../components/CampaignWizardStepper';
+import { useEffect } from 'react';
+import { Navigate, Outlet, useLocation, useParams } from 'react-router';
+import { toast } from 'sonner';
+import { CampaignWizardError, CampaignWizardHeader, CampaignWizardSkeleton, CampaignWizardStepper } from '../components';
+import { CAMPAIGN_WIZARD_STEPS, GetWizardStepPath } from '../config/wizard-steps';
+import { UseCampaignQuery } from '../hooks';
+import { GetHighestAccessibleStepNumber } from '../utils';
 
 /**
  * Layout orchestrator for the campaign creation workflow wizard.
- * Houses the top navigation link back to the campaigns list,
- * the progress stepper showing current step completion,
- * and the dynamic nested route outlet for each individual step.
+ * Houses the wizard header with back navigation,
+ * the progress stepper showing current step completion and locks,
+ * route guards ensuring users cannot skip incomplete mandatory steps,
+ * centralized error recovery, and the dynamic nested route outlet for each step.
  *
  * @returns The rendered campaign wizard layout shell.
  */
 function CampaignWizardLayout() {
+  const { id } = useParams<{ id?: string }>();
+  const location = useLocation();
+
+  const { data: campaign, isLoading, isError, error, refetch } = UseCampaignQuery(id);
+
+  const matchedStep = CAMPAIGN_WIZARD_STEPS.find((step) => location.pathname.includes(step.slug));
+  const currentStepNumber = matchedStep?.stepNumber ?? 1;
+
+  const highestAllowedStep = GetHighestAccessibleStepNumber(campaign);
+  const isForbiddenStep = currentStepNumber > highestAllowedStep;
+
+  useEffect(() => {
+    if (isForbiddenStep) {
+      toast.warning('Harap lengkapi langkah sebelumnya terlebih dahulu.', {
+        id: 'forbidden-step-toast',
+      });
+    }
+  }, [isForbiddenStep]);
+
+  if (!id) {
+    return <Navigate to="/dashboard/campaigns" replace />;
+  }
+
+  if (isLoading) {
+    return <CampaignWizardSkeleton />;
+  }
+
+  if (isError) {
+    return <CampaignWizardError message={error?.message} onRetry={() => refetch()} />;
+  }
+
+  if (isForbiddenStep) {
+    const fallbackStep = CAMPAIGN_WIZARD_STEPS[highestAllowedStep - 1] ?? CAMPAIGN_WIZARD_STEPS[0];
+    const fallbackPath = GetWizardStepPath(fallbackStep.slug, id);
+    return <Navigate to={fallbackPath} replace />;
+  }
+
   return (
     <div className="w-full max-w-5xl space-y-6 pb-12">
-      {/* Top Navigation & Header */}
       <div className="flex flex-col gap-4">
-        <div>
-          <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground">
-            <Link to="/dashboard/campaigns" className="flex items-center gap-1.5">
-              <ArrowLeft className="h-4 w-4" />
-              <span>Kembali ke Kampanye</span>
-            </Link>
-          </Button>
-        </div>
-
-        <div className="space-y-1">
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Buat Kampanye Baru</h1>
-          <p className="text-sm text-muted-foreground">
-            Lengkapi formulir di bawah ini dalam beberapa langkah mudah untuk memulai kampanye promosi Anda.
-          </p>
-        </div>
-
-        {/* Dynamic Stepper Bar */}
+        <CampaignWizardHeader />
         <div className="pt-2">
-          <CampaignWizardStepper />
+          <CampaignWizardStepper campaign={campaign} />
         </div>
       </div>
 
-      {/* Dynamic Active Step Content Outlet */}
       <div>
-        <Outlet />
+        <Outlet context={{ campaign }} />
       </div>
     </div>
   );

@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, ExternalLink, Loader2 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-
+import { useNavigate, useParams } from 'react-router';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-
+import { CampaignThumbnailUpload } from './CampaignThumbnailUpload';
+import { UseCampaignWizardContext, UseEditCampaignMutation } from '../hooks';
 import {
   basicInfoSchema,
   type BasicInfoFormValues,
@@ -22,59 +24,69 @@ import {
   CAMPAIGN_TYPE_OPTIONS,
   type CampaignTypeOption,
 } from '../schemas';
-import type { BasicInfoFormProps } from '../types';
 
 /**
  * Basic info form component for Step 1 of the campaign creation wizard.
  * Captures title, description, category, type, platform, thumbnail URL, and main media URL.
+ * Connects directly to the campaign edit mutation and manages its own submission lifecycle.
  *
- * @param props - Component properties including initialData, onSubmit, isPending, and isLoading.
  * @returns The rendered basic info form element.
  */
-export function BasicInfoForm({
-  initialData,
-  onSubmit,
-  isPending: propIsPending,
-  isLoading: propIsLoading,
-  isSubmitting: propIsSubmitting,
-}: BasicInfoFormProps) {
+export function CampaignFormStep1() {
+  const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  const { campaign } = UseCampaignWizardContext();
+  const editMutation = UseEditCampaignMutation(id);
+
   const form = useForm<BasicInfoFormValues>({
     resolver: zodResolver(basicInfoSchema),
     defaultValues: {
-      title: initialData?.title ?? '',
-      description: initialData?.description ?? '',
-      campaignType: (initialData?.campaignType as CampaignTypeOption) ?? 'PRODUCT',
-      campaignCategory: (initialData?.campaignCategory as CampaignCategoryOption) ?? 'BEAUTY_SKINCARE',
-      thumbnailUrl: initialData?.thumbnailUrl ?? '',
-      platform: 'TIKTOK',
-      mainMediaUrl: initialData?.mainMediaUrl ?? '',
+      title: campaign?.title ?? '',
+      description: campaign?.description ?? '',
+      campaignType: (campaign?.campaignType as CampaignTypeOption) ?? 'PRODUCT',
+      campaignCategory: (campaign?.campaignCategory as CampaignCategoryOption) ?? 'BEAUTY_SKINCARE',
+      thumbnailUrl: campaign?.thumbnailUrl ?? '',
+      platform: (campaign?.platform as CampaignPlatformOption) ?? 'TIKTOK',
+      mainMediaUrl: campaign?.mainMediaUrl ?? '',
     },
   });
 
   useEffect(() => {
-    if (initialData) {
+    if (campaign) {
       form.reset({
-        title: initialData.title ?? '',
-        description: initialData.description ?? '',
-        campaignType: (initialData.campaignType as CampaignTypeOption) ?? 'PRODUCT',
-        campaignCategory: (initialData.campaignCategory as CampaignCategoryOption) ?? 'BEAUTY_SKINCARE',
-        thumbnailUrl: initialData.thumbnailUrl ?? '',
-        platform: 'TIKTOK',
-        mainMediaUrl: initialData.mainMediaUrl ?? '',
+        title: campaign.title ?? '',
+        description: campaign.description ?? '',
+        campaignType: (campaign.campaignType as CampaignTypeOption) ?? 'PRODUCT',
+        campaignCategory: (campaign.campaignCategory as CampaignCategoryOption) ?? 'BEAUTY_SKINCARE',
+        thumbnailUrl: campaign.thumbnailUrl ?? '',
+        platform: (campaign.platform as CampaignPlatformOption) ?? 'TIKTOK',
+        mainMediaUrl: campaign.mainMediaUrl ?? '',
       });
     }
-  }, [initialData, form]);
+  }, [campaign, form]);
 
   /**
-   * Handles valid form submission.
+   * Handles form submission and dispatches to the edit campaign mutation.
    *
    * @param values - Validated form field values.
    */
   function HandleFormSubmit(values: BasicInfoFormValues) {
-    onSubmit(values);
+    if (!id) {
+      toast.error('ID Kampanye tidak valid. Mengarahkan ke daftar kampanye...', {
+        id: 'missing-campaign-id',
+      });
+      navigate('/dashboard/campaigns');
+      return;
+    }
+
+    if (editMutation.isPending) {
+      return;
+    }
+
+    editMutation.mutate(values);
   }
 
-  const isPending = Boolean(propIsPending ?? propIsLoading ?? propIsSubmitting ?? form.formState.isSubmitting);
+  const isPending = editMutation.isPending || form.formState.isSubmitting;
 
   return (
     <form noValidate onSubmit={form.handleSubmit(HandleFormSubmit)} className="space-y-6">
@@ -85,15 +97,23 @@ export function BasicInfoForm({
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Judul Kampanye</FieldLabel>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor={field.name}>
+                  Judul Kampanye <span className="text-destructive font-medium">*</span>
+                </FieldLabel>
+                <span className="text-[11px] text-muted-foreground/70 tabular-nums">{(field.value ?? '').length}/100</span>
+              </div>
               <Input
                 {...field}
                 id={field.name}
-                placeholder="Contoh: Peluncuran Serum Wajah Glowing 30 Hari"
+                maxLength={100}
+                placeholder="mis. Peluncuran Serum Skincare Glowing 30 Hari"
                 aria-invalid={fieldState.invalid}
                 disabled={isPending}
               />
-              <FieldDescription>Berikan judul yang jelas dan menarik untuk memikat para kreator video (clippers).</FieldDescription>
+              <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                Gunakan judul yang ringkas, jelas, dan menggambarkan penawaran utama produk Anda.
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
@@ -105,16 +125,24 @@ export function BasicInfoForm({
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Deskripsi Kampanye</FieldLabel>
+              <div className="flex items-center justify-between">
+                <FieldLabel htmlFor={field.name}>
+                  Deskripsi Kampanye <span className="text-destructive font-medium">*</span>
+                </FieldLabel>
+                <span className="text-[11px] text-muted-foreground/70 tabular-nums">{(field.value ?? '').length}/2000</span>
+              </div>
               <Textarea
                 {...field}
                 id={field.name}
                 rows={4}
-                placeholder="Jelaskan mengenai produk atau layanan Anda, tujuan kampanye, serta nilai utama yang perlu ditonjolkan..."
+                maxLength={2000}
+                placeholder="mis. Kampanye peluncuran varian terbaru dengan fokus edukasi keunggulan kandungan Niacinamide dan review jujur pemakaian 7 hari..."
                 aria-invalid={fieldState.invalid}
                 disabled={isPending}
               />
-              <FieldDescription>Ringkasan tentang produk/layanan dan apa yang ingin dicapai melalui kampanye ini.</FieldDescription>
+              <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                Jelaskan latar belakang produk, nilai keunggulan (USP), dan pesan utama yang diharapkan disampaikan kreator.
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
@@ -131,7 +159,9 @@ export function BasicInfoForm({
 
               return (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Tipe Kampanye</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>
+                    Tipe Kampanye <span className="text-destructive font-medium">*</span>
+                  </FieldLabel>
                   <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
                     <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className="w-full">
                       <SelectValue placeholder="Pilih tipe kampanye">{selectedTypeLabel}</SelectValue>
@@ -147,7 +177,9 @@ export function BasicInfoForm({
                       })}
                     </SelectContent>
                   </Select>
-                  <FieldDescription>Jenis produk atau jasa yang dipromosikan.</FieldDescription>
+                  <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                    Jenis penawaran yang dipromosikan (produk fisik, jasa, atau konten).
+                  </FieldDescription>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               );
@@ -163,7 +195,9 @@ export function BasicInfoForm({
 
               return (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Kategori Produk</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>
+                    Kategori Produk <span className="text-destructive font-medium">*</span>
+                  </FieldLabel>
                   <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
                     <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className="w-full">
                       <SelectValue placeholder="Pilih kategori produk">{selectedCategoryLabel}</SelectValue>
@@ -179,7 +213,9 @@ export function BasicInfoForm({
                       })}
                     </SelectContent>
                   </Select>
-                  <FieldDescription>Kategori yang sesuai untuk pengelompokan kampanye.</FieldDescription>
+                  <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                    Industri utama untuk pengelompokan kampanye.
+                  </FieldDescription>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               );
@@ -196,7 +232,9 @@ export function BasicInfoForm({
 
             return (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Platform Promosi</FieldLabel>
+                <FieldLabel htmlFor={field.name}>
+                  Platform Promosi <span className="text-destructive font-medium">*</span>
+                </FieldLabel>
                 <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
                   <SelectTrigger id={field.name} aria-invalid={fieldState.invalid} className="w-full">
                     <SelectValue placeholder="Pilih platform">{selectedPlatformLabel}</SelectValue>
@@ -212,7 +250,9 @@ export function BasicInfoForm({
                     })}
                   </SelectContent>
                 </Select>
-                <FieldDescription>Pilih platform yang sesuai untuk kampanye.</FieldDescription>
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Platform media sosial tempat kreator mempublikasikan konten video mereka.
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             );
@@ -223,41 +263,61 @@ export function BasicInfoForm({
         <Controller
           name="mainMediaUrl"
           control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>Tautan Media Utama</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="url"
-                placeholder="https://toko.com/produk-serum atau https://tiktok.com/@brand/video/..."
-                aria-invalid={fieldState.invalid}
-                disabled={isPending}
-              />
-              <FieldDescription>
-                Tautan ke halaman produk resmi, etalase toko online, atau video referensi utama produk Anda.
-              </FieldDescription>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
+          render={({ field, fieldState }) => {
+            const isValidHttpUrl = Boolean(field.value && (field.value.startsWith('http://') || field.value.startsWith('https://')));
+
+            return (
+              <Field data-invalid={fieldState.invalid}>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor={field.name}>
+                    Tautan Media Utama <span className="text-destructive font-medium">*</span>
+                  </FieldLabel>
+                  {isValidHttpUrl && (
+                    <a
+                      href={field.value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-medium">
+                      <span>Uji Tautan</span>
+                      <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                </div>
+                <Input
+                  {...field}
+                  id={field.name}
+                  type="url"
+                  placeholder="mis. https://vt.tiktok.com/ZS... atau https://shopee.co.id/brand/produk"
+                  aria-invalid={fieldState.invalid}
+                  disabled={isPending}
+                />
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Tautan halaman produk toko resmi, etalase e-commerce, atau video referensi produk Anda.
+                </FieldDescription>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            );
+          }}
         />
 
-        {/* Thumbnail URL with Informational Note */}
+        {/* Thumbnail Image Upload */}
         <Controller
           name="thumbnailUrl"
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}>URL Gambar Thumbnail</FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type="url"
-                placeholder="https://images.unsplash.com/... atau https://cdn.brand.com/banner.jpg"
-                aria-invalid={fieldState.invalid}
+              <FieldLabel htmlFor={field.name}>
+                Gambar Thumbnail Kampanye <span className="text-destructive font-medium">*</span>
+              </FieldLabel>
+              <CampaignThumbnailUpload
+                value={field.value}
+                onChange={(url) => field.onChange(url)}
+                campaignId={id ?? ''}
                 disabled={isPending}
               />
-
+              <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                Gambar sampul (banner) yang akan ditampilkan pada daftar kampanye untuk menarik perhatian kreator.
+              </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
@@ -265,7 +325,7 @@ export function BasicInfoForm({
       </FieldGroup>
 
       {/* Form Submission Action */}
-      <div className="flex justify-end pt-4 border-t">
+      <div className="flex justify-end pt-4 border-t border-border">
         <Button type="submit" disabled={isPending} className="flex items-center justify-center gap-2 min-w-[180px]">
           {isPending ? (
             <Loader2 className="size-4 animate-spin" />

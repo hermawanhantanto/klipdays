@@ -1,6 +1,6 @@
 import type { Control } from 'react-hook-form';
 
-import type { BasicInfoFormValues, MaterialsFormValues } from './schemas';
+import type { BriefFormValues, MaterialsFormValues, RewardFormValues } from './schemas';
 
 export interface ApiResponse<T> {
   status: string;
@@ -104,15 +104,6 @@ export interface CampaignEditInput {
   startDate?: string | Date;
   endDate?: string | Date;
 }
-
-export interface BasicInfoFormProps {
-  initialData?: Partial<Campaign> | null;
-  onSubmit: (values: BasicInfoFormValues) => void;
-  isPending?: boolean;
-  isLoading?: boolean;
-  isSubmitting?: boolean;
-}
-
 export interface MaterialsFormProps {
   initialData?: Partial<Campaign> | null;
   onSubmit: (values: MaterialsFormValues) => void;
@@ -129,3 +120,71 @@ export interface MaterialFieldGroupProps {
   onRemove: (index: number) => void;
   disabled?: boolean;
 }
+
+export interface BriefFormProps {
+  initialData?: Partial<Campaign> | null;
+  onSubmit: (values: BriefFormValues) => void;
+  isPending?: boolean;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
+  onBack?: () => void;
+}
+
+export interface BriefDynamicListFieldProps {
+  label: string;
+  description?: string;
+  placeholder?: string;
+  items: string[];
+  onAddItem: (item: string) => void;
+  onRemoveItem: (index: number) => void;
+  disabled?: boolean;
+  prefix?: string;
+  variant?: 'pills' | 'rows';
+  tone?: 'positive' | 'negative' | 'neutral';
+  error?: string;
+}
+
+export interface CampaignProjections {
+  totalEstimatedViews: number;
+  maxEarningsPerVideo: number;
+  minFundedVideos: number;
+  durationDays: number;
+}
+
+export interface RewardFormProps {
+  initialData?: Partial<Campaign> | null;
+  onSubmit: (values: RewardFormValues) => void;
+  isPending?: boolean;
+  isLoading?: boolean;
+  isSubmitting?: boolean;
+  onBack?: () => void;
+}
+
+export interface ReviewSummaryProps {
+  campaign: Campaign;
+  onSubmit: () => void;
+  onBack: () => void;
+  isPending?: boolean;
+}
+
+export interface CampaignWizardStepperProps {
+  className?: string;
+  campaign?: Campaign | null;
+}
+
+export interface CampaignWizardContext {
+  campaign?: Campaign;
+}
+
+export interface CampaignWizardErrorProps {
+  message?: string;
+  onRetry?: () => void;
+}
+
+export interface CampaignThumbnailUploadProps {
+  value?: string;
+  onChange: (url: string) => void;
+  campaignId: string;
+  disabled?: boolean;
+}
+
