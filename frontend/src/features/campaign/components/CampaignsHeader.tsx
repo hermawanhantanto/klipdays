@@ -1,5 +1,4 @@
 import { Plus } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
 import { CreateCampaignDialog } from './CreateCampaignDialog';
 

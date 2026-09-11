@@ -13,3 +13,12 @@ export type { BasicInfoFormValues, CampaignCategoryOption, CampaignPlatformOptio
 export { materialItemSchema, materialsFormSchema, MATERIAL_TYPE_LABELS, MATERIAL_TYPE_OPTIONS } from './materials-schema';
 
 export type { MaterialItemFormValues, MaterialsFormValues, MaterialTypeOption } from './materials-schema';
+
+export { briefSchema } from './brief-schema';
+
+export type { BriefFormValues } from './brief-schema';
+
+export { rewardSchema } from './reward-schema';
+
+export type { RewardFormValues } from './reward-schema';
+

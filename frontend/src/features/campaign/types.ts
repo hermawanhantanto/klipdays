@@ -104,14 +104,6 @@ export interface CampaignEditInput {
   startDate?: string | Date;
   endDate?: string | Date;
 }
-export interface MaterialsFormProps {
-  initialData?: Partial<Campaign> | null;
-  onSubmit: (values: MaterialsFormValues) => void;
-  isPending?: boolean;
-  isLoading?: boolean;
-  isSubmitting?: boolean;
-  onBack?: () => void;
-}
 
 export interface MaterialFieldGroupProps {
   index: number;
@@ -188,3 +180,10 @@ export interface CampaignThumbnailUploadProps {
   disabled?: boolean;
 }
 
+export interface WizardFormActionsProps {
+  onBack?: () => void;
+  isPending?: boolean;
+  submitText?: string;
+  backText?: string;
+  className?: string;
+}

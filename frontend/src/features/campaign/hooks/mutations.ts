@@ -2,7 +2,7 @@ import { useMutation, useQueryClient, type UseMutationOptions, type UseMutationR
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
-import { GetCampaignById, EditCampaign, InitializeCampaign } from '../api';
+import { GetCampaignById, EditCampaign, InitializeCampaign, SubmitCampaign } from '../api';
 import type { Campaign, CampaignEditInput, InitializeCampaignResponse } from '../types';
 import { ResolveCampaignWizardStepPath } from '../utils';
 
@@ -110,3 +110,51 @@ export function UseEditCampaignMutation(
 
   return mutation;
 }
+
+export type SubmitCampaignMutationOptions = Omit<UseMutationOptions<Campaign, Error, void>, 'mutationFn'>;
+
+/**
+ * Mutation hook for submitting a campaign for admin review.
+ * Calls `POST /campaigns/:id/submit`, updates the query cache, shows user feedback,
+ * and navigates to the campaigns list.
+ *
+ * @param campaignId - The UUID of the campaign being submitted.
+ * @param options - Optional mutation options to extend default behavior.
+ * @returns TanStack Query mutation object for submitting a campaign.
+ */
+export function UseSubmitCampaignMutation(
+  campaignId?: string,
+  options?: SubmitCampaignMutationOptions
+): UseMutationResult<Campaign, Error, void> {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { onSuccess, onError, ...restOptions } = options ?? {};
+
+  const mutation = useMutation({
+    ...restOptions,
+    mutationFn: () => {
+      if (!campaignId) {
+        throw new Error('Campaign ID is required.');
+      }
+      return SubmitCampaign(campaignId);
+    },
+    onSuccess: (submittedCampaign, variables, onMutateResult, context) => {
+      if (campaignId) {
+        queryClient.setQueryData(['campaign', campaignId], submittedCampaign);
+      }
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+
+      toast.success('Kampanye berhasil diajukan untuk proses review.');
+      navigate('/dashboard/campaigns');
+
+      onSuccess?.(submittedCampaign, variables, onMutateResult, context);
+    },
+    onError: (error, variables, onMutateResult, context) => {
+      toast.error(error.message);
+      onError?.(error, variables, onMutateResult, context);
+    },
+  });
+
+  return mutation;
+}
+

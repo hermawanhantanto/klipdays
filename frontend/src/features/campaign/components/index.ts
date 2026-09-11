@@ -1,6 +1,7 @@
 export { BriefDynamicListField } from './BriefDynamicListField';
 export { BriefForm } from './BriefForm';
 export { CampaignFormStep1 } from './CampaignFormStep1';
+export { CampaignFormStep2 } from './CampaignFormStep2';
 export { CampaignThumbnailUpload } from './CampaignThumbnailUpload';
 export { CampaignWizardError } from './CampaignWizardError';
 export { CampaignWizardHeader } from './CampaignWizardHeader';
@@ -9,6 +10,6 @@ export { CampaignWizardStepper } from './CampaignWizardStepper';
 export { CampaignsHeader } from './CampaignsHeader';
 export { CreateCampaignDialog } from './CreateCampaignDialog';
 export { MaterialFieldGroup } from './MaterialFieldGroup';
-export { MaterialsForm } from './MaterialsForm';
 export { ReviewSummary } from './ReviewSummary';
 export { RewardForm } from './RewardForm';
+export { WizardFormActions } from './WizardFormActions';

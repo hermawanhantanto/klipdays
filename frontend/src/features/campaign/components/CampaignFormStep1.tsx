@@ -1,15 +1,15 @@
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, ExternalLink, Loader2 } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CampaignThumbnailUpload } from './CampaignThumbnailUpload';
+import { WizardFormActions } from './WizardFormActions';
 import { UseCampaignWizardContext, UseEditCampaignMutation } from '../hooks';
 import {
   basicInfoSchema,
@@ -24,6 +24,7 @@ import {
   CAMPAIGN_TYPE_OPTIONS,
   type CampaignTypeOption,
 } from '../schemas';
+import { GetInitialBasicInfo } from '../utils';
 
 /**
  * Basic info form component for Step 1 of the campaign creation wizard.
@@ -38,32 +39,16 @@ export function CampaignFormStep1() {
   const { campaign } = UseCampaignWizardContext();
   const editMutation = UseEditCampaignMutation(id);
 
+  const initialValues = useMemo(() => GetInitialBasicInfo(campaign), [campaign]);
+
   const form = useForm<BasicInfoFormValues>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: {
-      title: campaign?.title ?? '',
-      description: campaign?.description ?? '',
-      campaignType: (campaign?.campaignType as CampaignTypeOption) ?? 'PRODUCT',
-      campaignCategory: (campaign?.campaignCategory as CampaignCategoryOption) ?? 'BEAUTY_SKINCARE',
-      thumbnailUrl: campaign?.thumbnailUrl ?? '',
-      platform: (campaign?.platform as CampaignPlatformOption) ?? 'TIKTOK',
-      mainMediaUrl: campaign?.mainMediaUrl ?? '',
+    defaultValues: initialValues,
+    values: initialValues,
+    resetOptions: {
+      keepDirtyValues: true,
     },
   });
-
-  useEffect(() => {
-    if (campaign) {
-      form.reset({
-        title: campaign.title ?? '',
-        description: campaign.description ?? '',
-        campaignType: (campaign.campaignType as CampaignTypeOption) ?? 'PRODUCT',
-        campaignCategory: (campaign.campaignCategory as CampaignCategoryOption) ?? 'BEAUTY_SKINCARE',
-        thumbnailUrl: campaign.thumbnailUrl ?? '',
-        platform: (campaign.platform as CampaignPlatformOption) ?? 'TIKTOK',
-        mainMediaUrl: campaign.mainMediaUrl ?? '',
-      });
-    }
-  }, [campaign, form]);
 
   /**
    * Handles form submission and dispatches to the edit campaign mutation.
@@ -325,18 +310,7 @@ export function CampaignFormStep1() {
       </FieldGroup>
 
       {/* Form Submission Action */}
-      <div className="flex justify-end pt-4 border-t border-border">
-        <Button type="submit" disabled={isPending} className="flex items-center justify-center gap-2 min-w-[180px]">
-          {isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <>
-              <span>Simpan & Lanjutkan</span>
-              <ArrowRight className="size-4" />
-            </>
-          )}
-        </Button>
-      </div>
+      <WizardFormActions isPending={isPending} />
     </form>
   );
 }

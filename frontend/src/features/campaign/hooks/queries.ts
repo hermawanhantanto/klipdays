@@ -1,5 +1,4 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-
 import { GetCampaignById } from '../api';
 import type { Campaign } from '../types';
 
