@@ -33,15 +33,15 @@ export function CampaignDanaAmanNotice({
   const resolvedDescription = description ?? fallback.description;
 
   const containerClasses = cn(
-    'flex items-start gap-3 rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 sm:p-4.5 text-sm',
+    'flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm',
     className
   );
 
   return (
     <div className={containerClasses}>
-      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
-      <div className="space-y-1">
-        <p className="font-medium text-emerald-400">{resolvedTitle}</p>
+      <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+      <div className="space-y-1 min-w-0 flex-1">
+        <p className="text-xs sm:text-sm font-medium text-foreground tracking-tight">{resolvedTitle}</p>
         <p className="text-xs leading-relaxed text-muted-foreground">{resolvedDescription}</p>
       </div>
     </div>

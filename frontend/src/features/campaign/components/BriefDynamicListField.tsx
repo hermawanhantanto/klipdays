@@ -117,19 +117,18 @@ function DynamicListRows({ items, onRemove, tone = 'neutral', disabled = false }
   const isNegative = tone === 'negative';
 
   return (
-    <ul className="space-y-2 pt-1">
+    <ul className="space-y-1.5 pt-1">
       {items.map((item, index) => (
         <li
           key={`${item}-${index}`}
           className={cn(
-            'flex items-center justify-between gap-3 rounded-lg border p-3 text-sm transition-colors',
-            isPositive && 'border-emerald-500/20 bg-emerald-500/5',
-            isNegative && 'border-rose-500/20 bg-rose-500/5',
-            !isPositive && !isNegative && 'bg-card'
+            'flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background px-3 py-2 text-xs sm:text-sm transition-colors',
+            isPositive && 'border-emerald-500/30',
+            isNegative && 'border-rose-500/30'
           )}>
           <div className="flex items-start gap-2.5 min-w-0">
-            {isPositive && <CheckCircle2 className="size-4 text-emerald-500 shrink-0 mt-0.5" />}
-            {isNegative && <XCircle className="size-4 text-rose-500 shrink-0 mt-0.5" />}
+            {isPositive && <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />}
+            {isNegative && <XCircle className="size-3.5 text-rose-500 shrink-0 mt-0.5" />}
             <span className="text-foreground leading-relaxed wrap-break-word">{item}</span>
           </div>
 
@@ -137,11 +136,11 @@ function DynamicListRows({ items, onRemove, tone = 'neutral', disabled = false }
             <Button
               type="button"
               variant="ghost"
-              size="sm"
+              size="xs"
               onClick={() => onRemove(index)}
-              className="h-7 w-7 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive shrink-0"
+              className="h-6 w-6 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive shrink-0"
               aria-label={`Hapus ${item}`}>
-              <Trash2 className="size-3.5" />
+              <Trash2 className="size-3" />
             </Button>
           )}
         </li>

@@ -10,22 +10,22 @@ import type { CampaignWizardHelperBoxProps } from '../types';
  */
 export function CampaignWizardHelperBox({ title, description, tip, icon: Icon = Lightbulb, className = '' }: CampaignWizardHelperBoxProps) {
   const containerClass =
-    `flex items-start gap-3.5 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 sm:p-5 text-sm ${className}`.trim();
+    `flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-4 text-sm ${className}`.trim();
 
   return (
     <div className={containerClass}>
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/15 text-orange-500 dark:text-orange-400">
-        <Icon className="size-4" />
+      <div className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background text-muted-foreground mt-0.5">
+        <Icon className="size-3.5" />
       </div>
 
-      <div className="space-y-1.5 flex-1 min-w-0">
-        <p className="font-semibold text-foreground text-sm">{title}</p>
+      <div className="space-y-1 flex-1 min-w-0">
+        <p className="font-medium text-foreground text-xs sm:text-sm tracking-tight">{title}</p>
 
-        {description && <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{description}</p>}
+        {description && <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>}
 
         {tip && (
           <p className="text-xs text-muted-foreground/90 leading-relaxed pt-0.5">
-            <strong className="text-orange-600 dark:text-orange-400 font-semibold">Tips: </strong>
+            <span className="font-medium text-foreground">Tips: </span>
             {tip}
           </p>
         )}

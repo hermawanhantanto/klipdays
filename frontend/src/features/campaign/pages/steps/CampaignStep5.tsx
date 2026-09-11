@@ -9,11 +9,11 @@ import { CampaignFormStep5 } from '../../components';
  */
 function CampaignStep5() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Langkah 5: Review & Submit</CardTitle>
-        <CardDescription>
-          Tinjau kembali seluruh rincian kampanye Anda sebelum mengajukannya untuk proses review admin.
+    <Card className="border-border/60 shadow-xs">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold tracking-tight">Review & Pengajuan Kampanye</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+          Tinjau kembali seluruh rincian kampanye Anda sebelum mengajukannya untuk proses kurasi admin.
         </CardDescription>
       </CardHeader>
 

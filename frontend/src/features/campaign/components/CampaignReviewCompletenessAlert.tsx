@@ -18,11 +18,11 @@ export function CampaignReviewCompletenessAlert({
   }
 
   return (
-    <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 text-sm">
+    <div className="rounded-xl border border-destructive/25 bg-destructive/5 p-4 text-sm">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-        <div className="space-y-2">
-          <h4 className="font-semibold text-destructive">Kampanye Belum Siap Diajukan</h4>
+        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
+        <div className="space-y-1.5 flex-1 min-w-0">
+          <h4 className="text-xs sm:text-sm font-semibold text-destructive tracking-tight">Kampanye Belum Siap Diajukan</h4>
           <p className="text-xs text-muted-foreground">
             Terdapat beberapa langkah yang belum lengkap. Harap lengkapi sebelum mengajukan kampanye untuk direview.
           </p>
@@ -31,16 +31,16 @@ export function CampaignReviewCompletenessAlert({
               const stepPrefix = `Langkah ${step.stepNumber} (${step.title}):`;
 
               return (
-                <li key={step.slug} className="flex items-center justify-between gap-4 text-xs">
-                  <span className="text-foreground">
-                    <strong className="font-medium">{stepPrefix}</strong> {step.reason}
+                <li key={step.slug} className="flex items-center justify-between gap-3 text-xs">
+                  <span className="text-foreground truncate">
+                    <span className="font-medium">{stepPrefix}</span> {step.reason}
                   </span>
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="xs"
                     onClick={() => onNavigateToStep(step.slug)}
-                    className="h-7 text-xs">
+                    className="h-6 text-[11px] px-2 shrink-0">
                     Lengkapi
                   </Button>
                 </li>

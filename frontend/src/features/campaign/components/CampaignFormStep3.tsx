@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, FileText, Hash, MessageSquareQuote } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -99,11 +98,9 @@ export function CampaignFormStep3() {
 
       {/* Section 1: Core Direction (Tujuan & Pesan Utama) */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <FileText className="size-4" />
-          </div>
-          <h3 className="font-semibold text-base text-foreground">Pesan Utama & Arahan Kreatif</h3>
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Pesan Utama & Arahan Kreatif</h3>
+          <p className="text-xs text-muted-foreground">Tentukan tujuan kampanye, pesan inti, dan aksi yang diharapkan dari penonton.</p>
         </div>
 
         <FieldGroup>
@@ -226,11 +223,9 @@ export function CampaignFormStep3() {
 
       {/* Section 2: Social Media Posting Guidelines */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Hash className="size-4" />
-          </div>
-          <h3 className="font-semibold text-base text-foreground">Panduan Postingan Media Sosial</h3>
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Panduan Postingan Media Sosial</h3>
+          <p className="text-xs text-muted-foreground">Tentukan caption, tagar, dan akun mention wajib untuk publikasi video kreator.</p>
         </div>
 
         <FieldGroup>
@@ -308,11 +303,9 @@ export function CampaignFormStep3() {
 
       {/* Section 3: Aturan Konten (Do's & Don'ts) */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <CheckCircle2 className="size-4" />
-          </div>
-          <h3 className="font-semibold text-base text-foreground">Aturan Konten (Do's & Don'ts)</h3>
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Aturan Konten (Do&apos;s &amp; Don&apos;ts)</h3>
+          <p className="text-xs text-muted-foreground">Panduan hal yang dianjurkan dan dilarang keras dilakukan dalam video klip.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -360,11 +353,9 @@ export function CampaignFormStep3() {
 
       {/* Section 4: Script Narration & Additional Guidelines */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 border-b pb-2">
-          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <MessageSquareQuote className="size-4" />
-          </div>
-          <h3 className="font-semibold text-base text-foreground">Narasi & Panduan Tambahan</h3>
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Narasi &amp; Panduan Tambahan</h3>
+          <p className="text-xs text-muted-foreground">Referensi hook pembuka skrip narasi atau instruksi spesifik lainnya.</p>
         </div>
 
         <FieldGroup>

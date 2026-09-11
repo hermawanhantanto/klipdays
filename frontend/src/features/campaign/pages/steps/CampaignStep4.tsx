@@ -9,10 +9,12 @@ import { CampaignFormStep4 } from '../../components';
  */
 function CampaignStep4() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Langkah 4: Hadiah & Anggaran</CardTitle>
-        <CardDescription>Tentukan tarif CPM, ambang batas penayangan minimum dan maksimum, serta total anggaran kampanye.</CardDescription>
+    <Card className="border-border/60 shadow-xs">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold tracking-tight">Hadiah & Anggaran</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+          Tentukan tarif CPM, ambang batas penayangan minimum dan maksimum, serta total anggaran kampanye.
+        </CardDescription>
       </CardHeader>
 
       <CardContent>

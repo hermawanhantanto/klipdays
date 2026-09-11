@@ -1,4 +1,4 @@
-import { ExternalLink, FileText, Pencil } from 'lucide-react';
+import { ExternalLink, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -34,22 +34,19 @@ export function CampaignReviewBasicInfo({ campaign, onEdit }: CampaignReviewBasi
   const descriptionDisplay = campaign.description || 'Belum ada deskripsi kampanye.';
 
   return (
-    <Card className="border-border/60">
+    <Card className="border-border/60 shadow-xs">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <div className="flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary" />
-          <div>
-            <CardTitle className="text-base">1. Informasi Dasar Kampanye</CardTitle>
-            <CardDescription>Detail identitas dan kategorisasi produk/layanan</CardDescription>
-          </div>
+        <div>
+          <CardTitle className="text-sm sm:text-base font-semibold tracking-tight">1. Informasi Dasar</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">Detail identitas dan kategorisasi kampanye</CardDescription>
         </div>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={onEdit}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <Pencil className="h-3.5 w-3.5" />
+          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+          <Pencil className="size-3.5" />
           Ubah
         </Button>
       </CardHeader>
@@ -64,15 +61,15 @@ export function CampaignReviewBasicInfo({ campaign, onEdit }: CampaignReviewBasi
 
           <div className="flex-1 space-y-3">
             <div>
-              <h3 className="text-lg font-bold text-foreground">{titleDisplay}</h3>
-              <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                <span className="rounded-md border border-orange-500/40 bg-orange-500/10 px-2 py-0.5 text-xs font-medium text-orange-400 dark:text-orange-300">
+              <h3 className="text-base sm:text-lg font-semibold text-foreground tracking-tight">{titleDisplay}</h3>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium text-foreground">
                   {categoryLabel}
                 </span>
-                <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {typeLabel}
                 </span>
-                <span className="rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {platformLabel}
                 </span>
               </div>

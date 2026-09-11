@@ -40,7 +40,7 @@ export function CampaignWizardSkeleton() {
               const isLast = index === 4;
               return (
                 <div key={index} className={cn('flex items-center gap-3', !isLast ? 'flex-1' : '')}>
-                  <Skeleton className="size-9 shrink-0 rounded-full" />
+                  <Skeleton className="size-8 shrink-0 rounded-full" />
                   <div className="hidden space-y-1 md:block">
                     <Skeleton className="h-3.5 w-20 lg:w-24 rounded-md" />
                     <Skeleton className="h-2.5 w-16 lg:w-20 rounded-md" />

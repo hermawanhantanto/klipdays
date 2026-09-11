@@ -154,7 +154,7 @@ export function CampaignFormStep2() {
         variant="outline"
         onClick={HandleAddMaterial}
         disabled={isPending}
-        className="w-full flex items-center justify-center gap-2 border-dashed border-2 py-5 rounded-xl text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-all">
+        className="w-full flex items-center justify-center gap-2 border-dashed h-11 rounded-lg text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/40 transition-colors">
         <Plus className="size-4" />
         <span className="font-medium text-sm">Tambah Materi & Aset Promosi</span>
       </Button>

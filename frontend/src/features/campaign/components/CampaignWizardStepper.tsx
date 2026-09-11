@@ -59,8 +59,8 @@ export function CampaignWizardStepper({ className, campaign: propCampaign }: Cam
             const circleClass = isCompleted
               ? 'bg-primary text-primary-foreground'
               : isCurrent
-                ? 'border-2 border-primary bg-background text-primary font-bold shadow-xs'
-                : 'border border-border bg-muted/50 text-muted-foreground';
+                ? 'border-2 border-primary bg-background text-primary font-semibold shadow-xs'
+                : 'border border-border bg-muted/40 text-muted-foreground';
 
             const titleClass = isCurrent
               ? 'font-semibold text-foreground'
@@ -73,13 +73,13 @@ export function CampaignWizardStepper({ className, campaign: propCampaign }: Cam
                 {isAccessible ? (
                   <Link
                     to={targetPath}
-                    className="group flex items-center gap-3 text-left outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-lg p-1">
+                    className="group flex items-center gap-2.5 text-left outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-lg p-1">
                     <div
                       className={cn(
-                        'flex size-9 shrink-0 items-center justify-center rounded-full text-xs transition-colors',
+                        'flex size-8 shrink-0 items-center justify-center rounded-full text-xs transition-colors font-medium',
                         circleClass
                       )}>
-                      {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : step.stepNumber}
+                      {isCompleted ? <Check className="size-3.5 stroke-[2.5]" /> : step.stepNumber}
                     </div>
                     <div className="hidden min-w-0 md:block">
                       <p className={cn('truncate text-xs tracking-tight lg:text-sm', titleClass)}>{step.title}</p>
@@ -90,8 +90,8 @@ export function CampaignWizardStepper({ className, campaign: propCampaign }: Cam
                   <div
                     aria-disabled="true"
                     title="Lengkapi langkah sebelumnya terlebih dahulu"
-                    className="flex items-center gap-3 text-left opacity-40 cursor-not-allowed select-none rounded-lg p-1">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs border border-border bg-muted/40 text-muted-foreground/60">
+                    className="flex items-center gap-2.5 text-left opacity-40 cursor-not-allowed select-none rounded-lg p-1">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs border border-border bg-muted/40 text-muted-foreground/60 font-medium">
                       {step.stepNumber}
                     </div>
                     <div className="hidden min-w-0 md:block">
@@ -103,7 +103,7 @@ export function CampaignWizardStepper({ className, campaign: propCampaign }: Cam
 
                 {!isLast && (
                   <div
-                    className={cn('mx-2 hidden h-0.5 flex-1 transition-colors sm:block lg:mx-4', isCompleted ? 'bg-primary' : 'bg-border')}
+                    className={cn('mx-2 hidden h-px flex-1 transition-colors sm:block lg:mx-3', isCompleted ? 'bg-primary' : 'bg-border/60')}
                   />
                 )}
               </li>

@@ -189,23 +189,24 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
                 size="sm"
                 onClick={TriggerFilePicker}
                 disabled={!isInteractive}
-                className="gap-1.5 shadow-md font-medium bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white">
+                className="gap-1.5 shadow-sm font-medium">
                 <RefreshCw className="size-3.5" />
                 <span>Ganti Gambar</span>
               </Button>
               <Button
                 type="button"
+                variant="destructive"
                 size="sm"
                 onClick={HandleRemove}
                 disabled={!isInteractive}
-                className="gap-1.5 shadow-md font-medium bg-red-600 hover:bg-red-700 text-white border border-red-500/40">
+                className="gap-1.5 shadow-sm font-medium">
                 <Trash2 className="size-3.5" />
                 <span>Hapus Thumbnail</span>
               </Button>
             </div>
           </div>
 
-          {/* Action row below preview - always visible so user never has to search for it */}
+          {/* Action row below preview */}
           <div className="flex items-center justify-between px-0.5 text-xs">
             <div className="flex items-center gap-2">
               <Button
@@ -220,10 +221,11 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
               </Button>
               <Button
                 type="button"
+                variant="ghost"
                 size="xs"
                 onClick={HandleRemove}
                 disabled={!isInteractive}
-                className="h-7 text-xs gap-1.5 font-medium bg-red-600 hover:bg-red-700 text-white border border-red-500/40 shadow-xs">
+                className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
                 <Trash2 className="size-3" />
                 <span>Hapus</span>
               </Button>

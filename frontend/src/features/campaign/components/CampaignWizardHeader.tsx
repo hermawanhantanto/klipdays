@@ -11,20 +11,20 @@ import { Button } from '@/components/ui/button';
  */
 export function CampaignWizardHeader() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground">
+        <Button asChild variant="ghost" size="sm" className="h-8 -ml-2 px-2 text-xs text-muted-foreground hover:text-foreground">
           <Link to="/dashboard/campaigns" className="flex items-center gap-1.5">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="size-3.5" />
             <span>Kembali ke Kampanye</span>
           </Link>
         </Button>
       </div>
 
-      <div className="space-y-1">
-        <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Buat Kampanye Baru</h1>
-        <p className="text-sm text-muted-foreground">
-          Lengkapi formulir di bawah ini dalam beberapa langkah mudah untuk memulai kampanye promosi Anda.
+      <div className="space-y-0.5">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">Buat Kampanye Baru</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Lengkapi konfigurasi di bawah ini untuk meluncurkan kampanye promosi video klip Anda.
         </p>
       </div>
     </div>

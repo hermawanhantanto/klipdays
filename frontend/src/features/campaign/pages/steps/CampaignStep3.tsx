@@ -9,10 +9,10 @@ import { CampaignFormStep3 } from '../../components';
  */
 function CampaignStep3() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Langkah 3: Brief & Panduan</CardTitle>
-        <CardDescription>
+    <Card className="border-border/60 shadow-xs">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold tracking-tight">Brief & Panduan Kreator</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-muted-foreground">
           Berikan arahan kreatif, pesan utama, instruksi caption, tagar, serta aturan pembuatan konten bagi kreator.
         </CardDescription>
       </CardHeader>

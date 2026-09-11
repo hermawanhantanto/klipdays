@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, Coins, Eye, TrendingUp, Wallet } from 'lucide-react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -98,13 +97,10 @@ export function CampaignFormStep4() {
   return (
     <form noValidate onSubmit={form.handleSubmit(HandleFormSubmit)} className="space-y-8">
       {/* SECTION 1: Hadiah & Ambang Tayangan (Reward System) */}
-      <div className="space-y-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Coins className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Sistem Hadiah Kreator</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">Tentukan imbalan yang didapatkan kreator setiap 1.000 penayangan terverifikasi.</p>
+      <div className="space-y-4">
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Sistem Hadiah Kreator</h3>
+          <p className="text-xs text-muted-foreground">Tentukan imbalan yang didapatkan kreator setiap 1.000 penayangan terverifikasi.</p>
         </div>
 
         <FieldGroup>
@@ -153,20 +149,16 @@ export function CampaignFormStep4() {
                   <FieldLabel htmlFor={field.name}>
                     Penayangan Minimum (Min Views) <span className="text-destructive font-medium">*</span>
                   </FieldLabel>
-                  <div className="relative">
-                    <Eye className="pointer-events-none absolute inset-y-0 left-0 my-auto ml-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Contoh: 1.000"
-                      className="pl-9"
-                      disabled={isPending}
-                      value={FormatNumberForInput(field.value)}
-                      onChange={(e) => HandleFormattedNumberChange(field.onChange, e)}
-                    />
-                  </div>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Contoh: 1.000"
+                    disabled={isPending}
+                    value={FormatNumberForInput(field.value)}
+                    onChange={(e) => HandleFormattedNumberChange(field.onChange, e)}
+                  />
                   <FieldDescription>
                     Ambang batas tayangan agar video mulai menghasilkan imbalan. Video di bawah batas ini menghasilkan Rp 0.
                   </FieldDescription>
@@ -184,20 +176,16 @@ export function CampaignFormStep4() {
                   <FieldLabel htmlFor={field.name}>
                     Batas Tayangan Maksimum (Max Views) <span className="text-destructive font-medium">*</span>
                   </FieldLabel>
-                  <div className="relative">
-                    <TrendingUp className="pointer-events-none absolute inset-y-0 left-0 my-auto ml-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      {...field}
-                      id={field.name}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Contoh: 50.000"
-                      className="pl-9"
-                      disabled={isPending}
-                      value={FormatNumberForInput(field.value)}
-                      onChange={(e) => HandleFormattedNumberChange(field.onChange, e)}
-                    />
-                  </div>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Contoh: 50.000"
+                    disabled={isPending}
+                    value={FormatNumberForInput(field.value)}
+                    onChange={(e) => HandleFormattedNumberChange(field.onChange, e)}
+                  />
                   <FieldDescription>
                     Batas atas penayangan yang dibayarkan per satu video. Penayangan setelah batas ini tidak menambah bayaran.
                   </FieldDescription>
@@ -209,16 +197,11 @@ export function CampaignFormStep4() {
         </FieldGroup>
       </div>
 
-      <hr className="border-border" />
-
       {/* SECTION 2: Total Anggaran Kampanye */}
-      <div className="space-y-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Total Anggaran Kampanye</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
+      <div className="space-y-4">
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Total Anggaran Kampanye</h3>
+          <p className="text-xs text-muted-foreground">
             Tentukan batas dana yang dialokasikan untuk mendanai tayangan kreator melalui sistem dana aman.
           </p>
         </div>
@@ -263,16 +246,11 @@ export function CampaignFormStep4() {
         <CampaignDanaAmanNotice variant="budget" />
       </div>
 
-      <hr className="border-border" />
-
       {/* SECTION 3: Jadwal & Periode Kampanye */}
-      <div className="space-y-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-semibold text-foreground">Jadwal & Periode Kampanye</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">Tentukan rentang tanggal mulai dan batas akhir penayangan video oleh kreator.</p>
+      <div className="space-y-4">
+        <div className="border-b border-border/40 pb-2">
+          <h3 className="text-sm font-semibold text-foreground tracking-tight">Jadwal & Periode Kampanye</h3>
+          <p className="text-xs text-muted-foreground">Tentukan rentang tanggal mulai dan batas akhir penayangan video oleh kreator.</p>
         </div>
 
         <FieldGroup>

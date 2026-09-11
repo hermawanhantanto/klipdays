@@ -9,10 +9,12 @@ import { CampaignFormStep2 } from '../../components';
  */
 function CampaignStep2() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Langkah 2: Materi & Aset</CardTitle>
-        <CardDescription>Sediakan materi dan aset yang akan digunakan oleh kreator (clippers) untuk membuat video promosi.</CardDescription>
+    <Card className="border-border/60 shadow-xs">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold tracking-tight">Materi & Aset Promosi</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+          Sediakan materi dan aset yang akan digunakan oleh kreator (clippers) untuk membuat video promosi.
+        </CardDescription>
       </CardHeader>
 
       <CardContent>

@@ -1,4 +1,4 @@
-import { ExternalLink, Layers, Pencil } from 'lucide-react';
+import { ExternalLink, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MATERIAL_TYPE_LABELS, type MaterialTypeOption } from '../schemas';
@@ -15,22 +15,19 @@ export function CampaignReviewMaterials({ materials, onEdit }: CampaignReviewMat
   const materialsCountDescription = `${activeMaterials.length} aset disediakan untuk kreator`;
 
   return (
-    <Card className="border-border/60">
+    <Card className="border-border/60 shadow-xs">
       <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <div className="flex items-center gap-2">
-          <Layers className="h-5 w-5 text-primary" />
-          <div>
-            <CardTitle className="text-base">2. Materi & Aset Promosi</CardTitle>
-            <CardDescription>{materialsCountDescription}</CardDescription>
-          </div>
+        <div>
+          <CardTitle className="text-sm sm:text-base font-semibold tracking-tight">2. Materi & Aset Promosi</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">{materialsCountDescription}</CardDescription>
         </div>
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={onEdit}
-          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <Pencil className="h-3.5 w-3.5" />
+          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+          <Pencil className="size-3.5" />
           Ubah
         </Button>
       </CardHeader>

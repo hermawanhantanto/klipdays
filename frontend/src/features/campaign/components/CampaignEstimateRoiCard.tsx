@@ -1,4 +1,3 @@
-import { Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { CampaignEstimateRoiCardProps } from '../types';
@@ -34,45 +33,47 @@ export function CampaignEstimateRoiCard({ projections, className }: CampaignEsti
 
   const stats = [
     {
-      label: 'Estimasi Total Penayangan',
+      label: 'Estimasi Penayangan',
       value: totalViewsFormatted,
       subtext: 'potensi views dari budget',
     },
     {
-      label: 'Maks. Imbalan per Video',
+      label: 'Maks. Imbalan / Video',
       value: maxEarningsFormatted,
-      subtext: 'cap jika tembus max views',
+      subtext: 'cap tembus batas atas',
     },
     {
-      label: 'Kapasitas Video Maksimal',
+      label: 'Kapasitas Video',
       value: fundedVideosLabel,
-      subtext: 'video terdanai hingga batas atas',
+      subtext: 'video terdanai maksimal',
     },
     {
       label: 'Durasi Kampanye',
       value: durationLabel,
-      subtext: 'periode tayang & verifikasi',
+      subtext: 'periode aktif promosi',
     },
   ];
 
   return (
-    <Card className={cn('border-border/60 bg-muted/30', className)}>
-      <CardContent className="p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <h4 className="text-sm font-semibold text-foreground">Estimasi Performa & ROI Kampanye</h4>
+    <Card className={cn('border-border/60 bg-muted/20 shadow-xs', className)}>
+      <CardContent className="p-4 sm:p-5 space-y-3.5">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Estimasi Performa & ROI Kampanye
+          </h4>
+          <span className="text-[11px] text-muted-foreground/70">Kalkulasi Otomatis</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {stats.map((stat) => (
-            <div key={stat.label} className="min-w-0 overflow-hidden space-y-1 rounded-md border border-border/50 bg-background/60 p-3">
+            <div key={stat.label} className="min-w-0 overflow-hidden space-y-1 rounded-lg border border-border/40 bg-background/80 p-3">
               <span className="text-xs text-muted-foreground block truncate">{stat.label}</span>
               <p
-                className={cn('font-bold text-foreground tracking-tight tabular-nums truncate', GetAdaptiveMetricFontSize(stat.value))}
+                className={cn('font-semibold text-foreground tracking-tight tabular-nums truncate', GetAdaptiveMetricFontSize(stat.value))}
                 title={stat.value}>
                 {stat.value}
               </p>
-              <span className="text-[11px] text-muted-foreground block truncate">{stat.subtext}</span>
+              <span className="text-[11px] text-muted-foreground/80 block truncate">{stat.subtext}</span>
             </div>
           ))}
         </div>

@@ -9,10 +9,10 @@ import { CampaignFormStep1 } from '../../components';
  */
 function CampaignStep1() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Langkah 1: Informasi Dasar</CardTitle>
-        <CardDescription>
+    <Card className="border-border/60 shadow-xs">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold tracking-tight">Informasi Dasar</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-muted-foreground">
           Tentukan identitas dasar kampanye seperti judul, kategori produk, platform, dan aset media utama.
         </CardDescription>
       </CardHeader>
