@@ -1,6 +1,7 @@
 import { ExternalLink, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SanitizeHttpUrl } from '@/lib/utils';
 import { MATERIAL_TYPE_LABELS, type MaterialTypeOption } from '../schemas';
 import type { CampaignReviewMaterialsProps } from '../types';
 
@@ -40,6 +41,7 @@ export function CampaignReviewMaterials({ materials, onEdit }: CampaignReviewMat
             {activeMaterials.map((material, idx) => {
               const label = MATERIAL_TYPE_LABELS[material.type as MaterialTypeOption] ?? material.type;
               const itemKey = material.id || idx;
+              const sanitizedUrl = SanitizeHttpUrl(material.url);
 
               return (
                 <div key={itemKey} className="flex items-center justify-between p-3.5 text-sm">
@@ -49,13 +51,17 @@ export function CampaignReviewMaterials({ materials, onEdit }: CampaignReviewMat
                     </span>
                     <span className="font-medium text-foreground truncate">{material.name}</span>
                   </div>
-                  <a
-                    href={material.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ml-4 inline-flex items-center gap-1 text-xs text-primary hover:underline shrink-0">
-                    Buka Aset <ExternalLink className="h-3 w-3" />
-                  </a>
+                  {sanitizedUrl ? (
+                    <a
+                      href={sanitizedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-4 inline-flex items-center gap-1 text-xs text-primary hover:underline shrink-0">
+                      Buka Aset <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : (
+                    <span className="ml-4 text-xs text-muted-foreground italic shrink-0">Tautan tidak valid</span>
+                  )}
                 </div>
               );
             })}

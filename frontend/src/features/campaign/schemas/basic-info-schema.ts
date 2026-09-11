@@ -58,7 +58,8 @@ export const basicInfoSchema = z.object({
     .string()
     .trim()
     .min(1, 'URL thumbnail wajib diisi.')
-    .url('Format URL thumbnail tidak valid (harus diawali http:// atau https://).'),
+    .url('Format URL thumbnail tidak valid.')
+    .regex(/^https?:\/\//i, 'Format URL thumbnail tidak valid (harus diawali http:// atau https://).'),
   platform: z.enum(CAMPAIGN_PLATFORM_OPTIONS, {
     error: 'Pilih platform yang valid.',
   }),
@@ -66,7 +67,8 @@ export const basicInfoSchema = z.object({
     .string()
     .trim()
     .min(1, 'URL tautan media utama wajib diisi.')
-    .url('Format URL tautan media utama tidak valid (harus diawali http:// atau https://).'),
+    .url('Format URL tautan media utama tidak valid.')
+    .regex(/^https?:\/\//i, 'Format URL tautan media utama tidak valid (harus diawali http:// atau https://).'),
 });
 
 export type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;

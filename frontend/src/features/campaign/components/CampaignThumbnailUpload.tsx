@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { ExternalLink, ImagePlus, Loader2, RefreshCw, Trash2, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, SanitizeHttpUrl } from '@/lib/utils';
 import { UploadCampaignThumbnail } from '../api';
 import type { CampaignThumbnailUploadProps } from '../types';
 
@@ -22,6 +22,7 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const sanitizedThumbnailUrl = SanitizeHttpUrl(value);
 
   /**
    * Validates and streams an image file to the backend.
@@ -231,14 +232,16 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
               </Button>
             </div>
 
-            <a
-              href={value}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
-              <span>Lihat Ukuran Penuh</span>
-              <ExternalLink className="size-3" />
-            </a>
+            {sanitizedThumbnailUrl ? (
+              <a
+                href={sanitizedThumbnailUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
+                <span>Lihat Ukuran Penuh</span>
+                <ExternalLink className="size-3" />
+              </a>
+            ) : null}
           </div>
         </div>
       ) : (

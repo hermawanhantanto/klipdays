@@ -1,6 +1,7 @@
 import { ExternalLink, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SanitizeHttpUrl } from '@/lib/utils';
 import {
   CAMPAIGN_CATEGORY_LABELS,
   type CampaignCategoryOption,
@@ -32,6 +33,7 @@ export function CampaignReviewBasicInfo({ campaign, onEdit }: CampaignReviewBasi
 
   const titleDisplay = campaign.title || 'Belum ada judul';
   const descriptionDisplay = campaign.description || 'Belum ada deskripsi kampanye.';
+  const sanitizedMediaUrl = SanitizeHttpUrl(campaign.mainMediaUrl);
 
   return (
     <Card className="border-border/60 shadow-xs">
@@ -52,18 +54,18 @@ export function CampaignReviewBasicInfo({ campaign, onEdit }: CampaignReviewBasi
       </CardHeader>
 
       <CardContent className="space-y-4 pt-1">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           {campaign.thumbnailUrl ? (
-            <div className="h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-muted/30">
+            <div className="h-28 w-28 shrink-0 overflow-hidden rounded-lg border border-border bg-muted/30">
               <img src={campaign.thumbnailUrl} alt={titleDisplay} className="h-full w-full object-cover" />
             </div>
           ) : null}
 
-          <div className="flex-1 space-y-3">
+          <div className="min-w-0 flex-1 space-y-2.5">
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-foreground tracking-tight">{titleDisplay}</h3>
-              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium text-foreground">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground tracking-tight">{titleDisplay}</h3>
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {categoryLabel}
                 </span>
                 <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground">
@@ -77,13 +79,13 @@ export function CampaignReviewBasicInfo({ campaign, onEdit }: CampaignReviewBasi
 
             <p className="text-sm text-muted-foreground whitespace-pre-line">{descriptionDisplay}</p>
 
-            {campaign.mainMediaUrl ? (
+            {sanitizedMediaUrl ? (
               <div className="flex items-center gap-2 pt-1">
                 <span className="text-xs text-muted-foreground">Tautan Media Utama:</span>
                 <a
-                  href={campaign.mainMediaUrl}
+                  href={sanitizedMediaUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
                   Buka Tautan <ExternalLink className="h-3 w-3" />
                 </a>

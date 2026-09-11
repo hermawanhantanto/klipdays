@@ -16,7 +16,12 @@ export const materialItemSchema = z.object({
   type: z.enum(MATERIAL_TYPE_OPTIONS, {
     error: 'Pilih jenis materi yang valid.',
   }),
-  url: z.string().trim().min(1, 'URL materi wajib diisi.').url('Format URL materi tidak valid (harus diawali http:// atau https://).'),
+  url: z
+    .string()
+    .trim()
+    .min(1, 'URL materi wajib diisi.')
+    .url('Format URL materi tidak valid.')
+    .regex(/^https?:\/\//i, 'Format URL materi tidak valid (harus diawali http:// atau https://).'),
 });
 
 export const materialsFormSchema = z.object({
