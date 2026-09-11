@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MATERIAL_TYPE_LABELS, MATERIAL_TYPE_OPTIONS, type MaterialTypeOption } from '../schemas';
 import type { MaterialFieldGroupProps } from '../types';
 import { FieldLengthTracker } from './FieldLengthTracker';
+import { SanitizeHttpUrl } from '@/lib/utils';
 
 /**
  * Renders a single field group for a campaign material and asset item.
@@ -119,8 +120,7 @@ export function MaterialFieldGroup({ index, control, canRemove, onRemove, disabl
               name={`materials.${index}.url`}
               control={control}
               render={({ field, fieldState }) => {
-                const trimmedUrl = (field.value ?? '').trim();
-                const isValidHttpUrl = /^https?:\/\//i.test(trimmedUrl);
+                const sanitizedUrl = SanitizeHttpUrl(field.value);
 
                 return (
                   <Field data-invalid={fieldState.invalid}>
@@ -128,9 +128,9 @@ export function MaterialFieldGroup({ index, control, canRemove, onRemove, disabl
                       <FieldLabel htmlFor={field.name}>
                         Tautan / URL Materi <span className="text-destructive font-medium">*</span>
                       </FieldLabel>
-                      {isValidHttpUrl && (
+                      {sanitizedUrl && (
                         <a
-                          href={trimmedUrl}
+                          href={sanitizedUrl}
                           target="_blank"
                           rel="noreferrer noopener"
                           className="flex items-center gap-1 text-[11px] font-medium text-primary hover:underline transition-colors">

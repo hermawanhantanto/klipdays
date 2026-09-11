@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from 'react-router';
 import { Toaster } from '@/components/ui/sonner';
+import { RootErrorBoundary } from '@/components/RootErrorBoundary';
 import { ProtectedRoute } from '@/features/authentication/components';
 import AuthLayout from '@/features/authentication/layouts/AuthLayout';
 import CampaignWizardLayout from '@/features/campaign/layouts/CampaignWizardLayout';
@@ -33,7 +34,7 @@ function PageLoadingFallback() {
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <>
+    <Route errorElement={<RootErrorBoundary />}>
       <Route
         index
         element={
@@ -71,7 +72,7 @@ const router = createBrowserRouter(
         </Route>
         <Route path="kampanye" element={<Navigate to="/dashboard/campaigns" replace />} />
       </Route>
-    </>
+    </Route>
   )
 );
 

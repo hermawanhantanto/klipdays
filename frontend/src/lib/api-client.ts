@@ -14,6 +14,29 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const url = error.config?.url ?? '';
+      const isAuthEndpoint =
+        url.includes('/auth/login') ||
+        url.includes('/auth/register') ||
+        url.includes('/auth/me') ||
+        url.includes('/auth/logout');
+
+      if (!isAuthEndpoint && typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/signin') && !currentPath.includes('/signup')) {
+          window.location.href = `/signin?expired=true&redirect=${encodeURIComponent(currentPath)}`;
+        }
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 /**
  * Extracts a descriptive Error instance from an unknown error or Axios response.
  * Inspects the backend's standard `{ message }` response payload, falling back to

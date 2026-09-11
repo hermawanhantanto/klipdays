@@ -12,6 +12,7 @@ import { CampaignThumbnailUpload } from './CampaignThumbnailUpload';
 import { CampaignUnsavedChangesDialog } from './CampaignUnsavedChangesDialog';
 import { FieldLengthTracker } from './FieldLengthTracker';
 import { WizardFormActions } from './WizardFormActions';
+import { SanitizeHttpUrl } from '@/lib/utils';
 import { UseCampaignWizardContext, UseEditCampaignMutation, UseUnsavedChangesGuard } from '../hooks';
 import {
   basicInfoSchema,
@@ -261,7 +262,7 @@ export function CampaignFormStep1() {
           name="mainMediaUrl"
           control={form.control}
           render={({ field, fieldState }) => {
-            const isValidHttpUrl = Boolean(field.value && (field.value.startsWith('http://') || field.value.startsWith('https://')));
+            const sanitizedMediaUrl = SanitizeHttpUrl(field.value);
 
             return (
               <Field data-invalid={fieldState.invalid}>
@@ -269,9 +270,9 @@ export function CampaignFormStep1() {
                   <FieldLabel htmlFor={field.name}>
                     Tautan Media Utama <span className="text-destructive font-medium">*</span>
                   </FieldLabel>
-                  {isValidHttpUrl && (
+                  {sanitizedMediaUrl && (
                     <a
-                      href={field.value}
+                      href={sanitizedMediaUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-medium">
