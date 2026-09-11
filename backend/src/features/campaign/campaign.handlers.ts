@@ -4,14 +4,17 @@ import type { NextFunction, Request, Response } from 'express';
 import type { Prisma } from '../../generated/prisma/client.js';
 import { prisma } from '../../utils/prisma.js';
 import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
-import { BuildCampaignEditFields } from './campaign.helper.js';
+import { CAMPAIGN_CARD_SELECT } from './campaign.constants.js';
+import { BuildCampaignEditFields, BuildCampaignsOrderBy, BuildCampaignsWhereClause } from './campaign.helper.js';
 import {
   ValidateCampaignDateLogic,
   ValidateCampaignEditBody,
+  ValidateCampaignQuery,
   ValidateCampaignRewardLogic,
   ValidateCampaignSubmitCompleteness,
 } from './campaign.validators.js';
 import { SendError, SendSuccess } from '../../utils/api-response.js';
+import type { CampaignCardItem, CampaignsPaginatedData } from './campaign.types.js';
 
 /**
  * Handles `POST /campaigns`: creates an empty draft campaign for the
@@ -161,6 +164,90 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
+
+/**
+ * Handles `GET /campaigns`: retrieves a paginated list of campaign cards with
+ * keyword search, filters (category, campaign type, platform, status), and sorting.
+ *
+ * Role boundaries:
+ * - Brand: sees their own campaigns across all lifecycle statuses (with optional status filter).
+ * - Creator: sees only campaigns with active lifecycle status and active brand.
+ * - Admin: sees all active campaigns with optional status filter.
+ *
+ * @param req - Express request with the authenticated account and query parameters.
+ * @param res - Express response object.
+ * @param next - Express next function.
+ */
+export async function GetCampaigns(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const account = req.account;
+
+    // Fast-fail: authentication check
+    if (!account) {
+      SendError(res, 'Authentication required.', 401);
+      return;
+    }
+
+    // Fast-fail: role boundary check
+    if (account.role !== Role.BRAND && account.role !== Role.CREATOR && account.role !== Role.ADMIN) {
+      SendError(res, 'Unauthorized role.', 403);
+      return;
+    }
+
+    // Input validation
+    const queryValidationResult = ValidateCampaignQuery(req.query);
+    if (typeof queryValidationResult === 'string') {
+      SendError(res, queryValidationResult, 400);
+      return;
+    }
+
+    const queryInput = queryValidationResult;
+    const page = queryInput.page ?? 1;
+    const limit = queryInput.limit ?? 10;
+    const sort = queryInput.sort ?? 'latest';
+    const skip = (page - 1) * limit;
+
+    // Query reconstruction
+    const whereClause = BuildCampaignsWhereClause(account, queryInput);
+    const orderByClause = BuildCampaignsOrderBy(sort);
+
+    // Parallel database execution via transaction
+    const [campaigns, totalCount] = await prisma.$transaction([
+      prisma.campaign.findMany({
+        where: whereClause,
+        orderBy: orderByClause,
+        skip,
+        take: limit,
+        select: CAMPAIGN_CARD_SELECT,
+      }),
+      
+      prisma.campaign.count({
+        where: whereClause,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    const responsePayload: CampaignsPaginatedData = {
+      items: campaigns as unknown as CampaignCardItem[],
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage,
+      },
+    };
+
+    SendSuccess(res, responsePayload, 'Campaigns retrieved successfully.');
+  } catch (err) {
+    next(err);
+  }
+}
+
 
 /**
  * Handles `GET /campaigns/:id`: retrieves campaign details (including active

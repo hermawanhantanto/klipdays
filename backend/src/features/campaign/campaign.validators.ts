@@ -1,8 +1,8 @@
 import type { Prisma } from '../../generated/prisma/client.js';
 
-import { campaignEditSchema } from './campaign.schemas.js';
+import { campaignEditSchema, campaignQuerySchema } from './campaign.schemas.js';
 
-import type { CampaignEditInput } from './campaign.types.js';
+import type { CampaignEditInput, CampaignQueryInput } from './campaign.types.js';
 
 export interface CampaignExistingFields {
   minViews?: number | null;
@@ -195,5 +195,27 @@ export function ValidateCampaignSubmitCompleteness(campaign: CampaignSubmitCheck
 
   return null;
 }
+
+/**
+ * Validates the query parameters for retrieving the campaigns list.
+ * Validates page, limit, keyword search, filters (category, type, platform, status),
+ * and sorting strategy.
+ *
+ * @param query - Raw query object from `req.query`.
+ * @returns The parsed and typed `CampaignQueryInput` or an error message string when validation fails.
+ */
+export function ValidateCampaignQuery(query: unknown): CampaignQueryInput | string {
+  const parseResult = campaignQuerySchema.safeParse(query);
+
+  if (!parseResult.success) {
+    const firstIssue = parseResult.error.issues[0];
+    const errorMessage = firstIssue?.message ?? 'Invalid query parameters.';
+    return errorMessage;
+  }
+
+  const queryData = parseResult.data;
+  return queryData;
+}
+
 
 

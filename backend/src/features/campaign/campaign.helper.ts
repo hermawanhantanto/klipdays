@@ -1,26 +1,15 @@
 import type { Prisma } from '../../generated/prisma/client.js';
-import { Status } from '../../generated/prisma/enums.js';
+import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
+import type { AuthPayload } from '../../middleware/auth.middleware.js';
+import type {
+  CampaignBriefInput,
+  CampaignEditInput,
+  CampaignMaterialsInput,
+  CampaignQueryInput,
+  CampaignSortOption,
+} from './campaign.types.js';
 
-import type { CampaignBriefInput, CampaignEditInput, CampaignMaterialsInput } from './campaign.types.js';
-
-
-// Scalar fields copied 1:1 from the edit body into the update. This list is
-// the whitelist: only fields named here can ever be written.
-const SCALAR_FIELDS = [
-  'title',
-  'description',
-  'campaignType',
-  'campaignCategory',
-  'thumbnailUrl',
-  'platform',
-  'mainMediaUrl',
-  'cpm',
-  'minViews',
-  'maxViews',
-  'budget',
-  'startDate',
-  'endDate',
-] as const;
+import { SCALAR_FIELDS } from './campaign.constants.js';
 
 /**
  * Copies `value` into `target[key]` when it is defined, so only the fields
@@ -127,4 +116,120 @@ export function BuildCampaignEditFields(input: CampaignEditInput): Prisma.Campai
   }
 
   return campaignQuery;
+}
+
+/**
+ * Reconstructs the Prisma `where` clause for querying campaigns based on user role,
+ * soft-delete requirements, keyword search, and filters.
+ *
+ * @param account - The authenticated account extracted from the JWT session.
+ * @param query - Validated campaign query parameters.
+ * @returns The structured Prisma campaign `where` object.
+ */
+export function BuildCampaignsWhereClause(account: AuthPayload, query: CampaignQueryInput): Prisma.CampaignWhereInput {
+  // Base soft-delete filter: both Campaign and Brand must have status ACTIVE across all roles
+  const brandWhere: Prisma.BrandWhereInput = {
+    status: Status.ACTIVE,
+  };
+
+  const whereClause: Prisma.CampaignWhereInput = {
+    status: Status.ACTIVE,
+    brand: brandWhere,
+  };
+
+  // Enforce tenant boundary and role-based lifecycle filtering:
+  // - Brand: views their own campaigns (across any lifecycle status, with optional status filter)
+  // - Creator: views only campaigns with active lifecycle status
+  // - Admin: views all active campaigns with optional status filter
+  switch (account.role) {
+    case Role.BRAND: {
+      brandWhere.accountId = account.sub;
+
+      if (query.campaignStatus) {
+        whereClause.campaignStatus = query.campaignStatus;
+      }
+
+      break;
+    }
+
+    case Role.CREATOR: {
+      whereClause.campaignStatus = CampaignStatus.ACTIVE;
+      break;
+    }
+
+    case Role.ADMIN: {
+      if (query.campaignStatus) {
+        whereClause.campaignStatus = query.campaignStatus;
+      }
+
+      break;
+    }
+  }
+
+  // Keyword search in title or description (case-insensitive)
+  if (query.search && query.search.length) {
+    whereClause.OR = [
+      {
+        title: {
+          contains: query.search,
+          mode: 'insensitive',
+        },
+      },
+      {
+        description: {
+          contains: query.search,
+          mode: 'insensitive',
+        },
+      },
+    ];
+  }
+
+  // Category filter
+  if (query.category) {
+    whereClause.campaignCategory = query.category;
+  }
+
+  // Campaign type filter
+  if (query.campaignType) {
+    whereClause.campaignType = query.campaignType;
+  }
+
+  // Platform filter
+  if (query.platform) {
+    whereClause.platform = query.platform;
+  }
+
+  return whereClause;
+}
+
+/**
+ * Constructs the Prisma `orderBy` array according to the selected sort strategy.
+ * Includes secondary ordering to guarantee deterministic pagination.
+ *
+ * @param sort - The validated sort option key.
+ * @returns An array of Prisma order criteria.
+ */
+export function BuildCampaignsOrderBy(sort: CampaignSortOption): Prisma.CampaignOrderByWithRelationInput[] {
+  if (sort === 'highest_cpm') {
+    const orderByCpm: Prisma.CampaignOrderByWithRelationInput[] = [{ cpm: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    return orderByCpm;
+  }
+
+  if (sort === 'lowest_cpm') {
+    const orderByLowestCpm: Prisma.CampaignOrderByWithRelationInput[] = [{ cpm: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }];
+    return orderByLowestCpm;
+  }
+
+  if (sort === 'highest_total_budget') {
+    const orderByBudget: Prisma.CampaignOrderByWithRelationInput[] = [{ budget: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    return orderByBudget;
+  }
+
+  if (sort === 'highest_maximum_views') {
+    const orderByViews: Prisma.CampaignOrderByWithRelationInput[] = [{ maxViews: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    return orderByViews;
+  }
+
+  const orderByLatest: Prisma.CampaignOrderByWithRelationInput[] = [{ createdAt: 'desc' }, { id: 'desc' }];
+  return orderByLatest;
 }

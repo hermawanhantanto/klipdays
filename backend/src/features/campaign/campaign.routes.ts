@@ -1,13 +1,19 @@
 import { Router } from 'express';
-
-import { EditCampaign, GetCampaignById, InitializeCampaign, SubmitCampaign, UploadCampaignThumbnail } from './campaign.handlers.js';
+import {
+  EditCampaign,
+  GetCampaignById,
+  GetCampaigns,
+  InitializeCampaign,
+  SubmitCampaign,
+  UploadCampaignThumbnail,
+} from './campaign.handlers.js';
 import { RequireAuth } from '../../middleware/auth.middleware.js';
 
 export const campaignRouter = Router();
 
 // Every campaign endpoint requires a logged-in account.
 campaignRouter.use(RequireAuth);
-
+campaignRouter.get('/', GetCampaigns);
 campaignRouter.post('/', InitializeCampaign);
 campaignRouter.get('/:id', GetCampaignById);
 campaignRouter.patch('/:id/edit', EditCampaign);
