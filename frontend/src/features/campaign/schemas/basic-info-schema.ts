@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const CAMPAIGN_TYPE_OPTIONS = ['PRODUCT', 'SERVICE', 'CONTENT'] as const;
+
 export type CampaignTypeOption = (typeof CAMPAIGN_TYPE_OPTIONS)[number];
 
 export const CAMPAIGN_TYPE_LABELS: Record<CampaignTypeOption, string> = {
@@ -37,6 +38,7 @@ export const CAMPAIGN_CATEGORY_LABELS: Record<CampaignCategoryOption, string> = 
 };
 
 export const CAMPAIGN_PLATFORM_OPTIONS = ['TIKTOK'] as const;
+
 export type CampaignPlatformOption = (typeof CAMPAIGN_PLATFORM_OPTIONS)[number];
 
 export const CAMPAIGN_PLATFORM_LABELS: Record<CampaignPlatformOption, string> = {

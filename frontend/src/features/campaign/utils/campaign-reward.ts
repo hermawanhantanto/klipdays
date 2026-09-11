@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import type { RewardFormValues } from '../schemas';
 import type { Campaign, CampaignProjections } from '../types';
 
@@ -32,44 +33,22 @@ export function GetDefaultCampaignDates(): { startDate: string; endDate: string 
   return dates;
 }
 
-const defaultDates = GetDefaultCampaignDates();
-
-/**
- * Default initial values for the reward and budget form.
- */
-export const DEFAULT_EMPTY_REWARD: RewardFormValues = {
-  cpm: 10000,
-  minViews: 1000,
-  maxViews: 50000,
-  budget: 5000000,
-  startDate: defaultDates.startDate,
-  endDate: defaultDates.endDate,
-};
-
 /**
  * Maps campaign entity data into clean form values for Step 4 (Reward & Budget).
+ * Defaults critical financial and threshold fields to 0 and dates to empty strings,
+ * ensuring intentional configuration by the brand rather than arbitrary prefilled values.
  * Handles Prisma Decimal strings for cpm and budget, as well as Date string parsing.
  *
  * @param campaign - Partial campaign entity retrieved from the backend.
  * @returns Clean form values conforming to RewardFormValues.
  */
 export function GetInitialReward(campaign?: Partial<Campaign> | null): RewardFormValues {
-  if (!campaign) {
-    return DEFAULT_EMPTY_REWARD;
-  }
-
-  const cpm = campaign.cpm != null ? Number(campaign.cpm) : DEFAULT_EMPTY_REWARD.cpm;
-  const minViews = campaign.minViews != null ? Number(campaign.minViews) : DEFAULT_EMPTY_REWARD.minViews;
-  const maxViews = campaign.maxViews != null ? Number(campaign.maxViews) : DEFAULT_EMPTY_REWARD.maxViews;
-  const budget = campaign.budget != null ? Number(campaign.budget) : DEFAULT_EMPTY_REWARD.budget;
-
-  const startDate = campaign.startDate
-    ? FormatDateForInput(campaign.startDate)
-    : DEFAULT_EMPTY_REWARD.startDate;
-
-  const endDate = campaign.endDate
-    ? FormatDateForInput(campaign.endDate)
-    : DEFAULT_EMPTY_REWARD.endDate;
+  const cpm = campaign?.cpm != null ? Number(campaign.cpm) : 0;
+  const minViews = campaign?.minViews != null ? Number(campaign.minViews) : 0;
+  const maxViews = campaign?.maxViews != null ? Number(campaign.maxViews) : 0;
+  const budget = campaign?.budget != null ? Number(campaign.budget) : 0;
+  const startDate = campaign?.startDate ? FormatDateForInput(campaign.startDate) : '';
+  const endDate = campaign?.endDate ? FormatDateForInput(campaign.endDate) : '';
 
   const initialValues: RewardFormValues = {
     cpm,
@@ -149,4 +128,43 @@ export function FormatNumber(value?: number | null): string {
   const formatter = new Intl.NumberFormat('id-ID');
   const formatted = formatter.format(value);
   return formatted;
+}
+
+/**
+ * Formats a number for text input display with Indonesian thousands separators (dot).
+ * Returns an empty string if value is null, undefined, 0, or NaN so placeholders display cleanly.
+ *
+ * @param value - The numeric value to format.
+ * @returns Formatted number string (e.g. "10.000", "5.000.000") or empty string.
+ */
+export function FormatNumberForInput(value?: number | null): string {
+  if (value == null || isNaN(value) || value === 0) return '';
+  const formatted = FormatNumber(value);
+  return formatted;
+}
+
+/**
+ * Parses a numeric input string that may contain thousands delimiters (dots, commas, or spaces)
+ * into a clean integer number.
+ *
+ * @param value - The raw string input to parse.
+ * @returns Clean integer number, or 0 if empty/invalid.
+ */
+export function ParseFormattedNumber(value: string): number {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return 0;
+  const parsed = Number(digits);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Handles change events for formatted numeric text inputs by stripping non-digit delimiters
+ * and passing the clean parsed integer to the field's onChange callback.
+ *
+ * @param onChange - The form field onChange callback from react-hook-form.
+ * @param event - The React change event from the input element.
+ */
+export function HandleFormattedNumberChange(onChange: (...event: unknown[]) => void, event: ChangeEvent<HTMLInputElement>): void {
+  const parsed = ParseFormattedNumber(event.target.value);
+  onChange(parsed);
 }

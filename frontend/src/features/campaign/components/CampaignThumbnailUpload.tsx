@@ -189,8 +189,7 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
                 size="sm"
                 onClick={TriggerFilePicker}
                 disabled={!isInteractive}
-                className="gap-1.5 shadow-md font-medium bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-              >
+                className="gap-1.5 shadow-md font-medium bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white">
                 <RefreshCw className="size-3.5" />
                 <span>Ganti Gambar</span>
               </Button>
@@ -199,8 +198,7 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
                 size="sm"
                 onClick={HandleRemove}
                 disabled={!isInteractive}
-                className="gap-1.5 shadow-md font-medium bg-red-600 hover:bg-red-700 text-white border border-red-500/40"
-              >
+                className="gap-1.5 shadow-md font-medium bg-red-600 hover:bg-red-700 text-white border border-red-500/40">
                 <Trash2 className="size-3.5" />
                 <span>Hapus Thumbnail</span>
               </Button>
@@ -216,8 +214,7 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
                 size="xs"
                 onClick={TriggerFilePicker}
                 disabled={!isInteractive}
-                className="h-7 text-xs gap-1.5"
-              >
+                className="h-7 text-xs gap-1.5">
                 <RefreshCw className="size-3" />
                 <span>Ganti Gambar</span>
               </Button>
@@ -226,8 +223,7 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
                 size="xs"
                 onClick={HandleRemove}
                 disabled={!isInteractive}
-                className="h-7 text-xs gap-1.5 font-medium bg-red-600 hover:bg-red-700 text-white border border-red-500/40 shadow-xs"
-              >
+                className="h-7 text-xs gap-1.5 font-medium bg-red-600 hover:bg-red-700 text-white border border-red-500/40 shadow-xs">
                 <Trash2 className="size-3" />
                 <span>Hapus</span>
               </Button>
@@ -237,8 +233,7 @@ export function CampaignThumbnailUpload({ value, onChange, campaignId, disabled 
               href={value}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
-            >
+              className="inline-flex items-center gap-1 text-primary hover:underline font-medium">
               <span>Lihat Ukuran Penuh</span>
               <ExternalLink className="size-3" />
             </a>

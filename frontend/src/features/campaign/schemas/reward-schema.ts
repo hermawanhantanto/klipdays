@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-const cpmField = z
-  .number({ error: 'Tarif CPM wajib diisi angka.' })
-  .positive('Tarif CPM harus lebih besar dari Rp 0.');
+const cpmField = z.number({ error: 'Tarif CPM wajib diisi angka.' }).positive('Tarif CPM harus lebih besar dari Rp 0.');
 
 const minViewsField = z
   .number({ error: 'Penayangan minimum wajib diisi angka.' })
@@ -14,19 +12,11 @@ const maxViewsField = z
   .int('Batas penayangan maksimum harus berupa bilangan bulat.')
   .positive('Batas penayangan maksimum harus lebih besar dari 0.');
 
-const budgetField = z
-  .number({ error: 'Total anggaran wajib diisi angka.' })
-  .positive('Total anggaran harus lebih besar dari Rp 0.');
+const budgetField = z.number({ error: 'Total anggaran wajib diisi angka.' }).positive('Total anggaran harus lebih besar dari Rp 0.');
 
-const startDateField = z
-  .string()
-  .trim()
-  .min(1, 'Tanggal mulai kampanye wajib diisi.');
+const startDateField = z.string().trim().min(1, 'Tanggal mulai kampanye wajib diisi.');
 
-const endDateField = z
-  .string()
-  .trim()
-  .min(1, 'Tanggal berakhir kampanye wajib diisi.');
+const endDateField = z.string().trim().min(1, 'Tanggal berakhir kampanye wajib diisi.');
 
 /**
  * Validation schema for campaign creation wizard Step 4 (Hadiah & Anggaran).

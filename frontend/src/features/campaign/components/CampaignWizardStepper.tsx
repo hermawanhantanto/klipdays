@@ -1,6 +1,5 @@
 import { Check } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router';
-
 import { cn } from '@/lib/utils';
 import { CAMPAIGN_WIZARD_STEPS, GetWizardStepPath } from '../config/wizard-steps';
 import { UseCampaignQuery } from '../hooks';
@@ -76,7 +75,10 @@ export function CampaignWizardStepper({ className, campaign: propCampaign }: Cam
                     to={targetPath}
                     className="group flex items-center gap-3 text-left outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring rounded-lg p-1">
                     <div
-                      className={cn('flex size-9 shrink-0 items-center justify-center rounded-full text-xs transition-colors', circleClass)}>
+                      className={cn(
+                        'flex size-9 shrink-0 items-center justify-center rounded-full text-xs transition-colors',
+                        circleClass
+                      )}>
                       {isCompleted ? <Check className="h-4 w-4 stroke-[2.5]" /> : step.stepNumber}
                     </div>
                     <div className="hidden min-w-0 md:block">

@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-
 import { GetCampaignById, EditCampaign, InitializeCampaign, SubmitCampaign } from '../api';
 import type { Campaign, CampaignEditInput, InitializeCampaignResponse } from '../types';
 import { ResolveCampaignWizardStepPath } from '../utils';
@@ -157,4 +156,3 @@ export function UseSubmitCampaignMutation(
 
   return mutation;
 }
-

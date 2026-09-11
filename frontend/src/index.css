@@ -145,12 +145,18 @@
   }
 
   /* Make date/time picker calendar icons crisp white */
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='time'] {
+    color-scheme: dark;
+  }
+
   input[type='date']::-webkit-calendar-picker-indicator,
   input[type='datetime-local']::-webkit-calendar-picker-indicator,
   input[type='time']::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+    filter: brightness(0) invert(1) !important;
     cursor: pointer;
-    opacity: 0.9;
+    opacity: 0.95;
     transition: opacity 0.2s ease;
   }
 

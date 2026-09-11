@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CampaignThumbnailUpload } from './CampaignThumbnailUpload';
+import { CampaignUnsavedChangesDialog } from './CampaignUnsavedChangesDialog';
+import { FieldLengthTracker } from './FieldLengthTracker';
 import { WizardFormActions } from './WizardFormActions';
-import { UseCampaignWizardContext, UseEditCampaignMutation } from '../hooks';
+import { UseCampaignWizardContext, UseEditCampaignMutation, UseUnsavedChangesGuard } from '../hooks';
 import {
   basicInfoSchema,
   type BasicInfoFormValues,
@@ -68,10 +70,20 @@ export function CampaignFormStep1() {
       return;
     }
 
-    editMutation.mutate(values);
+    editMutation.mutate(values, {
+      onSuccess: () => {
+        form.reset(values);
+      },
+    });
   }
 
   const isPending = editMutation.isPending || form.formState.isSubmitting;
+  const isSaving = editMutation.isPending || editMutation.isSuccess;
+
+  const { isBlocked, ConfirmNavigation, CancelNavigation } = UseUnsavedChangesGuard({
+    isDirty: form.formState.isDirty,
+    isSaving,
+  });
 
   return (
     <form noValidate onSubmit={form.handleSubmit(HandleFormSubmit)} className="space-y-6">
@@ -86,7 +98,7 @@ export function CampaignFormStep1() {
                 <FieldLabel htmlFor={field.name}>
                   Judul Kampanye <span className="text-destructive font-medium">*</span>
                 </FieldLabel>
-                <span className="text-[11px] text-muted-foreground/70 tabular-nums">{(field.value ?? '').length}/100</span>
+                <FieldLengthTracker current={(field.value ?? '').length} max={100} />
               </div>
               <Input
                 {...field}
@@ -114,7 +126,7 @@ export function CampaignFormStep1() {
                 <FieldLabel htmlFor={field.name}>
                   Deskripsi Kampanye <span className="text-destructive font-medium">*</span>
                 </FieldLabel>
-                <span className="text-[11px] text-muted-foreground/70 tabular-nums">{(field.value ?? '').length}/2000</span>
+                <FieldLengthTracker current={(field.value ?? '').length} max={2000} />
               </div>
               <Textarea
                 {...field}
@@ -311,6 +323,13 @@ export function CampaignFormStep1() {
 
       {/* Form Submission Action */}
       <WizardFormActions isPending={isPending} />
+
+      {/* Unsaved Changes Guard Dialog */}
+      <CampaignUnsavedChangesDialog
+        isOpen={isBlocked}
+        onConfirm={ConfirmNavigation}
+        onCancel={CancelNavigation}
+      />
     </form>
   );
 }

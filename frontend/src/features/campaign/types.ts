@@ -1,6 +1,6 @@
+import type { ComponentType } from 'react';
 import type { Control } from 'react-hook-form';
-
-import type { BriefFormValues, MaterialsFormValues, RewardFormValues } from './schemas';
+import type { MaterialsFormValues } from './schemas';
 
 export interface ApiResponse<T> {
   status: string;
@@ -113,15 +113,6 @@ export interface MaterialFieldGroupProps {
   disabled?: boolean;
 }
 
-export interface BriefFormProps {
-  initialData?: Partial<Campaign> | null;
-  onSubmit: (values: BriefFormValues) => void;
-  isPending?: boolean;
-  isLoading?: boolean;
-  isSubmitting?: boolean;
-  onBack?: () => void;
-}
-
 export interface BriefDynamicListFieldProps {
   label: string;
   description?: string;
@@ -134,6 +125,28 @@ export interface BriefDynamicListFieldProps {
   variant?: 'pills' | 'rows';
   tone?: 'positive' | 'negative' | 'neutral';
   error?: string;
+  maxItemLength?: number;
+}
+
+export interface DynamicListInputProps {
+  onAdd: (item: string) => void;
+  placeholder?: string;
+  prefix?: string;
+  disabled?: boolean;
+  maxLength?: number;
+}
+
+export interface DynamicListPillsProps {
+  items: string[];
+  onRemove: (index: number) => void;
+  disabled?: boolean;
+}
+
+export interface DynamicListRowsProps {
+  items: string[];
+  onRemove: (index: number) => void;
+  tone?: 'positive' | 'negative' | 'neutral';
+  disabled?: boolean;
 }
 
 export interface CampaignProjections {
@@ -143,13 +156,58 @@ export interface CampaignProjections {
   durationDays: number;
 }
 
-export interface RewardFormProps {
-  initialData?: Partial<Campaign> | null;
-  onSubmit: (values: RewardFormValues) => void;
+export interface MissingStepItem {
+  stepNumber: number;
+  slug: WizardStepSlug;
+  title: string;
+  reason: string;
+}
+
+export interface CampaignCompletenessResult {
+  isComplete: boolean;
+  missingSteps: MissingStepItem[];
+}
+
+export interface CampaignReviewCompletenessAlertProps {
+  missingSteps: MissingStepItem[];
+  onNavigateToStep: (stepSlug: WizardStepSlug) => void;
+}
+
+export interface CampaignReviewBasicInfoProps {
+  campaign: Campaign;
+  onEdit: () => void;
+}
+
+export interface CampaignReviewMaterialsProps {
+  materials?: CampaignMaterial[];
+  onEdit: () => void;
+}
+
+export interface CampaignReviewBriefProps {
+  brief?: CampaignBrief | null;
+  onEdit: () => void;
+}
+
+export interface CampaignReviewRewardProps {
+  campaign: Campaign;
+  projections: CampaignProjections;
+  onEdit: () => void;
+}
+
+export interface CampaignDanaAmanNoticeProps {
+  variant?: 'budget' | 'review';
+  title?: string;
+  description?: string;
+  className?: string;
+}
+
+export type CampaignReviewEscrowNoticeProps = CampaignDanaAmanNoticeProps;
+
+export interface CampaignReviewActionsProps {
+  onBack: () => void;
+  onSubmit: () => void;
   isPending?: boolean;
-  isLoading?: boolean;
-  isSubmitting?: boolean;
-  onBack?: () => void;
+  isComplete?: boolean;
 }
 
 export interface ReviewSummaryProps {
@@ -187,3 +245,73 @@ export interface WizardFormActionsProps {
   backText?: string;
   className?: string;
 }
+
+export interface CampaignWizardHelperBoxProps {
+  title: string;
+  description?: string;
+  tip?: string;
+  icon?: ComponentType<{ className?: string }>;
+  className?: string;
+}
+
+export interface CampaignEstimateRoiCardProps {
+  projections: CampaignProjections;
+  className?: string;
+}
+
+export interface UseUnsavedChangesGuardOptions {
+  /**
+   * Whether form has unsaved modifications.
+   */
+  isDirty: boolean;
+  /**
+   * Whether form is actively submitting or saving.
+   */
+  isSaving?: boolean;
+}
+
+export interface UseUnsavedChangesGuardResult {
+  /**
+   * True if navigation is currently blocked due to unsaved changes.
+   */
+  isBlocked: boolean;
+  /**
+   * Confirms the pending navigation, discarding unsaved changes.
+   */
+  ConfirmNavigation: () => void;
+  /**
+   * Cancels the pending navigation and remains on the current page.
+   */
+  CancelNavigation: () => void;
+}
+
+export interface CampaignUnsavedChangesDialogProps {
+  /**
+   * Whether the unsaved changes dialog is open.
+   */
+  isOpen: boolean;
+  /**
+   * Callback fired when user confirms leaving without saving.
+   */
+  onConfirm: () => void;
+  /**
+   * Callback fired when user cancels navigation and stays on current step.
+   */
+  onCancel: () => void;
+}
+
+export interface FieldLengthTrackerProps {
+  /**
+   * Current length of the field value.
+   */
+  current: number;
+  /**
+   * Maximum allowed character length for the field.
+   */
+  max: number;
+  /**
+   * Optional custom CSS class overrides.
+   */
+  className?: string;
+}
+

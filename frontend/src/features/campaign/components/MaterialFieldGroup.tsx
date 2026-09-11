@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MATERIAL_TYPE_LABELS, MATERIAL_TYPE_OPTIONS, type MaterialTypeOption } from '../schemas';
 import type { MaterialFieldGroupProps } from '../types';
+import { FieldLengthTracker } from './FieldLengthTracker';
 
 /**
  * Resolves the contextual category icon based on the active material type.
@@ -80,7 +81,7 @@ export function MaterialFieldGroup({ index, control, canRemove, onRemove, disabl
                 <FieldLabel htmlFor={field.name}>
                   Nama Materi / Aset <span className="text-destructive font-medium">*</span>
                 </FieldLabel>
-                <span className="text-[11px] text-muted-foreground/70 tabular-nums">{(field.value ?? '').length}/100</span>
+                <FieldLengthTracker current={(field.value ?? '').length} max={100} />
               </div>
               <Input
                 {...field}

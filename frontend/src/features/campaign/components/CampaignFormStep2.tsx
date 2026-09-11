@@ -1,14 +1,16 @@
 import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Lightbulb, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { GetWizardStepPath } from '../config/wizard-steps';
-import { UseCampaignWizardContext, UseEditCampaignMutation } from '../hooks';
+import { UseCampaignWizardContext, UseEditCampaignMutation, UseUnsavedChangesGuard } from '../hooks';
 import { materialsFormSchema, type MaterialsFormValues } from '../schemas';
 import { GetInitialMaterials } from '../utils';
+import { CampaignUnsavedChangesDialog } from './CampaignUnsavedChangesDialog';
+import { CampaignWizardHelperBox } from './CampaignWizardHelperBox';
 import { MaterialFieldGroup } from './MaterialFieldGroup';
 import { WizardFormActions } from './WizardFormActions';
 
@@ -97,29 +99,33 @@ export function CampaignFormStep2() {
       return;
     }
 
-    editMutation.mutate({ materials: values.materials });
+    editMutation.mutate(
+      { materials: values.materials },
+      {
+        onSuccess: () => {
+          form.reset(values);
+        },
+      }
+    );
   }
 
   const isPending = editMutation.isPending || form.formState.isSubmitting;
+  const isSaving = editMutation.isPending || editMutation.isSuccess;
   const rootError = form.formState.errors.materials?.root?.message;
+
+  const { isBlocked, ConfirmNavigation, CancelNavigation } = UseUnsavedChangesGuard({
+    isDirty: form.formState.isDirty,
+    isSaving,
+  });
 
   return (
     <form noValidate onSubmit={form.handleSubmit(HandleFormSubmit)} className="space-y-6">
       {/* Information Helper Box */}
-      <div className="flex items-start gap-3.5 rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 sm:p-5 text-sm">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/15 text-orange-500 dark:text-orange-400">
-          <Lightbulb className="size-4" />
-        </div>
-        <div className="space-y-1">
-          <p className="font-semibold text-foreground text-sm">Panduan Materi & Aset Promosi</p>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            Sediakan materi yang dibutuhkan kreator seperti video mentah (footage), foto produk beresolusi tinggi, logo brand, atau tautan penyimpanan cloud.
-          </p>
-          <p className="text-xs text-muted-foreground/90 leading-relaxed pt-0.5">
-            <strong className="text-orange-600 dark:text-orange-400 font-semibold">Tips:</strong> Jika menggunakan Google Drive atau Dropbox, pastikan izin akses tautan telah diatur ke <span className="underline underline-offset-2">"Siapa saja yang memiliki tautan dapat melihat"</span> agar kreator dapat langsung mengunduh aset.
-          </p>
-        </div>
-      </div>
+      <CampaignWizardHelperBox
+        title="Panduan Materi & Aset Promosi"
+        description="Sediakan materi yang dibutuhkan kreator seperti video mentah (footage), foto produk beresolusi tinggi, logo brand, atau tautan penyimpanan cloud."
+        tip='Jika menggunakan Google Drive atau Dropbox, pastikan izin akses tautan telah diatur ke "Siapa saja yang memiliki tautan dapat melihat" agar kreator dapat langsung mengunduh aset.'
+      />
 
       {/* Dynamic Materials Field Groups */}
       <div className="space-y-4">
@@ -155,6 +161,13 @@ export function CampaignFormStep2() {
 
       {/* Navigation and Submission Actions */}
       <WizardFormActions onBack={HandleBack} isPending={isPending} />
+
+      {/* Unsaved Changes Guard Dialog */}
+      <CampaignUnsavedChangesDialog
+        isOpen={isBlocked}
+        onConfirm={ConfirmNavigation}
+        onCancel={CancelNavigation}
+      />
     </form>
   );
 }

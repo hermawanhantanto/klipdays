@@ -2,4 +2,5 @@ export { UseEditCampaignMutation, UseInitializeCampaignMutation, UseSubmitCampai
 export type { EditCampaignMutationOptions, InitializeCampaignMutationOptions, SubmitCampaignMutationOptions } from './mutations';
 export { UseCampaignQuery } from './queries';
 export { UseCampaignWizardContext } from './wizard-context';
+export { UseUnsavedChangesGuard } from './use-unsaved-changes';
 

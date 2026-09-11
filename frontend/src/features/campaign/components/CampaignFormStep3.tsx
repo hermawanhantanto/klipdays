@@ -1,68 +1,101 @@
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, FileText, Hash, MessageSquareQuote } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-
+import { useNavigate, useParams } from 'react-router';
+import { toast } from 'sonner';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { GetWizardStepPath } from '../config/wizard-steps';
+import { UseCampaignWizardContext, UseEditCampaignMutation, UseUnsavedChangesGuard } from '../hooks';
 import { briefSchema, type BriefFormValues } from '../schemas';
-import type { BriefFormProps } from '../types';
 import { GetInitialBrief } from '../utils';
 import { BriefDynamicListField } from './BriefDynamicListField';
+import { CampaignUnsavedChangesDialog } from './CampaignUnsavedChangesDialog';
+import { CampaignWizardHelperBox } from './CampaignWizardHelperBox';
+import { FieldLengthTracker } from './FieldLengthTracker';
 import { WizardFormActions } from './WizardFormActions';
 
 /**
  * Brief & guidelines form component for Step 3 of the campaign creation wizard.
- * Captures campaign objective, key messages, call to action, TikTok caption/hashtag rules,
+ * Captures campaign objective, key messages, call to action, social media caption/hashtag rules,
  * Do's & Don'ts content guidelines, and script instructions.
+ * Connects directly to the campaign edit mutation and manages its own submission lifecycle.
  *
- * @param props - Component properties including initialData, onSubmit, onBack, and pending states.
- * @returns The rendered brief form element.
+ * @returns The rendered campaign brief form element.
  */
-export function BriefForm({
-  initialData,
-  onSubmit,
-  isPending: propIsPending,
-  isLoading: propIsLoading,
-  isSubmitting: propIsSubmitting,
-  onBack,
-}: BriefFormProps) {
-  const initialBrief = GetInitialBrief(initialData);
+export function CampaignFormStep3() {
+  const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
+  const { campaign } = UseCampaignWizardContext();
+
+  const editMutation = UseEditCampaignMutation(id, {
+    successMessage: 'Brief & panduan berhasil disimpan.',
+  });
+
+  const initialValues = useMemo(() => GetInitialBrief(campaign), [campaign]);
 
   const form = useForm<BriefFormValues>({
     resolver: zodResolver(briefSchema),
-    defaultValues: initialBrief,
+    defaultValues: initialValues,
+    values: initialValues,
+    resetOptions: {
+      keepDirtyValues: true,
+    },
   });
 
-  useEffect(() => {
-    if (initialData?.brief && !form.formState.isDirty) {
-      const active = GetInitialBrief(initialData);
-      form.reset(active);
-    }
-  }, [initialData, form]);
+  /**
+   * Navigates back to Step 2 (Materials & Assets).
+   */
+  function HandleBack() {
+    const targetPath = GetWizardStepPath('step-2', id);
+    navigate(targetPath);
+  }
 
   /**
-   * Dispatches validated form values to the parent submit handler.
+   * Handles form submission and dispatches to the edit campaign mutation.
    *
    * @param values - Validated campaign brief form values.
    */
   function HandleFormSubmit(values: BriefFormValues) {
-    onSubmit(values);
+    if (!id) {
+      toast.error('ID Kampanye tidak valid. Mengarahkan ke daftar kampanye...', {
+        id: 'missing-campaign-id',
+      });
+      navigate('/dashboard/campaigns');
+      return;
+    }
+
+    if (editMutation.isPending) {
+      return;
+    }
+
+    editMutation.mutate(
+      { brief: values },
+      {
+        onSuccess: () => {
+          form.reset(values);
+        },
+      }
+    );
   }
 
-  const isPending = Boolean(propIsPending ?? propIsLoading ?? propIsSubmitting ?? form.formState.isSubmitting);
+  const isPending = editMutation.isPending || form.formState.isSubmitting;
+  const isSaving = editMutation.isPending || editMutation.isSuccess;
+
+  const { isBlocked, ConfirmNavigation, CancelNavigation } = UseUnsavedChangesGuard({
+    isDirty: form.formState.isDirty,
+    isSaving,
+  });
 
   return (
     <form noValidate onSubmit={form.handleSubmit(HandleFormSubmit)} className="space-y-8">
       {/* Information Helper Box */}
-      <div className="rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">Panduan Kreatif & Instruksi Konten</p>
-        <p className="mt-1">
-          Brief ini menjadi acuan utama para kreator (clippers) dalam membuat video klip promosi.
-          Berikan instruksi yang jelas agar konten yang dihasilkan sesuai dengan ekspektasi brand Anda.
-        </p>
-      </div>
+      <CampaignWizardHelperBox
+        title="Panduan Kreatif & Instruksi Konten"
+        description="Brief ini menjadi acuan utama para kreator (clippers) dalam membuat video promosi. Berikan instruksi yang jelas agar konten yang dihasilkan selaras dengan visi brand Anda."
+      />
 
       {/* Section 1: Core Direction (Tujuan & Pesan Utama) */}
       <div className="space-y-4">
@@ -80,15 +113,24 @@ export function BriefForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Tujuan Kampanye</FieldLabel>
-                <Input
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor={field.name}>
+                    Tujuan Kampanye <span className="text-destructive font-medium">*</span>
+                  </FieldLabel>
+                  <FieldLengthTracker current={(field.value ?? '').length} max={1000} />
+                </div>
+                <Textarea
                   {...field}
                   id={field.name}
+                  rows={3}
+                  maxLength={1000}
                   placeholder="Contoh: Meningkatkan awareness produk dan penjualan serum glowing 30 hari..."
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
-                <FieldDescription>Apa yang ingin dicapai melalui kampanye video kliping ini?</FieldDescription>
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Apa yang ingin dicapai melalui kampanye video kliping ini?
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
@@ -100,16 +142,24 @@ export function BriefForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Pesan Utama</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor={field.name}>
+                    Pesan Utama <span className="text-destructive font-medium">*</span>
+                  </FieldLabel>
+                  <FieldLengthTracker current={(field.value ?? '').length} max={1000} />
+                </div>
                 <Textarea
                   {...field}
                   id={field.name}
                   rows={3}
+                  maxLength={1000}
                   placeholder="Contoh: Formula baru dengan 2% Retinol murni yang lembut untuk kulit sensitif dan memberikan hasil dalam 14 hari..."
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
-                <FieldDescription>Poin keunggulan atau pesan inti yang wajib dipahami penonton.</FieldDescription>
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Poin keunggulan atau pesan inti yang wajib dipahami penonton.
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
@@ -123,15 +173,23 @@ export function BriefForm({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Call to Action (CTA)</FieldLabel>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel htmlFor={field.name}>
+                      Call to Action (CTA) <span className="text-destructive font-medium">*</span>
+                    </FieldLabel>
+                    <FieldLengthTracker current={(field.value ?? '').length} max={500} />
+                  </div>
                   <Input
                     {...field}
                     id={field.name}
+                    maxLength={500}
                     placeholder="Contoh: Cek keranjang kuning sekarang untuk diskon 30%!"
                     aria-invalid={fieldState.invalid}
                     disabled={isPending}
                   />
-                  <FieldDescription>Aksi yang diharapkan dari penonton setelah menonton video.</FieldDescription>
+                  <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                    Aksi yang diharapkan dari penonton setelah menonton video.
+                  </FieldDescription>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
@@ -143,15 +201,21 @@ export function BriefForm({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor={field.name}>Kesan / Mood Konten (Opsional)</FieldLabel>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel htmlFor={field.name}>Kesan / Mood Konten (Opsional)</FieldLabel>
+                    <FieldLengthTracker current={(field.value ?? '').length} max={500} />
+                  </div>
                   <Input
                     {...field}
                     id={field.name}
+                    maxLength={500}
                     placeholder="Contoh: Review jujur (honest review), ceria, edukatif..."
                     aria-invalid={fieldState.invalid}
                     disabled={isPending}
                   />
-                  <FieldDescription>Nuansa atau kesan emosional yang ingin ditonjolkan.</FieldDescription>
+                  <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                    Nuansa atau kesan emosional yang ingin ditonjolkan.
+                  </FieldDescription>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
@@ -160,13 +224,13 @@ export function BriefForm({
         </FieldGroup>
       </div>
 
-      {/* Section 2: Posting Guidelines on TikTok */}
+      {/* Section 2: Social Media Posting Guidelines */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b pb-2">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
             <Hash className="size-4" />
           </div>
-          <h3 className="font-semibold text-base text-foreground">Panduan Postingan TikTok</h3>
+          <h3 className="font-semibold text-base text-foreground">Panduan Postingan Media Sosial</h3>
         </div>
 
         <FieldGroup>
@@ -176,16 +240,22 @@ export function BriefForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Caption Wajib (Opsional)</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor={field.name}>Caption Wajib (Opsional)</FieldLabel>
+                  <FieldLengthTracker current={(field.value ?? '').length} max={2000} />
+                </div>
                 <Textarea
                   {...field}
                   id={field.name}
                   rows={2}
+                  maxLength={2000}
                   placeholder="Contoh: Solusi wajah kusam akhirnya ketemu! Jangan lupa cobain sekarang..."
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
-                <FieldDescription>Teks caption rekomendasi atau wajib yang perlu dicantumkan saat posting.</FieldDescription>
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Teks caption rekomendasi atau wajib yang perlu dicantumkan saat posting.
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
@@ -200,15 +270,13 @@ export function BriefForm({
               render={({ field, fieldState }) => (
                 <BriefDynamicListField
                   label="Tagar / Hashtags Wajib"
-                  description="Tagar yang wajib disertakan kreator di TikTok."
-                  placeholder="Contoh: skincare, glowing, racuntiktok"
+                  description="Tagar yang wajib disertakan kreator di media sosial."
+                  placeholder="Contoh: skincare, glowing, racunbelanja"
                   prefix="#"
                   variant="pills"
                   items={field.value ?? []}
                   onAddItem={(newItem) => field.onChange([...(field.value ?? []), newItem])}
-                  onRemoveItem={(indexToRemove) =>
-                    field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))
-                  }
+                  onRemoveItem={(indexToRemove) => field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))}
                   disabled={isPending}
                   error={fieldState.error?.message}
                 />
@@ -228,9 +296,7 @@ export function BriefForm({
                   variant="pills"
                   items={field.value ?? []}
                   onAddItem={(newItem) => field.onChange([...(field.value ?? []), newItem])}
-                  onRemoveItem={(indexToRemove) =>
-                    field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))
-                  }
+                  onRemoveItem={(indexToRemove) => field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))}
                   disabled={isPending}
                   error={fieldState.error?.message}
                 />
@@ -240,7 +306,7 @@ export function BriefForm({
         </FieldGroup>
       </div>
 
-      {/* Section 3: Do's & Don'ts */}
+      {/* Section 3: Aturan Konten (Do's & Don'ts) */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 border-b pb-2">
           <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-primary">
@@ -263,9 +329,7 @@ export function BriefForm({
                 tone="positive"
                 items={field.value ?? []}
                 onAddItem={(newItem) => field.onChange([...(field.value ?? []), newItem])}
-                onRemoveItem={(indexToRemove) =>
-                  field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))
-                }
+                onRemoveItem={(indexToRemove) => field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))}
                 disabled={isPending}
                 error={fieldState.error?.message}
               />
@@ -285,9 +349,7 @@ export function BriefForm({
                 tone="negative"
                 items={field.value ?? []}
                 onAddItem={(newItem) => field.onChange([...(field.value ?? []), newItem])}
-                onRemoveItem={(indexToRemove) =>
-                  field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))
-                }
+                onRemoveItem={(indexToRemove) => field.onChange((field.value ?? []).filter((_, index) => index !== indexToRemove))}
                 disabled={isPending}
                 error={fieldState.error?.message}
               />
@@ -312,16 +374,22 @@ export function BriefForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Referensi Narasi / Hook Pembuka (Opsional)</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor={field.name}>Referensi Narasi / Hook Pembuka (Opsional)</FieldLabel>
+                  <FieldLengthTracker current={(field.value ?? '').length} max={2000} />
+                </div>
                 <Textarea
                   {...field}
                   id={field.name}
                   rows={3}
+                  maxLength={2000}
                   placeholder="Contoh: 'Kalian yang kulitnya kering kerontang wajib nonton ini sampai habis...'"
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
-                <FieldDescription>Contoh hook pembuka atau skrip narasi yang dapat digunakan kreator.</FieldDescription>
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Contoh hook pembuka atau skrip narasi yang dapat digunakan kreator.
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
@@ -333,16 +401,22 @@ export function BriefForm({
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Panduan Tambahan Lainnya (Opsional)</FieldLabel>
+                <div className="flex items-center justify-between">
+                  <FieldLabel htmlFor={field.name}>Panduan Tambahan Lainnya (Opsional)</FieldLabel>
+                  <FieldLengthTracker current={(field.value ?? '').length} max={3000} />
+                </div>
                 <Textarea
                   {...field}
                   id={field.name}
                   rows={3}
+                  maxLength={3000}
                   placeholder="Catatan khusus lainnya terkait ketentuan video, resolusi, format kliping, dsb..."
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
-                <FieldDescription>Informasi penting lainnya yang perlu diketahui oleh clippers.</FieldDescription>
+                <FieldDescription className="text-xs text-muted-foreground/80 leading-relaxed">
+                  Informasi penting lainnya yang perlu diketahui oleh clippers.
+                </FieldDescription>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </Field>
             )}
@@ -351,7 +425,14 @@ export function BriefForm({
       </div>
 
       {/* Navigation and Submission Actions */}
-      <WizardFormActions onBack={onBack} isPending={isPending} />
+      <WizardFormActions onBack={HandleBack} isPending={isPending} />
+
+      {/* Unsaved Changes Guard Dialog */}
+      <CampaignUnsavedChangesDialog
+        isOpen={isBlocked}
+        onConfirm={ConfirmNavigation}
+        onCancel={CancelNavigation}
+      />
     </form>
   );
 }

@@ -1,22 +1,6 @@
-import type { Campaign, WizardStepSlug } from '../types';
-import {
-  IsStep1Complete,
-  IsStep2Complete,
-  IsStep3Complete,
-  IsStep4Complete,
-} from './wizard-navigation';
-
-export interface MissingStepItem {
-  stepNumber: number;
-  slug: WizardStepSlug;
-  title: string;
-  reason: string;
-}
-
-export interface CampaignCompletenessResult {
-  isComplete: boolean;
-  missingSteps: MissingStepItem[];
-}
+import type { Campaign, CampaignCompletenessResult, MissingStepItem } from '../types';
+import { IsStep1Complete, IsStep2Complete, IsStep3Complete, IsStep4Complete } from './wizard-navigation';
+export type { MissingStepItem, CampaignCompletenessResult };
 
 /**
  * Checks whether a campaign has completed all required fields across the 4 wizard steps:

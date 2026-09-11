@@ -1,7 +1,13 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router';
 import { toast } from 'sonner';
-import { CampaignWizardError, CampaignWizardHeader, CampaignWizardSkeleton, CampaignWizardStepper } from '../components';
+import {
+  CampaignStepSkeleton,
+  CampaignWizardError,
+  CampaignWizardHeader,
+  CampaignWizardSkeleton,
+  CampaignWizardStepper,
+} from '../components';
 import { CAMPAIGN_WIZARD_STEPS, GetWizardStepPath } from '../config/wizard-steps';
 import { UseCampaignQuery } from '../hooks';
 import { GetHighestAccessibleStepNumber } from '../utils';
@@ -25,15 +31,22 @@ function CampaignWizardLayout() {
   const currentStepNumber = matchedStep?.stepNumber ?? 1;
 
   const highestAllowedStep = GetHighestAccessibleStepNumber(campaign);
-  const isForbiddenStep = currentStepNumber > highestAllowedStep;
+  const isForbiddenStep = !isLoading && !isError && Boolean(campaign) && currentStepNumber > highestAllowedStep;
 
   useEffect(() => {
     if (isForbiddenStep) {
       toast.warning('Harap lengkapi langkah sebelumnya terlebih dahulu.', {
         id: 'forbidden-step-toast',
       });
+    } else {
+      toast.dismiss('forbidden-step-toast');
     }
   }, [isForbiddenStep]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.querySelector('main')?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [location.pathname]);
 
   if (!id) {
     return <Navigate to="/dashboard/campaigns" replace />;
@@ -63,7 +76,9 @@ function CampaignWizardLayout() {
       </div>
 
       <div>
-        <Outlet context={{ campaign }} />
+        <Suspense fallback={<CampaignStepSkeleton />}>
+          <Outlet context={{ campaign }} />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const MATERIAL_TYPE_OPTIONS = ['VIDEO', 'IMAGE', 'DOCUMENT', 'LINK'] as const;
+
 export type MaterialTypeOption = (typeof MATERIAL_TYPE_OPTIONS)[number];
 
 export const MATERIAL_TYPE_LABELS: Record<MaterialTypeOption, string> = {

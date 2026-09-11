@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Link, Outlet } from 'react-router';
 
 /**
@@ -18,7 +20,14 @@ function AuthLayout() {
         </Link>
       </header>
       <div className="flex flex-1 items-center justify-center p-6">
-        <Outlet />
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="size-8 animate-spin text-primary" />
+            </div>
+          }>
+          <Outlet />
+        </Suspense>
       </div>
     </main>
   );

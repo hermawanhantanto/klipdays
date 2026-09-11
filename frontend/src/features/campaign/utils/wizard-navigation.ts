@@ -20,8 +20,7 @@ export function IsStep1Complete(campaign?: Partial<Campaign> | null): boolean {
   const hasPlatform = Boolean(campaign.platform);
   const hasMainMedia = Boolean(campaign.mainMediaUrl && campaign.mainMediaUrl.trim() !== '');
 
-  const isComplete =
-    hasTitle && hasDescription && hasType && hasCategory && hasThumbnail && hasPlatform && hasMainMedia;
+  const isComplete = hasTitle && hasDescription && hasType && hasCategory && hasThumbnail && hasPlatform && hasMainMedia;
 
   return isComplete;
 }
@@ -100,6 +99,22 @@ export function IsStep4Complete(campaign?: Partial<Campaign> | null): boolean {
 }
 
 /**
+ * Checks whether Step 5 (Review & Submit) has been completed.
+ * Step 5 is only considered complete once the campaign has been officially submitted for review
+ * (i.e. campaignStatus has transitioned away from DRAFT or REVISION to IN_REVIEW, ACTIVE, etc.).
+ *
+ * @param campaign - The campaign entity to evaluate.
+ * @returns True if the campaign has been submitted for review, false otherwise.
+ */
+export function IsStep5Complete(campaign?: Partial<Campaign> | null): boolean {
+  if (!campaign || !campaign.campaignStatus) return false;
+
+  const isSubmitted = campaign.campaignStatus !== 'DRAFT' && campaign.campaignStatus !== 'REVISION';
+
+  return isSubmitted;
+}
+
+/**
  * Checks whether a specific wizard step number has been completed.
  *
  * @param stepNumber - The step number (1 to 5).
@@ -117,12 +132,7 @@ export function IsWizardStepCompleted(stepNumber: number, campaign?: Partial<Cam
     case 4:
       return IsStep4Complete(campaign);
     case 5:
-      return (
-        IsStep1Complete(campaign) &&
-        IsStep2Complete(campaign) &&
-        IsStep3Complete(campaign) &&
-        IsStep4Complete(campaign)
-      );
+      return IsStep5Complete(campaign);
     default:
       return false;
   }
