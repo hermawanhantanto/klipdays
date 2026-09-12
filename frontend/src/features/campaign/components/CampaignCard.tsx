@@ -87,7 +87,7 @@ export function CampaignCard({ campaign, onClick, className }: CampaignCardProps
       <CardContent className="relative z-10 -mt-px flex flex-1 flex-col justify-between p-4 space-y-3.5 bg-card">
         <div className="space-y-2">
           {/* Title */}
-          <h3 className="line-clamp-2 text-sm sm:text-base font-semibold text-foreground tracking-tight leading-snug group-hover:text-primary transition-colors">
+          <h3 className="line-clamp-2 text-sm sm:text-base font-semibold text-foreground tracking-tight leading-snug">
             {title}
           </h3>
 
