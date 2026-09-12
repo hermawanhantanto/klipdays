@@ -144,7 +144,7 @@ export function UseSubmitCampaignMutation(
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
 
       toast.success('Kampanye berhasil diajukan untuk proses review.');
-      navigate('/dashboard/campaigns');
+      navigate('/brand-dashboard/brand-campaigns');
 
       onSuccess?.(submittedCampaign, variables, onMutateResult, context);
     },

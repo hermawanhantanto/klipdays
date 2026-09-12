@@ -14,7 +14,7 @@ export function CampaignWizardHeader() {
     <div className="flex flex-col gap-3">
       <div>
         <Button asChild variant="ghost" size="sm" className="h-8 -ml-2 px-2 text-xs text-muted-foreground hover:text-foreground">
-          <Link to="/dashboard/campaigns" className="flex items-center gap-1.5">
+          <Link to="/brand-dashboard/brand-campaigns" className="flex items-center gap-1.5">
             <ArrowLeft className="size-3.5" />
             <span>Kembali ke Kampanye</span>
           </Link>

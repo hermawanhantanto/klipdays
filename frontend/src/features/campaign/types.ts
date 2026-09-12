@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import type { Control } from 'react-hook-form';
 import type { MaterialsFormValues } from './schemas';
 
@@ -260,58 +260,103 @@ export interface CampaignEstimateRoiCardProps {
 }
 
 export interface UseUnsavedChangesGuardOptions {
-  /**
-   * Whether form has unsaved modifications.
-   */
   isDirty: boolean;
-  /**
-   * Whether form is actively submitting or saving.
-   */
   isSaving?: boolean;
 }
 
 export interface UseUnsavedChangesGuardResult {
-  /**
-   * True if navigation is currently blocked due to unsaved changes.
-   */
   isBlocked: boolean;
-  /**
-   * Confirms the pending navigation, discarding unsaved changes.
-   */
   ConfirmNavigation: () => void;
-  /**
-   * Cancels the pending navigation and remains on the current page.
-   */
   CancelNavigation: () => void;
 }
 
 export interface CampaignUnsavedChangesDialogProps {
-  /**
-   * Whether the unsaved changes dialog is open.
-   */
   isOpen: boolean;
-  /**
-   * Callback fired when user confirms leaving without saving.
-   */
   onConfirm: () => void;
-  /**
-   * Callback fired when user cancels navigation and stays on current step.
-   */
   onCancel: () => void;
 }
 
 export interface FieldLengthTrackerProps {
-  /**
-   * Current length of the field value.
-   */
   current: number;
-  /**
-   * Maximum allowed character length for the field.
-   */
   max: number;
-  /**
-   * Optional custom CSS class overrides.
-   */
   className?: string;
 }
 
+export interface CampaignCardBrand {
+  id: string;
+  companyName: string;
+  industry?: string | null;
+}
+
+export interface CampaignCardItem {
+  id: string;
+  title: string | null;
+  description: string | null;
+  campaignType: string;
+  campaignCategory: string;
+  thumbnailUrl: string | null;
+  platform: string;
+  mainMediaUrl?: string | null;
+  cpm: number | string | null;
+  minViews?: number | null;
+  maxViews?: number | null;
+  budget: number | string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  status: string;
+  campaignStatus: string;
+  createdAt: string;
+  updatedAt: string;
+  brandId: string;
+  brand: CampaignCardBrand;
+  joinedCount: number;
+}
+
+export interface CampaignCardProps {
+  campaign: CampaignCardItem;
+  onClick?: (campaign: CampaignCardItem) => void;
+  className?: string;
+}
+
+export interface CampaignStatusBadgeConfig {
+  label: string;
+  className: string;
+}
+
+export interface CampaignPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface CampaignsPaginatedData {
+  items: CampaignCardItem[];
+  pagination: CampaignPaginationMeta;
+}
+
+export interface CampaignQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  campaignType?: string;
+  platform?: string;
+  campaignStatus?: string;
+  sort?: string;
+}
+
+export interface CampaignCardSkeletonProps {
+  className?: string;
+}
+
+export interface BrandCampaignsListProps {
+  onCardClick?: (campaign: CampaignCardItem) => void;
+  className?: string;
+}
+
+export interface CreateCampaignDialogProps {
+  children: ReactNode;
+}

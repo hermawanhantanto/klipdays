@@ -220,7 +220,7 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
         take: limit,
         select: CAMPAIGN_CARD_SELECT,
       }),
-      
+
       prisma.campaign.count({
         where: whereClause,
       }),
@@ -230,8 +230,19 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
 
+    const items: CampaignCardItem[] = campaigns.map((campaign) => {
+      const { _count, ...rest } = campaign;
+
+      const item: CampaignCardItem = {
+        ...rest,
+        joinedCount: _count?.submissions ?? 0,
+      };
+
+      return item;
+    });
+
     const responsePayload: CampaignsPaginatedData = {
-      items: campaigns as unknown as CampaignCardItem[],
+      items,
       pagination: {
         page,
         limit,
@@ -247,7 +258,6 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
-
 
 /**
  * Handles `GET /campaigns/:id`: retrieves campaign details (including active

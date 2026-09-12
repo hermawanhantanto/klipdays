@@ -6,27 +6,27 @@ export type { DashboardNavItem };
 export const BRAND_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
-    href: '/dashboard',
+    href: '/brand-dashboard',
     icon: LayoutDashboard,
   },
   {
     title: 'Kampanye',
-    href: '/dashboard/campaigns',
+    href: '/brand-dashboard/brand-campaigns',
     icon: Megaphone,
   },
   {
     title: 'Pengajuan Klip',
-    href: '/dashboard/submissions',
+    href: '/brand-dashboard/submissions',
     icon: Video,
   },
   {
     title: 'Dompet Escrow',
-    href: '/dashboard/wallet',
+    href: '/brand-dashboard/wallet',
     icon: Wallet,
   },
   {
     title: 'Pengaturan',
-    href: '/dashboard/settings',
+    href: '/brand-dashboard/settings',
     icon: Settings,
   },
 ];

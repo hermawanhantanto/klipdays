@@ -11,8 +11,7 @@ import DashboardLayout from '@/features/dashboard/layouts/DashboardLayout';
 const Home = lazy(() => import('@/features/home/pages/Home'));
 const SignIn = lazy(() => import('@/features/authentication/pages/SignIn'));
 const SignUp = lazy(() => import('@/features/authentication/pages/SignUp'));
-const Dashboard = lazy(() => import('@/features/dashboard/pages/Dashboard'));
-const Campaigns = lazy(() => import('@/features/campaign/pages/Campaigns'));
+const BrandCampaigns = lazy(() => import('@/features/campaign/pages/BrandCampaigns'));
 const CampaignStep1 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep1'));
 const CampaignStep2 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep2'));
 const CampaignStep3 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep3'));
@@ -48,11 +47,11 @@ const router = createBrowserRouter(
         <Route path="login" element={<Navigate to="/signin" replace />} />
         <Route path="signup" element={<SignUp />} />
       </Route>
-      <Route element={<ProtectedRoute />}>
-        <Route path="dashboard" element={<DashboardLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="campaigns" element={<Campaigns />} />
-          <Route path="campaigns/create" element={<CampaignWizardLayout />}>
+      <Route element={<ProtectedRoute allowedRoles={['BRAND', 'ADMIN']} />}>
+        <Route path="brand-dashboard" element={<DashboardLayout />}>
+          <Route index element={<Navigate to="brand-campaigns" replace />} />
+          <Route path="brand-campaigns" element={<BrandCampaigns />} />
+          <Route path="brand-campaigns/create" element={<CampaignWizardLayout />}>
             <Route index element={<Navigate to="step-1" replace />} />
             <Route path="step-1" element={<CampaignStep1 />} />
             <Route path="step-2" element={<CampaignStep2 />} />
@@ -60,7 +59,7 @@ const router = createBrowserRouter(
             <Route path="step-4" element={<CampaignStep4 />} />
             <Route path="step-5" element={<CampaignStep5 />} />
           </Route>
-          <Route path="campaigns/:id/create" element={<CampaignWizardLayout />}>
+          <Route path="brand-campaigns/:id/create" element={<CampaignWizardLayout />}>
             <Route index element={<Navigate to="step-1" replace />} />
             <Route path="step-1" element={<CampaignStep1 />} />
             <Route path="step-2" element={<CampaignStep2 />} />
@@ -68,9 +67,8 @@ const router = createBrowserRouter(
             <Route path="step-4" element={<CampaignStep4 />} />
             <Route path="step-5" element={<CampaignStep5 />} />
           </Route>
-          <Route path="kampanye" element={<Navigate to="/dashboard/campaigns" replace />} />
         </Route>
-        <Route path="kampanye" element={<Navigate to="/dashboard/campaigns" replace />} />
+        <Route path="dashboard" element={<Navigate to="/brand-dashboard" replace />} />
       </Route>
     </Route>
   )

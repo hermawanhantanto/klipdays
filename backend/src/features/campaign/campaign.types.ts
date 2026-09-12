@@ -17,7 +17,6 @@ export type {
   CampaignSortOption,
 };
 
-
 export interface CampaignPaginationMeta {
   page: number;
   limit: number;
@@ -31,10 +30,6 @@ export interface CampaignCardBrand {
   id: string;
   companyName: string;
   industry: string | null;
-}
-
-export interface CampaignCardSubmissionsCount {
-  submissions: number;
 }
 
 export interface CampaignCardItem {
@@ -58,11 +53,10 @@ export interface CampaignCardItem {
   updatedAt: Date;
   brandId: string;
   brand: CampaignCardBrand;
-  _count: CampaignCardSubmissionsCount;
+  joinedCount: number;
 }
 
 export interface CampaignsPaginatedData {
   items: CampaignCardItem[];
   pagination: CampaignPaginationMeta;
 }
-

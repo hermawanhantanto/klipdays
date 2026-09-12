@@ -30,8 +30,7 @@
   implementations or inline business logic.
 - Wizard form steps must be self-contained workers: zero required props, own their `useForm()` and `zodResolver`, read context/params
   directly, connect to feature mutations, and manage their submission lifecycle.
-- Colocate all component and subcomponent prop interfaces in the feature module's `types.ts` to maintain clean single-source type exports
-  and prevent circular dependencies.
+- Strict prop interface colocation in `types.ts`: NEVER declare component, subcomponent, layout, or route guard prop interfaces (e.g. `ProtectedRouteProps`) inside component (`*.tsx`) or layout files. Always declare and export them strictly inside the feature's `types.ts` (compile-time pure) and import them into components via `import type`.
 - Extract form defaults, data extractors, and transformation mappers into the feature's `utils/` folder rather than declaring them inside
   form components, making them reusable and testable.
 - Avoid defensive callback checks for guaranteed props: make standard callbacks required on prop interfaces and avoid writing unnecessary
@@ -104,6 +103,8 @@
   colocate derived types (`z.infer`, `as const` tuples) with their runtime schemas and re-export them.
 - Standardize field character length tracking: use `FieldLengthTracker` with accessible live announcements and responsive color transitions
   ($<90\%$ muted, $\ge 90\%$ amber, $\ge 100\%$ destructive).
+- Clean API DTO Contracts: Never expose internal database engine naming artifacts (e.g. Prisma `_count`, MongoDB `_id`) directly in external API response contracts or frontend DTO types; always map them at the handler layer into clean, semantic domain fields (e.g. `joinedCount: number`).
+
 
 # Code Style & Clean Code Principles
 
@@ -140,3 +141,4 @@
   clear, actionable rationale.
 - Systematically review and cross-reference recorded lessons before developing new feature modules to ensure past pitfalls are never
   repeated.
+- Zero tolerance for inline prop declarations: Always declare component, route guard, and layout prop interfaces directly in the feature's `types.ts` from the very start; never declare interfaces inline within component `.tsx` files.

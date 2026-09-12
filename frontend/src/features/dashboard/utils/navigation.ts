@@ -34,10 +34,9 @@ export function GetNavItemsForRole(role?: string | null): DashboardNavItem[] {
  * @returns True if targetHref matches the path or is an active route prefix.
  */
 export function IsRouteActive(currentPath: string, targetHref: string): boolean {
-  if (targetHref === '/dashboard') {
-    return currentPath === '/dashboard';
+  if (targetHref === '/brand-dashboard' || targetHref === '/creator-dashboard' || targetHref === '/admin-dashboard') {
+    return currentPath === targetHref;
   }
 
   return currentPath.startsWith(targetHref);
 }
-

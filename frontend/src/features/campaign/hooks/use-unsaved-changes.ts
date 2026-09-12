@@ -10,10 +10,7 @@ import type { UseUnsavedChangesGuardOptions, UseUnsavedChangesGuardResult } from
  * @param options - Blocker configuration containing isDirty and isSaving flags.
  * @returns Object containing blocked status and proceed/cancel callbacks.
  */
-export function UseUnsavedChangesGuard({
-  isDirty,
-  isSaving = false,
-}: UseUnsavedChangesGuardOptions): UseUnsavedChangesGuardResult {
+export function UseUnsavedChangesGuard({ isDirty, isSaving = false }: UseUnsavedChangesGuardOptions): UseUnsavedChangesGuardResult {
   const shouldBlock = isDirty && !isSaving;
 
   useBeforeUnload(
@@ -28,26 +25,22 @@ export function UseUnsavedChangesGuard({
   );
 
   const blocker = useBlocker(
-    useCallback(
-      ({ currentLocation, nextLocation }) =>
-        shouldBlock && currentLocation.pathname !== nextLocation.pathname,
-      [shouldBlock]
-    )
+    useCallback(({ currentLocation, nextLocation }) => shouldBlock && currentLocation.pathname !== nextLocation.pathname, [shouldBlock])
   );
 
   const isBlocked = blocker.state === 'blocked';
 
   const ConfirmNavigation = useCallback(() => {
-    if (blocker.state === 'blocked') {
+    if (isBlocked) {
       blocker.proceed();
     }
-  }, [blocker]);
+  }, [blocker, isBlocked]);
 
   const CancelNavigation = useCallback(() => {
-    if (blocker.state === 'blocked') {
+    if (isBlocked) {
       blocker.reset();
     }
-  }, [blocker]);
+  }, [blocker, isBlocked]);
 
   return {
     isBlocked,

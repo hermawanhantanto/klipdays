@@ -49,8 +49,8 @@ export const CAMPAIGN_WIZARD_STEPS: WizardStepItem[] = [
  */
 export function GetWizardStepPath(slug: string, campaignId?: string): string {
   if (campaignId) {
-    return `/dashboard/campaigns/${campaignId}/create/${slug}`;
+    return `/brand-dashboard/brand-campaigns/${campaignId}/create/${slug}`;
   }
 
-  return `/dashboard/campaigns/create/${slug}`;
+  return `/brand-dashboard/brand-campaigns/create/${slug}`;
 }

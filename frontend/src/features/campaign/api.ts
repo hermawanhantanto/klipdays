@@ -1,5 +1,12 @@
 import { apiClient, ExtractApiError } from '@/lib/api-client';
-import type { ApiResponse, Campaign, CampaignEditInput, InitializeCampaignResponse } from './types';
+import type {
+  ApiResponse,
+  Campaign,
+  CampaignEditInput,
+  CampaignQueryParams,
+  CampaignsPaginatedData,
+  InitializeCampaignResponse,
+} from './types';
 
 /**
  * Sends a POST request to `/campaigns` to initialize an empty draft campaign.
@@ -119,3 +126,26 @@ export async function UploadCampaignThumbnail(id: string, file: File, onProgress
     throw apiError;
   }
 }
+
+/**
+ * Sends a GET request to `/campaigns` to retrieve a paginated list of campaigns.
+ * For authenticated brand accounts, the backend automatically scopes results to campaigns owned by the brand.
+ *
+ * @param query - Optional query filters (pagination, search, status, etc.).
+ * @returns Paginated campaign data containing items and metadata.
+ * @throws Standardized API error if the request fails.
+ */
+export async function GetCampaigns(query?: CampaignQueryParams): Promise<CampaignsPaginatedData> {
+  try {
+    const response = await apiClient.get<ApiResponse<CampaignsPaginatedData>>('/campaigns', {
+      params: query,
+    });
+    
+    const result = response.data.data;
+    return result;
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal memuat daftar kampanye. Silakan coba lagi.');
+    throw apiError;
+  }
+}
+

@@ -49,7 +49,7 @@ function CampaignWizardLayout() {
   }, [location.pathname]);
 
   if (!id) {
-    return <Navigate to="/dashboard/campaigns" replace />;
+    return <Navigate to="/brand-dashboard/brand-campaigns" replace />;
   }
 
   if (isLoading) {

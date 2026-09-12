@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { GetCampaignById } from '../api';
-import type { Campaign } from '../types';
+import { GetCampaignById, GetCampaigns } from '../api';
+import type { Campaign, CampaignQueryParams, CampaignsPaginatedData } from '../types';
 
 /**
  * Custom TanStack Query hook that fetches a single campaign's details by its ID.
@@ -19,3 +19,20 @@ export function UseCampaignQuery(id: string | undefined): UseQueryResult<Campaig
 
   return queryResult;
 }
+
+/**
+ * Custom TanStack Query hook that fetches a paginated list of campaigns for the current authenticated brand.
+ *
+ * @param query - Optional query parameters (pagination, search, sort, filters).
+ * @returns TanStack Query result containing the paginated campaigns data.
+ */
+export function UseCampaignsQuery(query?: CampaignQueryParams): UseQueryResult<CampaignsPaginatedData, Error> {
+  const queryResult = useQuery({
+    queryKey: ['campaigns', query],
+    queryFn: () => GetCampaigns(query),
+    staleTime: 60 * 1000,
+  });
+
+  return queryResult;
+}
+

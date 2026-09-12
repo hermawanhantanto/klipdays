@@ -76,4 +76,8 @@ export interface RoleSliderProps {
   disabled?: boolean;
 }
 
+export interface ProtectedRouteProps {
+  allowedRoles?: AuthRole[];
+}
+
 export type PasswordInputProps = React.ComponentProps<'input'>;

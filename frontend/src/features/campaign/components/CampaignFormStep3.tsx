@@ -62,7 +62,7 @@ export function CampaignFormStep3() {
       toast.error('ID Kampanye tidak valid. Mengarahkan ke daftar kampanye...', {
         id: 'missing-campaign-id',
       });
-      navigate('/dashboard/campaigns');
+      navigate('/brand-dashboard/brand-campaigns');
       return;
     }
 

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -12,11 +12,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { UseInitializeCampaignMutation } from '../hooks';
-
-interface CreateCampaignDialogProps {
-  /** Trigger element to open the confirmation modal */
-  children: ReactNode;
-}
+import type { CreateCampaignDialogProps } from '../types';
 
 /**
  * Confirmation dialog modal for creating a new campaign.
