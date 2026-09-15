@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import {
+  DeleteCampaign,
   EditCampaign,
   GetCampaignById,
   GetCampaigns,
+  GetCampaignStatusCounts,
   InitializeCampaign,
   SubmitCampaign,
   UploadCampaignThumbnail,
@@ -15,7 +17,9 @@ export const campaignRouter = Router();
 campaignRouter.use(RequireAuth);
 campaignRouter.get('/', GetCampaigns);
 campaignRouter.post('/', InitializeCampaign);
+campaignRouter.get('/counts', GetCampaignStatusCounts);
 campaignRouter.get('/:id', GetCampaignById);
 campaignRouter.patch('/:id/edit', EditCampaign);
 campaignRouter.post('/:id/submit', SubmitCampaign);
 campaignRouter.post('/:id/thumbnail', UploadCampaignThumbnail);
+campaignRouter.delete('/:id', DeleteCampaign);

@@ -1,4 +1,5 @@
 import type { Prisma } from '../../generated/prisma/client.js';
+import type { CampaignStatus } from '../../generated/prisma/enums.js';
 import type {
   CampaignBriefInput,
   CampaignEditInput,
@@ -32,6 +33,10 @@ export interface CampaignCardBrand {
   industry: string | null;
 }
 
+export interface CampaignCardCount {
+  submissions: number;
+}
+
 export interface CampaignCardItem {
   id: string;
   title: string | null;
@@ -53,10 +58,12 @@ export interface CampaignCardItem {
   updatedAt: Date;
   brandId: string;
   brand: CampaignCardBrand;
-  joinedCount: number;
+  _count?: CampaignCardCount;
 }
 
 export interface CampaignsPaginatedData {
   items: CampaignCardItem[];
   pagination: CampaignPaginationMeta;
 }
+
+export type CampaignStatusCounts = Record<CampaignStatus, number>;

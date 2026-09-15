@@ -288,6 +288,10 @@ export interface CampaignCardBrand {
   industry?: string | null;
 }
 
+export interface CampaignCardCount {
+  submissions: number;
+}
+
 export interface CampaignCardItem {
   id: string;
   title: string | null;
@@ -309,7 +313,7 @@ export interface CampaignCardItem {
   updatedAt: string;
   brandId: string;
   brand: CampaignCardBrand;
-  joinedCount: number;
+  _count?: CampaignCardCount;
 }
 
 export interface CampaignCardProps {

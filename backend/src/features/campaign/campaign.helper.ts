@@ -42,9 +42,12 @@ export function BuildCampaignBriefUpsert(brief: CampaignBriefInput): Prisma.Camp
     dos: brief.dos,
     donts: brief.donts,
     guidelines: brief.guidelines,
+    status: Status.ACTIVE,
   };
 
-  const updateData: Prisma.CampaignBriefUpdateWithoutCampaignInput = {};
+  const updateData: Prisma.CampaignBriefUpdateWithoutCampaignInput = {
+    status: Status.ACTIVE,
+  };
 
   for (const [key, value] of Object.entries(createData)) {
     SetField(updateData, key as keyof Prisma.CampaignBriefUpdateWithoutCampaignInput, value);

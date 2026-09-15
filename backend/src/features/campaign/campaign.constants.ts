@@ -1,4 +1,5 @@
 import type { Prisma } from '../../generated/prisma/client.js';
+import { Status } from '../../generated/prisma/enums.js';
 
 /**
  * Whitelist of scalar fields copied 1:1 from the campaign edit payload into Prisma update queries.
@@ -52,7 +53,9 @@ export const CAMPAIGN_CARD_SELECT = {
   },
   _count: {
     select: {
-      submissions: true,
+      submissions: {
+        where: { status: Status.ACTIVE },
+      },
     },
   },
 } as const satisfies Prisma.CampaignSelect;

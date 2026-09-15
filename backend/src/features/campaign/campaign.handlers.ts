@@ -14,7 +14,7 @@ import {
   ValidateCampaignSubmitCompleteness,
 } from './campaign.validators.js';
 import { SendError, SendSuccess } from '../../utils/api-response.js';
-import type { CampaignCardItem, CampaignsPaginatedData } from './campaign.types.js';
+import type { CampaignCardItem, CampaignsPaginatedData, CampaignStatusCounts } from './campaign.types.js';
 
 /**
  * Handles `POST /campaigns`: creates an empty draft campaign for the
@@ -155,7 +155,9 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
         materials: {
           where: { status: Status.ACTIVE },
         },
-        brief: true,
+        brief: {
+          where: { status: Status.ACTIVE },
+        },
       },
     });
 
@@ -230,19 +232,8 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
 
-    const items: CampaignCardItem[] = campaigns.map((campaign) => {
-      const { _count, ...rest } = campaign;
-
-      const item: CampaignCardItem = {
-        ...rest,
-        joinedCount: _count?.submissions ?? 0,
-      };
-
-      return item;
-    });
-
     const responsePayload: CampaignsPaginatedData = {
-      items,
+      items: campaigns,
       pagination: {
         page,
         limit,
@@ -254,6 +245,72 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
     };
 
     SendSuccess(res, responsePayload, 'Campaigns retrieved successfully.');
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Handles `GET /campaigns/counts`: aggregates total campaign count grouped by
+ * lifecycle status (`campaignStatus`) for the authenticated brand or admin.
+ * Only active (non-soft-deleted) campaigns belonging to active brands are counted.
+ *
+ * Fast-fail guard order:
+ * 1. Auth check (401)
+ * 2. Role boundary check (403): Only brands or admins can view status counts
+ * 3. Database aggregation query via prisma.campaign.groupBy
+ *
+ * @param req - Express request with the authenticated account.
+ * @param res - Express response object.
+ * @param next - Express next function.
+ */
+export async function GetCampaignStatusCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const account = req.account;
+
+    // Fast-fail: authentication check
+    if (!account) {
+      SendError(res, 'Authentication required.', 401);
+      return;
+    }
+
+    // Fast-fail: role boundary check
+    if (account.role !== Role.BRAND && account.role !== Role.ADMIN) {
+      SendError(res, 'Unauthorized role.', 403);
+      return;
+    }
+
+    const whereClause: Prisma.CampaignWhereInput = {
+      status: Status.ACTIVE,
+      brand: { status: Status.ACTIVE },
+    };
+
+    if (account.role === Role.BRAND) {
+      whereClause.brand = { accountId: account.sub, status: Status.ACTIVE };
+    }
+
+    const groupedCounts = await prisma.campaign.groupBy({
+      by: ['campaignStatus'],
+      where: whereClause,
+      _count: {
+        _all: true,
+      },
+    });
+
+    const statusCounts: CampaignStatusCounts = {
+      [CampaignStatus.DRAFT]: 0,
+      [CampaignStatus.IN_REVIEW]: 0,
+      [CampaignStatus.REVISION]: 0,
+      [CampaignStatus.REJECTED]: 0,
+      [CampaignStatus.ACTIVE]: 0,
+      [CampaignStatus.FINISHED]: 0,
+    };
+
+    for (const group of groupedCounts) {
+      statusCounts[group.campaignStatus] = group._count._all;
+    }
+
+    SendSuccess(res, statusCounts, 'Campaign status counts retrieved successfully.');
   } catch (err) {
     next(err);
   }
@@ -298,7 +355,9 @@ export async function GetCampaignById(req: Request, res: Response, next: NextFun
         materials: {
           where: { status: Status.ACTIVE },
         },
-        brief: true,
+        brief: {
+          where: { status: Status.ACTIVE },
+        },
         brand: {
           select: {
             id: true,
@@ -357,7 +416,9 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
         materials: {
           where: { status: Status.ACTIVE },
         },
-        brief: true,
+        brief: {
+          where: { status: Status.ACTIVE },
+        },
       },
     });
 
@@ -387,7 +448,9 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
         materials: {
           where: { status: Status.ACTIVE },
         },
-        brief: true,
+        brief: {
+          where: { status: Status.ACTIVE },
+        },
       },
     });
 
@@ -519,5 +582,85 @@ export async function UploadCampaignThumbnail(req: Request, res: Response, next:
       return;
     }
     next(error);
+  }
+}
+
+/**
+ * Handles `DELETE /campaigns/:id`: soft-deletes a campaign and cascades
+ * soft-deletion to all associated materials, brief, and submissions by updating
+ * their `status` to `Status.DELETED` in an atomic database transaction.
+ *
+ * Fast-fail guard order:
+ * 1. Auth check (401)
+ * 2. Role boundary check (403): Only brands or admins can delete campaigns
+ * 3. Existence & tenant ownership check in a single query (404)
+ * 4. Atomic database soft-delete write
+ *
+ * @param req - Express request with the authenticated account and campaign id parameter.
+ * @param res - Express response object.
+ * @param next - Express next function.
+ */
+export async function DeleteCampaign(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const account = req.account;
+
+    // Fast-fail: authentication check
+    if (!account) {
+      SendError(res, 'Authentication required.', 401);
+      return;
+    }
+
+    // Fast-fail: role boundary check
+    if (account.role !== Role.BRAND && account.role !== Role.ADMIN) {
+      SendError(res, 'Unauthorized role.', 403);
+      return;
+    }
+
+    const campaignId = req.params.id as string;
+
+    const whereClause: Prisma.CampaignWhereInput = {
+      id: campaignId,
+      status: Status.ACTIVE,
+      brand: { status: Status.ACTIVE },
+    };
+
+    if (account.role === Role.BRAND) {
+      whereClause.brand = { accountId: account.sub, status: Status.ACTIVE };
+    }
+
+    // Single-query existence & tenant ownership check
+    const ownedCampaign = await prisma.campaign.findFirst({
+      where: whereClause,
+      select: { id: true },
+    });
+
+    if (!ownedCampaign) {
+      SendError(res, 'Campaign not found.', 404);
+      return;
+    }
+
+    // Atomic cascade soft-delete
+    await prisma.$transaction([
+      prisma.campaign.update({
+        where: { id: ownedCampaign.id },
+        data: { status: Status.DELETED },
+      }),
+      prisma.campaignBrief.updateMany({
+        where: { campaignId: ownedCampaign.id, status: Status.ACTIVE },
+        data: { status: Status.DELETED },
+      }),
+      prisma.campaignMaterial.updateMany({
+        where: { campaignId: ownedCampaign.id, status: Status.ACTIVE },
+        data: { status: Status.DELETED },
+      }),
+      prisma.submission.updateMany({
+        where: { campaignId: ownedCampaign.id, status: Status.ACTIVE },
+        data: { status: Status.DELETED },
+      }),
+    ]);
+
+    SendSuccess(res, null, 'Campaign successfully deleted.');
+  } catch (err) {
+    next(err);
   }
 }

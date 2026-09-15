@@ -308,6 +308,9 @@ model CampaignBrief {
   // guidelines is the free-form clipping brief of the campaign brief, and is optional.
   guidelines      String? 
 
+  // status is used to determine if the campaign brief is active or deleted.
+  status          Status   @default(ACTIVE)
+
   //  createdAt and updatedAt are used to track when the campaign brief was created and last updated.
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -349,32 +352,35 @@ model CampaignMaterial {
 
 model Submission {
   // id is the primary key for the submission, and is generated as a UUID.
-  id            String           @id @default(uuid())
+  id               String           @id @default(uuid())
 
   // draftVideoUrl is the URL of the draft video for the submission, and is required.
-  draftVideoUrl String           @map("draft_video_url")
+  draftVideoUrl    String           @map("draft_video_url")
 
   // liveVideoUrl is the URL of the live video for the submission, and is optional.
-  liveVideoUrl  String?          @map("live_video_url")
+  liveVideoUrl     String?          @map("live_video_url")
 
-  // status is the status of the submission, and is required. It is stored as an enum with the following values: PENDING_REVIEW, REVISION_REQUESTED, REJECTED, APPROVED, POSTED, VERIFIED.
-  status        SubmissionStatus @default(PENDING_REVIEW)
+  // status is used to determine if the submission is active or deleted.
+  status           Status           @default(ACTIVE)
+
+  // submissionStatus is the lifecycle status of the submission, and is required. It is stored as an enum with the following values: PENDING_REVIEW, REVISION_REQUESTED, REJECTED, APPROVED, POSTED, VERIFIED.
+  submissionStatus SubmissionStatus @default(PENDING_REVIEW) @map("submission_status")
 
   // reviewNote is the feedback from the brand for revision or rejection, and is optional.
-  reviewNote    String?          @map("review_note") 
+  reviewNote       String?          @map("review_note") 
 
   // verifiedViews is the number of verified views for the submission, and is required. It is stored as an integer with a default value of 0.
-  verifiedViews Int              @default(0) @map("verified_views")
+  verifiedViews    Int              @default(0) @map("verified_views")
 
   // earnings is the earnings for the submission, and is required. It is stored as a decimal with 15 digits and 2 decimal places.
-  earnings      Decimal          @default(0) @db.Decimal(15, 2)
+  earnings         Decimal          @default(0) @db.Decimal(15, 2)
 
   // submittedAt is the date and time when the submission was submitted, and is required. It is stored as a DateTime with a default value of now().
-  submittedAt   DateTime         @default(now()) @map("submitted_at")
+  submittedAt      DateTime         @default(now()) @map("submitted_at")
 
   // createdAt and updatedAt are used to track when the submission was created and last updated.
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
 
   // relation to campaign
   campaign   Campaign @relation(fields: [campaignId], references: [id])

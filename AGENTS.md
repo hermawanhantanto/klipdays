@@ -79,7 +79,7 @@
 # Prisma & Database Conventions
 
 - Mandatory soft-delete filter: every Prisma query targeting models with the `Status` enum (`Account`, `Brand`, `Creator`, `Campaign`,
-  `CampaignMaterial`) must filter `status: ACTIVE` in `where`.
+  `CampaignMaterial`, `CampaignBrief`, `Submission`) must filter `status: ACTIVE` in `where`.
 - When a unique lookup requires an additional soft-delete or tenant filter, always use `findFirst` instead of `findUnique`.
 - Distinguish soft-delete status from lifecycle status: on `Campaign`, `status` is the soft-delete enum (`ACTIVE`/`DELETED`), while
   `campaignStatus` is the lifecycle enum (`DRAFT`, `IN_REVIEW`, `REVISION`, `REJECTED`, `ACTIVE`, `FINISHED`).
@@ -103,7 +103,7 @@
   colocate derived types (`z.infer`, `as const` tuples) with their runtime schemas and re-export them.
 - Standardize field character length tracking: use `FieldLengthTracker` with accessible live announcements and responsive color transitions
   ($<90\%$ muted, $\ge 90\%$ amber, $\ge 100\%$ destructive).
-- Clean API DTO Contracts: Never expose internal database engine naming artifacts (e.g. Prisma `_count`, MongoDB `_id`) directly in external API response contracts or frontend DTO types; always map them at the handler layer into clean, semantic domain fields (e.g. `joinedCount: number`).
+- Lean Query Performance & Prisma `_count`: Directly pass through Prisma `_count` aggregations (e.g. `_count: { submissions: number }`) in lean card and list responses to eliminate server-side mapping loops and unnecessary object allocations, while maintaining strict compile-time types across backend and frontend contracts.
 
 
 # Code Style & Clean Code Principles
