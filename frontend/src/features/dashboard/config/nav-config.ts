@@ -34,7 +34,7 @@ export const BRAND_NAV_ITEMS: DashboardNavItem[] = [
 export const CREATOR_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
-    href: '/dashboard',
+    href: '/creator-dashboard',
     icon: LayoutDashboard,
   },
   {
@@ -62,7 +62,7 @@ export const CREATOR_NAV_ITEMS: DashboardNavItem[] = [
 export const ADMIN_NAV_ITEMS: DashboardNavItem[] = [
   {
     title: 'Beranda',
-    href: '/dashboard',
+    href: '/admin-dashboard',
     icon: LayoutDashboard,
   },
   {

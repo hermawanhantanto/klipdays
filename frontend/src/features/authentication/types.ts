@@ -39,7 +39,7 @@ export interface RegisteredAccount {
 export interface LoggedInAccount {
   id: string;
   email: string;
-  role: string;
+  role: AuthRole;
 }
 
 export interface BrandProfile {

@@ -8,10 +8,14 @@ import AuthLayout from '@/features/authentication/layouts/AuthLayout';
 import { CampaignWizardIndexRedirect } from '@/features/campaign/components';
 import CampaignWizardLayout from '@/features/campaign/layouts/CampaignWizardLayout';
 import DashboardLayout from '@/features/dashboard/layouts/DashboardLayout';
+import { DashboardRoleRedirect } from '@/features/dashboard/components';
 
 const Home = lazy(() => import('@/features/home/pages/Home'));
 const SignIn = lazy(() => import('@/features/authentication/pages/SignIn'));
 const SignUp = lazy(() => import('@/features/authentication/pages/SignUp'));
+const BrandDashboard = lazy(() => import('@/features/dashboard/pages/BrandDashboard'));
+const CreatorDashboard = lazy(() => import('@/features/dashboard/pages/CreatorDashboard'));
+const AdminDashboard = lazy(() => import('@/features/dashboard/pages/AdminDashboard'));
 const BrandCampaigns = lazy(() => import('@/features/campaign/pages/BrandCampaigns'));
 const CampaignStep1 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep1'));
 const CampaignStep2 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep2'));
@@ -19,6 +23,7 @@ const CampaignStep3 = lazy(() => import('@/features/campaign/pages/steps/Campaig
 const CampaignStep4 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep4'));
 const CampaignStep5 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep5'));
 const CampaignDetail = lazy(() => import('@/features/campaign/pages/CampaignDetail'));
+
 
 /**
  * Generic full-page loading fallback spinner for lazily loaded routes.
@@ -49,9 +54,19 @@ const router = createBrowserRouter(
         <Route path="login" element={<Navigate to="/signin" replace />} />
         <Route path="signup" element={<SignUp />} />
       </Route>
+      <Route element={<ProtectedRoute allowedRoles={['CREATOR', 'ADMIN']} />}>
+        <Route path="creator-dashboard" element={<DashboardLayout />}>
+          <Route index element={<CreatorDashboard />} />
+        </Route>
+      </Route>
+      <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+        <Route path="admin-dashboard" element={<DashboardLayout />}>
+          <Route index element={<AdminDashboard />} />
+        </Route>
+      </Route>
       <Route element={<ProtectedRoute allowedRoles={['BRAND', 'ADMIN']} />}>
         <Route path="brand-dashboard" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="brand-campaigns" replace />} />
+          <Route index element={<BrandDashboard />} />
           <Route path="brand-campaigns" element={<BrandCampaigns />} />
           <Route path="brand-campaigns/:id" element={<CampaignDetail />} />
           <Route path="brand-campaigns/create" element={<CampaignWizardLayout />}>
@@ -71,9 +86,9 @@ const router = createBrowserRouter(
             <Route path="step-5" element={<CampaignStep5 />} />
           </Route>
         </Route>
-        <Route path="dashboard" element={<Navigate to="/brand-dashboard" replace />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['BRAND', 'CREATOR', 'ADMIN']} />}>
+        <Route path="dashboard" element={<DashboardRoleRedirect />} />
         <Route path="campaigns/:id" element={<DashboardLayout />}>
           <Route index element={<CampaignDetail />} />
         </Route>

@@ -10,6 +10,8 @@ import {
   type RegisteredAccount,
   type RegisterInput,
 } from '../api';
+import { GetDashboardRouteByRole } from '../utils';
+
 
 export type RegisterMutationOptions = Omit<UseMutationOptions<RegisteredAccount, Error, RegisterInput>, 'mutationFn'>;
 export type LoginMutationOptions = Omit<UseMutationOptions<LoggedInAccount, Error, LoginInput>, 'mutationFn'>;
@@ -61,7 +63,8 @@ export function UseLoginMutation(options?: LoginMutationOptions): UseMutationRes
       queryClient.invalidateQueries({ queryKey: ['current-account'] });
 
       toast.success('Berhasil masuk!');
-      navigate('/dashboard');
+      const redirectPath = GetDashboardRouteByRole(data.role);
+      navigate(redirectPath);
 
       onSuccess?.(data, variables, onMutateResult, context);
     },
