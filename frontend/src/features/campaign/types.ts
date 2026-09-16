@@ -364,3 +364,56 @@ export interface BrandCampaignsListProps {
 export interface CreateCampaignDialogProps {
   children: ReactNode;
 }
+
+export type CampaignLifecycleStatus =
+  | 'DRAFT'
+  | 'IN_REVIEW'
+  | 'REVISION'
+  | 'REJECTED'
+  | 'ACTIVE'
+  | 'FINISHED';
+
+export interface CampaignStatusCounts {
+  DRAFT: number;
+  IN_REVIEW: number;
+  REVISION: number;
+  REJECTED: number;
+  ACTIVE: number;
+  FINISHED: number;
+}
+
+export interface CampaignStatusTabsProps {
+  counts?: CampaignStatusCounts;
+  activeStatus?: string;
+  onStatusChange?: (status: string) => void;
+  className?: string;
+}
+
+export interface ResumeDraftBannerProps {
+  draftCount: number;
+  latestDraft?: CampaignCardItem | null;
+  onContinueDraft?: (draft: CampaignCardItem) => void;
+  onDeleteDraft?: (draft: CampaignCardItem) => void;
+  onViewAllDrafts?: () => void;
+  isDeleting?: boolean;
+  className?: string;
+}
+
+export interface DraftsSheetProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  drafts?: CampaignCardItem[];
+  isLoading?: boolean;
+  onContinueDraft?: (draft: CampaignCardItem) => void;
+  onDeleteDraft?: (draft: CampaignCardItem) => void;
+  deletingDraftId?: string | null;
+  className?: string;
+}
+
+export interface DraftItemRowProps {
+  draft: CampaignCardItem;
+  onContinue?: (draft: CampaignCardItem) => void;
+  onDelete?: (draft: CampaignCardItem) => void;
+  isDeleting?: boolean;
+  className?: string;
+}

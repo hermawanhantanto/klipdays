@@ -5,6 +5,7 @@ import type {
   CampaignEditInput,
   CampaignQueryParams,
   CampaignsPaginatedData,
+  CampaignStatusCounts,
   InitializeCampaignResponse,
 } from './types';
 
@@ -145,6 +146,44 @@ export async function GetCampaigns(query?: CampaignQueryParams): Promise<Campaig
     return result;
   } catch (error) {
     const apiError = ExtractApiError(error, 'Gagal memuat daftar kampanye. Silakan coba lagi.');
+    throw apiError;
+  }
+}
+
+/**
+ * Sends a DELETE request to `/campaigns/:id` to soft-delete a campaign and cascade
+ * soft-deletion to its materials, brief, and submissions.
+ *
+ * @param id - The UUID of the campaign to delete.
+ * @returns A promise that resolves when the deletion is completed.
+ * @throws Error if id is missing or standardized API error if the request fails.
+ */
+export async function DeleteCampaign(id?: string): Promise<void> {
+  if (!id) {
+    throw new Error('Campaign ID is required.');
+  }
+
+  try {
+    await apiClient.delete<ApiResponse<null>>(`/campaigns/${id}`);
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal menghapus kampanye. Silakan coba lagi.');
+    throw apiError;
+  }
+}
+
+/**
+ * Sends a GET request to `/campaigns/counts` to retrieve campaign counts grouped by lifecycle status.
+ *
+ * @returns The aggregated campaign status counts.
+ * @throws Standardized API error if the request fails.
+ */
+export async function GetCampaignStatusCounts(): Promise<CampaignStatusCounts> {
+  try {
+    const response = await apiClient.get<ApiResponse<CampaignStatusCounts>>('/campaigns/counts');
+    const result = response.data.data;
+    return result;
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal memuat jumlah status kampanye. Silakan coba lagi.');
     throw apiError;
   }
 }

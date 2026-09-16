@@ -24,16 +24,16 @@ Fokus: Menyediakan kemampuan soft-delete draf dan agregasi jumlah kampanye per s
 ## Milestone 2: Frontend Data Layer & Type Definitions
 Fokus: Menyiapkan interface murni, API client, dan TanStack Query hooks.
 
-- [ ] **2.1. Compile-time Type Definitions (`frontend/src/features/campaign/types.ts`)**
+- [x] **2.1. Compile-time Type Definitions (`frontend/src/features/campaign/types.ts`)**
   - Interface `CampaignStatusCounts`.
   - Prop interfaces untuk: `CampaignStatusTabsProps`, `ResumeDraftBannerProps`, `DraftsSheetProps`, `DraftItemRowProps`.
-- [ ] **2.2. API Functions (`frontend/src/features/campaign/api.ts`)**
+- [x] **2.2. API Functions (`frontend/src/features/campaign/api.ts`)**
   - Fungsi `DeleteCampaign(id: string)`.
   - Fungsi `GetCampaignStatusCounts()`.
-- [ ] **2.3. Query & Mutation Hooks (`frontend/src/features/campaign/hooks/`)**
+- [x] **2.3. Query & Mutation Hooks (`frontend/src/features/campaign/hooks/`)**
   - `UseCampaignStatusCountsQuery()` di `queries.ts`.
   - `UseDeleteCampaignMutation()` di `mutations.ts` dengan invalidation `['campaigns']` dan `['campaign-counts']`.
-- [ ] **2.4. Verifikasi Typecheck Frontend**
+- [x] **2.4. Verifikasi Typecheck Frontend**
   - Jalankan `npx tsc --noEmit` di frontend.
 
 ---

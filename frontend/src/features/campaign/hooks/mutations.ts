@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { GetCampaignById, EditCampaign, InitializeCampaign, SubmitCampaign } from '../api';
+import { DeleteCampaign, EditCampaign, GetCampaignById, InitializeCampaign, SubmitCampaign } from '../api';
 import type { Campaign, CampaignEditInput, InitializeCampaignResponse } from '../types';
 import { ResolveCampaignWizardStepPath } from '../utils';
 
@@ -31,6 +31,7 @@ export function UseInitializeCampaignMutation(
     mutationFn: InitializeCampaign,
     onSuccess: async (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign-counts'] });
       toast.success('Campaign created successfully');
 
       try {
@@ -142,6 +143,7 @@ export function UseSubmitCampaignMutation(
         queryClient.setQueryData(['campaign', campaignId], submittedCampaign);
       }
       queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign-counts'] });
 
       toast.success('Kampanye berhasil diajukan untuk proses review.');
       navigate('/brand-dashboard/brand-campaigns');
@@ -156,3 +158,43 @@ export function UseSubmitCampaignMutation(
 
   return mutation;
 }
+
+export type DeleteCampaignMutationOptions = Omit<UseMutationOptions<void, Error, string>, 'mutationFn'> & {
+  successMessage?: string;
+};
+
+/**
+ * Mutation hook for soft-deleting a campaign.
+ * Calls `DELETE /campaigns/:id`, invalidates `['campaigns']` and `['campaign-counts']`,
+ * and shows user feedback toast notifications.
+ *
+ * @param options - Optional mutation options to extend default behavior.
+ * @returns TanStack Query mutation object for deleting a campaign.
+ */
+export function UseDeleteCampaignMutation(
+  options?: DeleteCampaignMutationOptions
+): UseMutationResult<void, Error, string> {
+  const queryClient = useQueryClient();
+  const { onSuccess, onError, ...restOptions } = options ?? {};
+
+  const mutation = useMutation({
+    ...restOptions,
+    mutationFn: (id: string) => DeleteCampaign(id),
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.invalidateQueries({ queryKey: ['campaigns'] });
+      queryClient.invalidateQueries({ queryKey: ['campaign-counts'] });
+
+      const message = options?.successMessage ?? 'Kampanye berhasil dihapus.';
+      toast.success(message);
+
+      onSuccess?.(data, variables, onMutateResult, context);
+    },
+    onError: (error, variables, onMutateResult, context) => {
+      toast.error(error.message);
+      onError?.(error, variables, onMutateResult, context);
+    },
+  });
+
+  return mutation;
+}
+

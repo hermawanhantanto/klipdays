@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { GetCampaignById, GetCampaigns } from '../api';
-import type { Campaign, CampaignQueryParams, CampaignsPaginatedData } from '../types';
+import { GetCampaignById, GetCampaigns, GetCampaignStatusCounts } from '../api';
+import type { Campaign, CampaignQueryParams, CampaignsPaginatedData, CampaignStatusCounts } from '../types';
 
 /**
  * Custom TanStack Query hook that fetches a single campaign's details by its ID.
@@ -31,6 +31,21 @@ export function UseCampaignsQuery(query?: CampaignQueryParams): UseQueryResult<C
     queryKey: ['campaigns', query],
     queryFn: () => GetCampaigns(query),
     staleTime: 60 * 1000,
+  });
+
+  return queryResult;
+}
+
+/**
+ * Custom TanStack Query hook that fetches campaign counts grouped by lifecycle status for the authenticated brand.
+ *
+ * @returns TanStack Query result containing campaign status counts.
+ */
+export function UseCampaignStatusCountsQuery(): UseQueryResult<CampaignStatusCounts, Error> {
+  const queryResult = useQuery({
+    queryKey: ['campaign-counts'],
+    queryFn: () => GetCampaignStatusCounts(),
+    staleTime: 30 * 1000,
   });
 
   return queryResult;
