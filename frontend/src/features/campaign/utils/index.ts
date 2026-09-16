@@ -35,4 +35,5 @@ export {
   GetCampaignTypeBadgeLabel,
 } from './campaign-card';
 export { GetEmptyStateForStatus } from './campaign-status';
+export { FormatDraftDate, GetDraftStepProgress } from './campaign-draft';
 

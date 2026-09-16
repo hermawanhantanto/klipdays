@@ -37,6 +37,22 @@ export interface CampaignCardCount {
   submissions: number;
 }
 
+export interface CampaignCardMaterialItem {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  status: string;
+}
+
+export interface CampaignCardBriefItem {
+  id: string;
+  purpose: string | null;
+  keyMessage: string | null;
+  callToAction: string | null;
+  status: string;
+}
+
 export interface CampaignCardItem {
   id: string;
   title: string | null;
@@ -58,6 +74,8 @@ export interface CampaignCardItem {
   updatedAt: Date;
   brandId: string;
   brand: CampaignCardBrand;
+  materials?: CampaignCardMaterialItem[];
+  brief?: CampaignCardBriefItem | null;
   _count?: CampaignCardCount;
 }
 

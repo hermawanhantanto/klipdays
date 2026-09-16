@@ -313,6 +313,8 @@ export interface CampaignCardItem {
   updatedAt: string;
   brandId: string;
   brand: CampaignCardBrand;
+  materials?: CampaignMaterial[];
+  brief?: CampaignBrief | null;
   _count?: CampaignCardCount;
 }
 
@@ -384,32 +386,27 @@ export interface CampaignStatusCounts {
 
 
 
+export interface DraftStepProgress {
+  stepNumber: number;
+  stepTitle: string;
+  stepBadgeText: string;
+}
+
 export interface ResumeDraftBannerProps {
-  draftCount: number;
-  latestDraft?: CampaignCardItem | null;
-  onContinueDraft?: (draft: CampaignCardItem) => void;
-  onDeleteDraft?: (draft: CampaignCardItem) => void;
-  onViewAllDrafts?: () => void;
-  isDeleting?: boolean;
   className?: string;
 }
 
 export interface DraftsSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  drafts?: CampaignCardItem[];
-  isLoading?: boolean;
-  onContinueDraft?: (draft: CampaignCardItem) => void;
-  onDeleteDraft?: (draft: CampaignCardItem) => void;
-  deletingDraftId?: string | null;
   className?: string;
 }
 
 export interface DraftItemRowProps {
   draft: CampaignCardItem;
-  onContinue?: (draft: CampaignCardItem) => void;
-  onDelete?: (draft: CampaignCardItem) => void;
-  isDeleting?: boolean;
+  onContinue: (draft: CampaignCardItem) => void;
+  onDelete: (draft: CampaignCardItem) => void;
+  isDeleting: boolean;
   className?: string;
 }
 

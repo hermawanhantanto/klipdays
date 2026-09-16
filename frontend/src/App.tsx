@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { RootErrorBoundary } from '@/components/RootErrorBoundary';
 import { ProtectedRoute } from '@/features/authentication/components';
 import AuthLayout from '@/features/authentication/layouts/AuthLayout';
+import { CampaignWizardIndexRedirect } from '@/features/campaign/components';
 import CampaignWizardLayout from '@/features/campaign/layouts/CampaignWizardLayout';
 import DashboardLayout from '@/features/dashboard/layouts/DashboardLayout';
 
@@ -60,7 +61,7 @@ const router = createBrowserRouter(
             <Route path="step-5" element={<CampaignStep5 />} />
           </Route>
           <Route path="brand-campaigns/:id/create" element={<CampaignWizardLayout />}>
-            <Route index element={<Navigate to="step-1" replace />} />
+            <Route index element={<CampaignWizardIndexRedirect />} />
             <Route path="step-1" element={<CampaignStep1 />} />
             <Route path="step-2" element={<CampaignStep2 />} />
             <Route path="step-3" element={<CampaignStep3 />} />

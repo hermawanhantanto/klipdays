@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { cn } from '@/lib/utils';
 import { UseCampaignsQuery } from '../hooks';
 import type { BrandCampaignsListProps, CampaignCardItem } from '../types';
+import { ResolveCampaignWizardStepPath } from '../utils';
 import { BrandCampaignsErrorState } from './BrandCampaignsErrorState';
 import { CampaignCard } from './CampaignCard';
 import { CampaignCardSkeleton } from './CampaignCardSkeleton';
@@ -36,7 +37,8 @@ export function BrandCampaignsList({ onCardClick, className }: BrandCampaignsLis
     }
 
     if (campaign.campaignStatus === 'DRAFT' || campaign.campaignStatus === 'REVISION') {
-      navigate(`/brand-dashboard/brand-campaigns/${campaign.id}/create/step-1`);
+      const targetPath = ResolveCampaignWizardStepPath(campaign);
+      navigate(targetPath);
     }
   };
 

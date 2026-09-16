@@ -51,6 +51,26 @@ export const CAMPAIGN_CARD_SELECT = {
       industry: true,
     },
   },
+  materials: {
+    where: { status: Status.ACTIVE },
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      url: true,
+      status: true,
+    },
+  },
+  brief: {
+    where: { status: Status.ACTIVE },
+    select: {
+      id: true,
+      purpose: true,
+      keyMessage: true,
+      callToAction: true,
+      status: true,
+    },
+  },
   _count: {
     select: {
       submissions: {
