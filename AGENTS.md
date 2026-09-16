@@ -41,6 +41,8 @@
   Cumulative Layout Shift (CLS) and screen flicker during step navigation.
 - Implement unsaved changes navigation guards: combine React Router's `useBlocker` (client-side transitions) and `useBeforeUnload` (browser
   tab/refresh) with saving-state bypass (`isPending || isSuccess`).
+- Zero speculative props on self-contained components: when a component manages its own state, reads/writes URL search params, or connects directly to TanStack Query hooks (e.g. `CampaignStatusTabs`), keep its prop interface minimal (`className?: string`). Never introduce speculative passthrough props (`counts`, `activeStatus`, `onStatusChange`) that are not actively required by orchestrators.
+- Dedicated empty and error state components: never inline contextual empty states or error recovery cards with retry buttons inside list or grid orchestrators. Always extract them into small, dedicated feature components (e.g. `CampaignStatusEmptyState`, `BrandCampaignsErrorState`) to preserve the Single Responsibility Principle.
 
 # Modern Minimalist UI & Anti-AI Slop Design
 
@@ -60,6 +62,7 @@
   ad-hoc styling.
 - Radix `Slot` / `asChild` styling rule: never pass dynamic styling functions to `className` on components passed into Radix primitives via
   `asChild`; precalculate active styles using `useLocation()` and pass static strings.
+- Seamless edge-to-edge segmented controls: when creating tab or pill bars enclosed in a container border, avoid container inner padding (`p-1`) that leaves awkward unfilled notches or dark corners on the first and last tabs. Always use edge-to-edge styling (`p-0`, `overflow-hidden`, `divide-x`, and matching boundary radii `first:rounded-l-* last:rounded-r-*`) so active backgrounds fill 100% of their segment right to the container's outer rounded border.
 
 # Backend Fast-Fail & Security Guards
 
@@ -104,6 +107,7 @@
 - Standardize field character length tracking: use `FieldLengthTracker` with accessible live announcements and responsive color transitions
   ($<90\%$ muted, $\ge 90\%$ amber, $\ge 100\%$ destructive).
 - Lean Query Performance & Prisma `_count`: Directly pass through Prisma `_count` aggregations (e.g. `_count: { submissions: number }`) in lean card and list responses to eliminate server-side mapping loops and unnecessary object allocations, while maintaining strict compile-time types across backend and frontend contracts.
+- Standardized API function envelope unwrapping: all client API functions in `api.ts` must cleanly unwrap the backend `{ data: { data: T } }` envelope into a named `result` variable before returning (`const response = await apiClient.get<ApiResponse<T>>(...); const result = response.data.data; return result;`), and wrap the network call in a `try/catch` block that transforms Axios failures via `ExtractApiError(error, '<localized message>')`.
 
 
 # Code Style & Clean Code Principles

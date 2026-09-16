@@ -34,4 +34,5 @@ export {
   GetCampaignStatusBadge,
   GetCampaignTypeBadgeLabel,
 } from './campaign-card';
+export { GetEmptyStateForStatus } from './campaign-status';
 

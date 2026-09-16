@@ -41,12 +41,12 @@ Fokus: Menyiapkan interface murni, API client, dan TanStack Query hooks.
 ## Milestone 3: Status Tabs dengan Sinkronisasi URL
 Fokus: Navigasi tab status tanpa reload halaman dan bebas dari tampilan draf kosong.
 
-- [ ] **3.1. Komponen `CampaignStatusTabs` (`frontend/src/features/campaign/components/CampaignStatusTabs.tsx`)**
+- [x] **3.1. Komponen `CampaignStatusTabs` (`frontend/src/features/campaign/components/CampaignStatusTabs.tsx`)**
   - Tab list: `Aktif` (`ACTIVE`), `Menunggu Review` (`IN_REVIEW`), `Perlu Revisi` (`REVISION`), `Selesai` (`FINISHED`).
   - Sinkronisasi dengan URL search params `?status=ACTIVE` (menggunakan `useSearchParams` dari React Router).
   - Menampilkan badge counter jumlah kampanye di tiap tab (misal: `Aktif (2)`).
   - Aksen visual peringatan (amber) pada tab `Perlu Revisi` jika ada item.
-- [ ] **3.2. Integrasi ke `BrandCampaignsList` & `BrandCampaignsPage`**
+- [x] **3.2. Integrasi ke `BrandCampaignsList` & `BrandCampaignsPage`**
   - Pasang `CampaignStatusTabs` di antara `CampaignsHeader` dan `BrandCampaignsList`.
   - `BrandCampaignsList` membaca filter status dari URL dan mengirimkannya ke `UseCampaignsQuery({ campaignStatus: currentStatus })`.
   - Empty state spesifik yang ramah untuk tiap status (misal: "Belum ada kampanye aktif").

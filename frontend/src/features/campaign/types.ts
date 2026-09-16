@@ -382,12 +382,7 @@ export interface CampaignStatusCounts {
   FINISHED: number;
 }
 
-export interface CampaignStatusTabsProps {
-  counts?: CampaignStatusCounts;
-  activeStatus?: string;
-  onStatusChange?: (status: string) => void;
-  className?: string;
-}
+
 
 export interface ResumeDraftBannerProps {
   draftCount: number;
@@ -417,3 +412,30 @@ export interface DraftItemRowProps {
   isDeleting?: boolean;
   className?: string;
 }
+
+export interface StatusTabItem {
+  key: string;
+  label: string;
+  countKey: keyof CampaignStatusCounts;
+  alertOnCount?: boolean;
+}
+
+export interface CampaignEmptyStateConfig {
+  title: string;
+  description: string;
+}
+
+export interface CampaignStatusEmptyStateProps {
+  status?: string;
+  className?: string;
+}
+
+export interface BrandCampaignsErrorStateProps {
+  error?: unknown;
+  message?: string;
+  onRetry?: () => void;
+  className?: string;
+}
+
+
+
