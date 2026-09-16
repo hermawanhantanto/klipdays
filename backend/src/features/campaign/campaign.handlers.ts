@@ -346,7 +346,7 @@ export async function GetCampaignById(req: Request, res: Response, next: NextFun
     if (account.role === Role.BRAND) {
       whereClause.brand = { accountId: account.sub, status: Status.ACTIVE };
     } else if (account.role === Role.CREATOR) {
-      whereClause.campaignStatus = CampaignStatus.ACTIVE;
+      whereClause.campaignStatus = { in: [CampaignStatus.ACTIVE, CampaignStatus.FINISHED] };
     }
 
     const campaign = await prisma.campaign.findFirst({
@@ -363,6 +363,13 @@ export async function GetCampaignById(req: Request, res: Response, next: NextFun
             id: true,
             companyName: true,
             industry: true,
+          },
+        },
+        _count: {
+          select: {
+            submissions: {
+              where: { status: Status.ACTIVE },
+            },
           },
         },
       },

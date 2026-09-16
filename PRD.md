@@ -52,6 +52,20 @@ This document defines the requirements for Klipday's MVP, covering the complete 
 **Live phase:**
 - When the escrowed budget is exhausted, the campaign is finished: it closes automatically and the brand is notified.
 - There is no mid-campaign top-up; to continue promotion, the brand creates a new campaign.
+
+### 2.3.1 Campaign Detail Experience & Role-Adaptive Navigation
+- **Navigation & Lifecycle Redirection**:
+  - Submitted campaigns with lifecycle status `IN_REVIEW`, `ACTIVE`, `FINISHED`, or `REJECTED` render the dedicated Campaign Detail page.
+  - Incomplete or pending edit campaigns (`DRAFT`, `REVISION`) automatically redirect to their respective step in the campaign creation wizard.
+- **Hero Banner & Media Card**:
+  - Highlights brand profile, campaign title, prominent CPM rate display (`Rp{CPM} / 1K views`), platform icon, category badge, active timeline, joined creators count, and media preview card.
+  - **Status Badge Role Guard**: Lifecycle status badges are displayed strictly for `BRAND` and `ADMIN` accounts. Clipper (`CREATOR`) accounts see public campaign information without internal status badges.
+- **Role-Adaptive Tab Layout**:
+  - **Tab 1: Detail** (Universal): Contains comprehensive campaign overview, creative brief & social posting rules (with one-click copy for captions, hashtags, and mentions), downloadable editing materials (footage, visual assets, reference links), sample clip inspiration, and a sticky financial/reward metrics sidebar (CPM, min/max views cap, budget burn progress bar, escrow guarantee).
+  - **Tab 2: Role-Adaptive Workflow**:
+    - `CREATOR`: 'Video Kamu' (tracks personal draft submission, revision notes, view counts, and payout status).
+    - `BRAND`: 'Pengajuan Klip' (management queue of creator draft submissions for approval or revision requests).
+    - `ADMIN`: Unified view containing both submissions queue and clipper progress reviews.
 ### 2.4 Clipper Account Linking
 Clippers link a TikTok account before joining campaigns:
 1. Clipper enters their TikTok username.

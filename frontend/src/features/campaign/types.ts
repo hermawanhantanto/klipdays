@@ -81,6 +81,9 @@ export interface Campaign {
   materials?: CampaignMaterial[];
   brief?: CampaignBrief | null;
   brand?: CampaignBrand;
+  _count?: {
+    submissions?: number;
+  };
 }
 
 export interface CampaignEditInput {
@@ -434,5 +437,82 @@ export interface BrandCampaignsErrorStateProps {
   className?: string;
 }
 
+export interface CampaignDetailPageProps {
+  className?: string;
+}
 
+export interface CampaignDetailHeaderProps {
+  campaign: Campaign;
+  userRole?: 'BRAND' | 'CREATOR' | 'ADMIN' | null;
+  className?: string;
+}
 
+export interface CampaignDetailHeroMediaProps {
+  thumbnailUrl?: string | null;
+  title?: string | null;
+  typeBadge?: string;
+  brandName?: string;
+  className?: string;
+}
+
+export interface CampaignDetailTabsProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  userRole?: 'BRAND' | 'CREATOR' | 'ADMIN' | null;
+  className?: string;
+}
+
+export interface CampaignDetailAboutProps {
+  description?: string | null;
+  className?: string;
+}
+
+export interface CampaignDetailBriefProps {
+  brief?: CampaignBrief | null;
+  className?: string;
+}
+
+export interface CampaignDetailBriefSectionsProps {
+  brief?: CampaignBrief | null;
+  materials?: CampaignMaterial[];
+  className?: string;
+}
+
+export interface CampaignDetailBriefCardProps {
+  brief?: CampaignBrief | null;
+  materials?: CampaignMaterial[];
+  className?: string;
+}
+
+export interface CampaignDetailMaterialsProps {
+  materials?: CampaignMaterial[];
+  className?: string;
+}
+
+export interface CampaignDetailInspirationProps {
+  mainMediaUrl?: string | null;
+  materials?: CampaignMaterial[];
+  className?: string;
+}
+
+export interface CampaignDetailRewardSidebarProps {
+  campaign: Campaign;
+  className?: string;
+}
+
+export interface CampaignDetailSkeletonProps {
+  className?: string;
+}
+
+export interface CampaignDetailErrorStateProps {
+  error?: unknown;
+  message?: string;
+  onRetry?: () => void;
+  className?: string;
+}
+
+export interface CampaignDetailSubmissionsPlaceholderProps {
+  userRole?: 'BRAND' | 'CREATOR' | 'ADMIN' | null;
+  activeTab: string;
+  className?: string;
+}

@@ -28,7 +28,7 @@ function DashboardLayout() {
         <DashboardSidebar role={userProfile?.role} />
         <div className="flex flex-1 flex-col h-full min-h-0 overflow-hidden">
           <DashboardTopBar userName={userProfile?.name} userEmail={userProfile?.email} userRole={userProfile?.role} />
-          <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto bg-muted/20 p-4 sm:p-6 lg:p-8">
+          <main ref={mainRef} className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto bg-background p-4 sm:p-6 lg:p-8">
             <div className="w-full">
               <Suspense
                 fallback={

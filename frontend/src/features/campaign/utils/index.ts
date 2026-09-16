@@ -36,4 +36,9 @@ export {
 } from './campaign-card';
 export { GetEmptyStateForStatus } from './campaign-status';
 export { FormatDraftDate, GetDraftStepProgress } from './campaign-draft';
-
+export {
+  CalculateDaysRemaining,
+  CalculateMaxEarningsPerClip,
+  CopyTextToClipboard,
+  FormatDateRangeDisplay,
+} from './campaign-detail';

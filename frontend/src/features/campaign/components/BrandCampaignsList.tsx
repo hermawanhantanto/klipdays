@@ -30,7 +30,7 @@ export function BrandCampaignsList({ onCardClick, className }: BrandCampaignsLis
     campaignStatus: currentStatus,
   });
 
-  const handleCardClick = (campaign: CampaignCardItem) => {
+  const HandleCardClick = (campaign: CampaignCardItem) => {
     if (onCardClick) {
       onCardClick(campaign);
       return;
@@ -39,6 +39,8 @@ export function BrandCampaignsList({ onCardClick, className }: BrandCampaignsLis
     if (campaign.campaignStatus === 'DRAFT' || campaign.campaignStatus === 'REVISION') {
       const targetPath = ResolveCampaignWizardStepPath(campaign);
       navigate(targetPath);
+    } else {
+      navigate(`/brand-dashboard/brand-campaigns/${campaign.id}`);
     }
   };
 
@@ -67,7 +69,7 @@ export function BrandCampaignsList({ onCardClick, className }: BrandCampaignsLis
   return (
     <div className={cn('grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 py-2', className)}>
       {items.map((campaign) => (
-        <CampaignCard key={campaign.id} campaign={campaign} onClick={handleCardClick} />
+        <CampaignCard key={campaign.id} campaign={campaign} onClick={HandleCardClick} />
       ))}
     </div>
   );

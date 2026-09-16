@@ -18,6 +18,7 @@ const CampaignStep2 = lazy(() => import('@/features/campaign/pages/steps/Campaig
 const CampaignStep3 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep3'));
 const CampaignStep4 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep4'));
 const CampaignStep5 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep5'));
+const CampaignDetail = lazy(() => import('@/features/campaign/pages/CampaignDetail'));
 
 /**
  * Generic full-page loading fallback spinner for lazily loaded routes.
@@ -52,6 +53,7 @@ const router = createBrowserRouter(
         <Route path="brand-dashboard" element={<DashboardLayout />}>
           <Route index element={<Navigate to="brand-campaigns" replace />} />
           <Route path="brand-campaigns" element={<BrandCampaigns />} />
+          <Route path="brand-campaigns/:id" element={<CampaignDetail />} />
           <Route path="brand-campaigns/create" element={<CampaignWizardLayout />}>
             <Route index element={<Navigate to="step-1" replace />} />
             <Route path="step-1" element={<CampaignStep1 />} />
@@ -70,6 +72,11 @@ const router = createBrowserRouter(
           </Route>
         </Route>
         <Route path="dashboard" element={<Navigate to="/brand-dashboard" replace />} />
+      </Route>
+      <Route element={<ProtectedRoute allowedRoles={['BRAND', 'CREATOR', 'ADMIN']} />}>
+        <Route path="campaigns/:id" element={<DashboardLayout />}>
+          <Route index element={<CampaignDetail />} />
+        </Route>
       </Route>
     </Route>
   )
