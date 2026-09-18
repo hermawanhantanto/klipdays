@@ -48,3 +48,13 @@ export { CampaignDetailRewardSidebar } from './CampaignDetailRewardSidebar';
 export { CampaignDetailSkeleton } from './CampaignDetailSkeleton';
 export { CampaignDetailErrorState } from './CampaignDetailErrorState';
 export { CampaignDetailSubmissionsPlaceholder } from './CampaignDetailSubmissionsPlaceholder';
+export { FeaturedCampaignCarousel } from './FeaturedCampaignCarousel';
+export { FeaturedCampaignSlide } from './FeaturedCampaignSlide';
+export { FeaturedCampaignSkeleton } from './FeaturedCampaignSkeleton';
+export { CreatorCampaignsList } from './CreatorCampaignsList';
+export { CreatorCampaignsEmptyState } from './CreatorCampaignsEmptyState';
+export { CreatorCampaignsErrorState } from './CreatorCampaignsErrorState';
+export { CampaignFiltersToolbar } from './CampaignFiltersToolbar';
+export { CampaignFilterSelect } from './CampaignFilterSelect';
+
+

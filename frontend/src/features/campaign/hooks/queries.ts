@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { GetCampaignById, GetCampaigns, GetCampaignStatusCounts } from '../api';
-import type { Campaign, CampaignQueryParams, CampaignsPaginatedData, CampaignStatusCounts } from '../types';
+import { GetCampaignById, GetCampaigns, GetCampaignStatusCounts, GetFeaturedCampaigns } from '../api';
+import type { Campaign, CampaignCardItem, CampaignQueryParams, CampaignsPaginatedData, CampaignStatusCounts } from '../types';
 
 /**
  * Custom TanStack Query hook that fetches a single campaign's details by its ID.
@@ -46,6 +46,21 @@ export function UseCampaignStatusCountsQuery(): UseQueryResult<CampaignStatusCou
     queryKey: ['campaign-counts'],
     queryFn: () => GetCampaignStatusCounts(),
     staleTime: 30 * 1000,
+  });
+
+  return queryResult;
+}
+
+/**
+ * Custom TanStack Query hook that fetches a list of 3-5 featured campaigns for the hero carousel.
+ *
+ * @returns TanStack Query result containing the list of featured campaign items.
+ */
+export function UseFeaturedCampaignsQuery(): UseQueryResult<CampaignCardItem[], Error> {
+  const queryResult = useQuery({
+    queryKey: ['campaigns', 'featured'],
+    queryFn: () => GetFeaturedCampaigns(),
+    staleTime: 60 * 1000,
   });
 
   return queryResult;

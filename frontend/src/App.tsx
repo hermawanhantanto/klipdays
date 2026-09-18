@@ -17,6 +17,7 @@ const BrandDashboard = lazy(() => import('@/features/dashboard/pages/BrandDashbo
 const CreatorDashboard = lazy(() => import('@/features/dashboard/pages/CreatorDashboard'));
 const AdminDashboard = lazy(() => import('@/features/dashboard/pages/AdminDashboard'));
 const BrandCampaigns = lazy(() => import('@/features/campaign/pages/BrandCampaigns'));
+const CreatorCampaigns = lazy(() => import('@/features/campaign/pages/CreatorCampaigns'));
 const CampaignStep1 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep1'));
 const CampaignStep2 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep2'));
 const CampaignStep3 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep3'));
@@ -57,7 +58,10 @@ const router = createBrowserRouter(
       <Route element={<ProtectedRoute allowedRoles={['CREATOR', 'ADMIN']} />}>
         <Route path="creator-dashboard" element={<DashboardLayout />}>
           <Route index element={<CreatorDashboard />} />
+          <Route path="creator-campaigns" element={<CreatorCampaigns />} />
         </Route>
+        <Route path="creator-campaigns" element={<Navigate to="/creator-dashboard/creator-campaigns" replace />} />
+        <Route path="dashboard/campaigns" element={<Navigate to="/creator-dashboard/creator-campaigns" replace />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
         <Route path="admin-dashboard" element={<DashboardLayout />}>
@@ -85,7 +89,10 @@ const router = createBrowserRouter(
             <Route path="step-4" element={<CampaignStep4 />} />
             <Route path="step-5" element={<CampaignStep5 />} />
           </Route>
+          <Route path="brand-campaign" element={<Navigate to="/brand-dashboard/brand-campaigns" replace />} />
         </Route>
+        <Route path="brand-campaigns" element={<Navigate to="/brand-dashboard/brand-campaigns" replace />} />
+        <Route path="brand-campaign" element={<Navigate to="/brand-dashboard/brand-campaigns" replace />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['BRAND', 'CREATOR', 'ADMIN']} />}>
         <Route path="dashboard" element={<DashboardRoleRedirect />} />

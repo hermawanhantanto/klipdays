@@ -146,7 +146,7 @@ export function UseSubmitCampaignMutation(
       queryClient.invalidateQueries({ queryKey: ['campaign-counts'] });
 
       toast.success('Kampanye berhasil diajukan untuk proses review.');
-      navigate('/brand-dashboard/brand-campaigns');
+      navigate('/brand-dashboard/brand-campaigns?status=IN_REVIEW', { replace: true });
 
       onSuccess?.(submittedCampaign, variables, onMutateResult, context);
     },

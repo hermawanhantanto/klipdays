@@ -26,8 +26,19 @@ export function BrandCampaignsList({ onCardClick, className }: BrandCampaignsLis
   const rawStatus = searchParams.get('status');
   const currentStatus = rawStatus && (VALID_STATUSES as readonly string[]).includes(rawStatus) ? rawStatus : 'ACTIVE';
 
+  const search = searchParams.get('search') || undefined;
+  const rawCategory = searchParams.get('category');
+  const category = rawCategory && rawCategory !== 'ALL' ? rawCategory : undefined;
+  const rawType = searchParams.get('campaignType');
+  const campaignType = rawType && rawType !== 'ALL' ? rawType : undefined;
+  const sort = searchParams.get('sort') || undefined;
+
   const { data, isLoading, isError, error, refetch } = UseCampaignsQuery({
     campaignStatus: currentStatus,
+    search,
+    category,
+    campaignType,
+    sort,
   });
 
   const HandleCardClick = (campaign: CampaignCardItem) => {

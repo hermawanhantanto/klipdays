@@ -75,6 +75,10 @@ export interface Campaign {
   status?: string;
   campaignStatus?: string;
   adminNote?: string | null;
+  isFeatured?: boolean;
+  featuredBannerUrl?: string | null;
+  featuredOrder?: number | null;
+  featuredUntil?: string | null;
   createdAt?: string;
   updatedAt?: string;
   brandId?: string;
@@ -312,6 +316,10 @@ export interface CampaignCardItem {
   endDate?: string | null;
   status: string;
   campaignStatus: string;
+  isFeatured?: boolean;
+  featuredBannerUrl?: string | null;
+  featuredOrder?: number | null;
+  featuredUntil?: string | null;
   createdAt: string;
   updatedAt: string;
   brandId: string;
@@ -516,3 +524,81 @@ export interface CampaignDetailSubmissionsPlaceholderProps {
   activeTab: string;
   className?: string;
 }
+
+export interface FeaturedCampaignCarouselProps {
+  campaigns: CampaignCardItem[];
+  className?: string;
+  onSelectCampaign?: (campaign: CampaignCardItem) => void;
+}
+
+export interface FeaturedCampaignSlideProps {
+  campaign: CampaignCardItem;
+  isActive: boolean;
+  onSelect?: (campaign: CampaignCardItem) => void;
+  className?: string;
+}
+
+export interface FeaturedCampaignSkeletonProps {
+  className?: string;
+}
+
+export interface CreatorCampaignsListProps {
+  campaigns?: CampaignCardItem[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: unknown;
+  onRetry?: () => void;
+  onSelectCampaign?: (campaign: CampaignCardItem) => void;
+  className?: string;
+}
+
+export interface CreatorCampaignsEmptyStateProps {
+  onReset?: () => void;
+  className?: string;
+}
+
+export interface CreatorCampaignsErrorStateProps {
+  error?: unknown;
+  message?: string;
+  onRetry?: () => void;
+  className?: string;
+}
+
+export interface CreatorCampaignsProps {
+  className?: string;
+}
+
+export interface CampaignFiltersToolbarProps {
+  className?: string;
+  placeholder?: string;
+  showSort?: boolean;
+}
+
+export interface CampaignFilterOptionItem {
+  value: string;
+  label: string;
+}
+
+export interface CampaignFilterSelectProps {
+  value: string;
+  placeholder: string;
+  options: readonly CampaignFilterOptionItem[];
+  onValueChange: (value: string) => void;
+  className?: string;
+  contentClassName?: string;
+}
+
+export interface UseCampaignFiltersResult {
+  searchTerm: string;
+  category: string;
+  campaignType: string;
+  sort: string;
+  hasActiveFilters: boolean;
+  HandleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  HandleSearchKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  ClearSearch: () => void;
+  UpdateParam: (key: string, value: string | null) => void;
+  ResetFilters: () => void;
+}
+
+

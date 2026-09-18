@@ -42,3 +42,13 @@ export {
   CopyTextToClipboard,
   FormatDateRangeDisplay,
 } from './campaign-detail';
+export {
+  FILTER_CATEGORY_OPTIONS,
+  FILTER_CAMPAIGN_TYPE_OPTIONS,
+  FILTER_SORT_OPTIONS,
+  GetFilterCategoryLabel,
+  GetFilterCampaignTypeLabel,
+  GetFilterSortLabel,
+} from './campaign-filters';
+export type { FilterOption } from './campaign-filters';
+

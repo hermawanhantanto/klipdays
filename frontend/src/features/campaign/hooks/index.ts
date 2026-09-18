@@ -13,4 +13,5 @@ export type {
 export { UseCampaignQuery, UseCampaignsQuery, UseCampaignStatusCountsQuery } from './queries';
 export { UseCampaignWizardContext } from './wizard-context';
 export { UseUnsavedChangesGuard } from './use-unsaved-changes';
+export { UseCampaignFilters } from './use-campaign-filters';
 

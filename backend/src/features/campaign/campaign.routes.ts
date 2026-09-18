@@ -5,6 +5,7 @@ import {
   GetCampaignById,
   GetCampaigns,
   GetCampaignStatusCounts,
+  GetFeaturedCampaigns,
   InitializeCampaign,
   SubmitCampaign,
   UploadCampaignThumbnail,
@@ -18,6 +19,7 @@ campaignRouter.use(RequireAuth);
 campaignRouter.get('/', GetCampaigns);
 campaignRouter.post('/', InitializeCampaign);
 campaignRouter.get('/counts', GetCampaignStatusCounts);
+campaignRouter.get('/featured', GetFeaturedCampaigns);
 campaignRouter.get('/:id', GetCampaignById);
 campaignRouter.patch('/:id/edit', EditCampaign);
 campaignRouter.post('/:id/submit', SubmitCampaign);

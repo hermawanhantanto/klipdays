@@ -47,7 +47,7 @@ export function CampaignDetailHeader({ campaign, userRole, className }: Campaign
     if (window.history.length > 2) {
       navigate(-1);
     } else if (userRole === 'CREATOR') {
-      navigate('/dashboard/campaigns');
+      navigate('/creator-dashboard/creator-campaigns');
     } else {
       navigate('/brand-dashboard/brand-campaigns');
     }

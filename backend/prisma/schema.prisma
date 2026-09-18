@@ -251,6 +251,18 @@ model Campaign {
   // adminNote is the feedback from the admin for revision or rejection, and is optional.
   adminNote    String?        @map("admin_note") 
 
+  // isFeatured indicates if the campaign is pinned to the featured carousel.
+  isFeatured        Boolean   @default(false) @map("is_featured")
+
+  // featuredBannerUrl is the custom wide landscape banner for the featured hero carousel.
+  featuredBannerUrl String?   @map("featured_banner_url")
+
+  // featuredOrder controls the carousel slide sorting order.
+  featuredOrder     Int?      @map("featured_order")
+
+  // featuredUntil defines the expiration timestamp of the featured placement.
+  featuredUntil     DateTime? @map("featured_until")
+
   // createdAt and updatedAt are used to track when the campaign was created and last updated.
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
@@ -268,6 +280,7 @@ model Campaign {
   // relation to submissions
   submissions Submission[]
 
+  @@index([status, campaignStatus, isFeatured])
   @@map("campaigns")
 }
 

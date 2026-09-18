@@ -251,6 +251,94 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
 }
 
 /**
+ * Handles `GET /campaigns/featured`: retrieves a list of 3-5 featured campaigns for the hero carousel.
+ * Executes a hybrid query: first pulls actively featured campaigns (isFeatured: true, featuredUntil > now or null).
+ * If fewer than 3 items exist, automatically backfills with top active campaigns sorted by CPM and budget.
+ *
+ * Role boundaries:
+ * - Brand, Creator, Admin can all access featured campaigns.
+ *
+ * @param req - Express request with the authenticated account.
+ * @param res - Express response object.
+ * @param next - Express next function.
+ */
+export async function GetFeaturedCampaigns(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const account = req.account;
+
+    // Fast-fail: authentication check
+    if (!account) {
+      SendError(res, 'Authentication required.', 401);
+      return;
+    }
+
+    // Fast-fail: role boundary check
+    if (account.role !== Role.BRAND && account.role !== Role.CREATOR && account.role !== Role.ADMIN) {
+      SendError(res, 'Unauthorized role.', 403);
+      return;
+    }
+
+    const now = new Date();
+    const featuredWhereClause: Prisma.CampaignWhereInput = {
+      status: Status.ACTIVE,
+      campaignStatus: CampaignStatus.ACTIVE,
+      isFeatured: true,
+      brand: { status: Status.ACTIVE },
+      OR: [{ featuredUntil: null }, { featuredUntil: { gt: now } }],
+    };
+
+    const featuredOrderByClause: Prisma.CampaignOrderByWithRelationInput[] = [
+      { featuredOrder: { sort: 'asc', nulls: 'last' } },
+      { createdAt: 'desc' },
+    ];
+
+    const featuredCampaigns = await prisma.campaign.findMany({
+      where: featuredWhereClause,
+      orderBy: featuredOrderByClause,
+      take: 5,
+      select: CAMPAIGN_CARD_SELECT,
+    });
+
+    // If fewer than 3 campaigns, backfill with top active campaigns
+    if (featuredCampaigns.length < 3) {
+
+      const existingIds = featuredCampaigns.map((campaign) => campaign.id);
+
+      const backfillWhereClause: Prisma.CampaignWhereInput = {
+        status: Status.ACTIVE,
+        campaignStatus: CampaignStatus.ACTIVE,
+        brand: { status: Status.ACTIVE },
+        id: { notIn: existingIds },
+      };
+
+      const backfillOrderByClause: Prisma.CampaignOrderByWithRelationInput[] = [
+        { cpm: { sort: 'desc', nulls: 'last' } },
+        { budget: { sort: 'desc', nulls: 'last' } },
+        { createdAt: 'desc' },
+      ];
+
+      const backfillTake = 5 - featuredCampaigns.length;
+
+      const backfillCampaigns = await prisma.campaign.findMany({
+        where: backfillWhereClause,
+        orderBy: backfillOrderByClause,
+        take: backfillTake,
+        select: CAMPAIGN_CARD_SELECT,
+      });
+
+      const combinedCampaigns = [...featuredCampaigns, ...backfillCampaigns];
+      
+      SendSuccess(res, combinedCampaigns, 'Featured campaigns retrieved successfully.');
+      return;
+    }
+
+    SendSuccess(res, featuredCampaigns, 'Featured campaigns retrieved successfully.');
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * Handles `GET /campaigns/counts`: aggregates total campaign count grouped by
  * lifecycle status (`campaignStatus`) for the authenticated brand or admin.
  * Only active (non-soft-deleted) campaigns belonging to active brands are counted.

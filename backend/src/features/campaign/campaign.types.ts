@@ -70,6 +70,10 @@ export interface CampaignCardItem {
   endDate: Date | null;
   status: string;
   campaignStatus: string;
+  isFeatured?: boolean;
+  featuredBannerUrl?: string | null;
+  featuredOrder?: number | null;
+  featuredUntil?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   brandId: string;

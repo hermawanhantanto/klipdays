@@ -60,6 +60,10 @@ function CampaignWizardLayout() {
     return <CampaignWizardError message={error?.message} onRetry={() => refetch()} />;
   }
 
+  if (campaign?.campaignStatus && campaign.campaignStatus !== 'DRAFT' && campaign.campaignStatus !== 'REVISION') {
+    return <Navigate to="/brand-dashboard/brand-campaigns?status=IN_REVIEW" replace />;
+  }
+
   if (isForbiddenStep) {
     const fallbackStep = CAMPAIGN_WIZARD_STEPS[highestAllowedStep - 1] ?? CAMPAIGN_WIZARD_STEPS[0];
     const fallbackPath = GetWizardStepPath(fallbackStep.slug, id);

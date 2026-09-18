@@ -2,6 +2,7 @@ import { apiClient, ExtractApiError } from '@/lib/api-client';
 import type {
   ApiResponse,
   Campaign,
+  CampaignCardItem,
   CampaignEditInput,
   CampaignQueryParams,
   CampaignsPaginatedData,
@@ -184,6 +185,23 @@ export async function GetCampaignStatusCounts(): Promise<CampaignStatusCounts> {
     return result;
   } catch (error) {
     const apiError = ExtractApiError(error, 'Gagal memuat jumlah status kampanye. Silakan coba lagi.');
+    throw apiError;
+  }
+}
+
+/**
+ * Sends a GET request to `/campaigns/featured` to retrieve 3-5 featured campaigns for the hero carousel.
+ *
+ * @returns The array of featured campaign items.
+ * @throws Standardized API error if the request fails.
+ */
+export async function GetFeaturedCampaigns(): Promise<CampaignCardItem[]> {
+  try {
+    const response = await apiClient.get<ApiResponse<CampaignCardItem[]>>('/campaigns/featured');
+    const result = response.data.data;
+    return result;
+  } catch (error) {
+    const apiError = ExtractApiError(error, 'Gagal memuat kampanye unggulan. Silakan coba lagi.');
     throw apiError;
   }
 }
