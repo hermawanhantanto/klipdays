@@ -1,30 +1,25 @@
 import { z } from 'zod';
+import { SOCIAL_ACCOUNT_MESSAGES } from './social-account.constants.js';
+
+const usernameSchema = z
+  .string({ error: SOCIAL_ACCOUNT_MESSAGES.USERNAME_REQUIRED })
+  .trim()
+  .min(1, SOCIAL_ACCOUNT_MESSAGES.USERNAME_REQUIRED)
+  .max(50, SOCIAL_ACCOUNT_MESSAGES.USERNAME_TOO_LONG)
+  .regex(/^[a-zA-Z0-9._]+$/, SOCIAL_ACCOUNT_MESSAGES.USERNAME_INVALID_FORMAT);
 
 export const RequestCodeSchema = z.object({
-  username: z
-    .string()
-    .trim()
-    .min(1, 'Username TikTok tidak boleh kosong.')
-    .max(50, 'Username TikTok terlalu panjang.')
-    .regex(/^[a-zA-Z0-9._]+$/, 'Format username TikTok hanya boleh huruf, angka, titik, dan garis bawah.'),
+  username: usernameSchema,
 });
 
 export const VerifyBioSchema = z.object({
-  username: z
-    .string()
-    .trim()
-    .min(1, 'Username TikTok tidak boleh kosong.')
-    .max(50, 'Username TikTok terlalu panjang.')
-    .regex(/^[a-zA-Z0-9._]+$/, 'Format username TikTok hanya boleh huruf, angka, titik, dan garis bawah.'),
+  username: usernameSchema,
 });
 
 export const ValidateVideoUrlSchema = z.object({
   videoUrl: z
-    .string()
+    .string({ error: SOCIAL_ACCOUNT_MESSAGES.VIDEO_URL_INVALID })
     .trim()
-    .url('Format URL video TikTok tidak valid.')
-    .refine(
-      (url) => url.includes('tiktok.com/'),
-      'URL harus berupa tautan video TikTok yang valid (tiktok.com).',
-    ),
+    .url(SOCIAL_ACCOUNT_MESSAGES.VIDEO_URL_INVALID)
+    .refine((url) => url.includes('tiktok.com/'), SOCIAL_ACCOUNT_MESSAGES.VIDEO_URL_MUST_BE_TIKTOK),
 });

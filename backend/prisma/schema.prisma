@@ -183,6 +183,9 @@ model Creator {
   // relation to social accounts
   socialAccounts CreatorSocialAccount[]
 
+  // relation to temporary social verification challenges
+  verificationCodes SocialVerificationCode[]
+
   @@map("creators")
 }
 
@@ -471,6 +474,40 @@ model CreatorSocialAccount {
   @@map("creator_social_accounts")
 }
 
+model SocialVerificationCode {
+  // id is the primary key for the verification challenge.
+  id String @id @default(uuid())
+
+  // creatorId references the creator requesting the verification.
+  creatorId String @map("creator_id")
+
+  // platform is the target social platform (e.g. TIKTOK).
+  platform Platform @default(TIKTOK)
+
+  // username is the social handle being claimed/verified without '@'.
+  username String
+
+  // code is the temporary verification token (e.g. KD-XXXX).
+  code String
+
+  // expiresAt defines when this challenge token expires.
+  expiresAt DateTime @map("expires_at")
+
+  // status is used for soft-delete.
+  status Status @default(ACTIVE)
+
+  // createdAt and updatedAt timestamps.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // relation to creator
+  creator Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, platform, username])
+  @@index([platform, username])
+  @@map("social_verification_codes")
+}
+
 model ErrorLog {
   id           String  @id @default(uuid())
   functionName String? @map("function_name")
@@ -482,6 +519,9 @@ model ErrorLog {
   endpoint  String?
   accountId String? @map("account_id")
   metadata  Json?
+
+  // status is used for soft-delete.
+  status Status @default(ACTIVE)
 
   // Timestamp
   createdAt DateTime @default(now()) @map("created_at")
