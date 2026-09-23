@@ -1,5 +1,6 @@
-import { registerSchema, loginSchema } from './auth.schemas.js';
-import type { RegisterInput, LoginInput } from './auth.types.js';
+import { AUTH_MESSAGES } from './auth.constants.js';
+import { loginSchema, registerSchema } from './auth.schemas.js';
+import type { LoginInput, RegisterInput } from './auth.types.js';
 
 /**
  * Validates the register request body against the role-based register schema.
@@ -11,7 +12,14 @@ export function ValidateRegisterBody(body: unknown): RegisterInput | string {
   const result = registerSchema.safeParse(body);
 
   if (!result.success) {
-    return result.error.issues[0]?.message ?? 'Invalid request body.';
+    const firstIssue = result.error.issues[0];
+    const message = firstIssue?.message;
+
+    if (!message || message.startsWith('Invalid discriminator') || message.startsWith('Invalid input')) {
+      return AUTH_MESSAGES.INVALID_REQUEST;
+    }
+
+    return message;
   }
 
   return result.data;
@@ -27,7 +35,14 @@ export function ValidateLoginBody(body: unknown): LoginInput | string {
   const result = loginSchema.safeParse(body);
 
   if (!result.success) {
-    return result.error.issues[0]?.message ?? 'Invalid request body.';
+    const firstIssue = result.error.issues[0];
+    const message = firstIssue?.message;
+
+    if (!message || message.startsWith('Invalid input')) {
+      return AUTH_MESSAGES.EMAIL_OR_PASSWORD_REQUIRED;
+    }
+
+    return message;
   }
 
   return result.data;

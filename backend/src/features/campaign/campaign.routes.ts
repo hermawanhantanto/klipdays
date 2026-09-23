@@ -16,12 +16,16 @@ export const campaignRouter = Router();
 
 // Every campaign endpoint requires a logged-in account.
 campaignRouter.use(RequireAuth);
+
 campaignRouter.get('/', GetCampaigns);
-campaignRouter.post('/', InitializeCampaign);
 campaignRouter.get('/counts', GetCampaignStatusCounts);
 campaignRouter.get('/featured', GetFeaturedCampaigns);
 campaignRouter.get('/:id', GetCampaignById);
-campaignRouter.patch('/:id/edit', EditCampaign);
+
+campaignRouter.post('/', InitializeCampaign);
 campaignRouter.post('/:id/submit', SubmitCampaign);
 campaignRouter.post('/:id/thumbnail', UploadCampaignThumbnail);
+
+campaignRouter.patch('/:id/edit', EditCampaign);
+
 campaignRouter.delete('/:id', DeleteCampaign);

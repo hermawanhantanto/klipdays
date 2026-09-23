@@ -23,16 +23,16 @@ enum Status {
 }
 
 enum Industry {
-  E_COMMERCE           @map("E-Commerce")
-  FOOD_AND_BEVERAGE    @map("Food & Beverage")
-  FASHION_AND_BEAUTY   @map("Fashion & Beauty")
-  TECHNOLOGY           @map("Technology")
-  FINANCE              @map("Finance")
-  HEALTH_AND_WELLNESS  @map("Health & Wellness")
-  ENTERTAINMENT        @map("Entertainment")
-  EDUCATION            @map("Education")
+  E_COMMERCE             @map("E-Commerce")
+  FOOD_AND_BEVERAGE      @map("Food & Beverage")
+  FASHION_AND_BEAUTY     @map("Fashion & Beauty")
+  TECHNOLOGY             @map("Technology")
+  FINANCE                @map("Finance")
+  HEALTH_AND_WELLNESS    @map("Health & Wellness")
+  ENTERTAINMENT          @map("Entertainment")
+  EDUCATION              @map("Education")
   TRAVEL_AND_HOSPITALITY @map("Travel & Hospitality")
-  OTHER                @map("Other")
+  OTHER                  @map("Other")
 
   @@map("industry")
 }
@@ -55,6 +55,7 @@ enum CampaignStatus {
 }
 
 enum SubmissionStatus {
+  JOINED
   PENDING_REVIEW
   REVISION_REQUESTED
   REJECTED
@@ -83,42 +84,42 @@ enum CampaignType {
 }
 
 enum Category {
-  BEAUTY_SKINCARE @map("Beauty & Skincare")
-  FASHION_STYLE @map("Fashion & Style")
-  FOOD_BEVERAGE @map("Food & Beverage")
-  HEALTH_FITNESS @map("Health & Fitness")
+  BEAUTY_SKINCARE    @map("Beauty & Skincare")
+  FASHION_STYLE      @map("Fashion & Style")
+  FOOD_BEVERAGE      @map("Food & Beverage")
+  HEALTH_FITNESS     @map("Health & Fitness")
   TECHNOLOGY_GADGETS @map("Technology & Gadgets")
-  LIFESTYLE @map("Lifestyle")
-  GAMING @map("Gaming")
-  TRAVEL @map("Travel")
-  ENTERTAINMENT @map("Entertainment")
-  OTHER @map("Other")
+  LIFESTYLE          @map("Lifestyle")
+  GAMING             @map("Gaming")
+  TRAVEL             @map("Travel")
+  ENTERTAINMENT      @map("Entertainment")
+  OTHER              @map("Other")
 
   @@map("category")
 }
 
 model Account {
   // id is the primary key for the account, and is generated as a UUID.
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // email is unique to prevent duplicate accounts
-  email           String   @unique
+  email String @unique
 
   /// passwordHash is used to store the hashed password of the user. .
-  passwordHash    String   @map("password_hash")
+  passwordHash String @map("password_hash")
 
   // role is used to determine the type of user (brand, creator, or admin). 
-  role            Role
+  role Role
 
   // isEmailVerified is used to determine if the user's email has been verified. 
-  isEmailVerified Boolean  @default(false) @map("is_email_verified")
+  isEmailVerified Boolean @default(false) @map("is_email_verified")
 
   // status is used to determine if the user's account is active or deleted.
-  status          Status   @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   // createdAt and updatedAt are used to track when the account was created and last updated.
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations to other models
   brand   Brand?
@@ -130,23 +131,23 @@ model Account {
 
 model Brand {
   // id is the primary key for the brand, and is generated as a UUID.
-  id          String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // companyName is the name of the brand, and is mapped to the company_name column in the database.  
-  companyName String   @map("company_name")
+  companyName String @map("company_name")
 
   // phoneNumber is the phone number of the brand, and is mapped to the phone_number column in the database.
-  phoneNumber String?  @map("phone_number")
+  phoneNumber String? @map("phone_number")
 
   // industry is the industry of the brand, and is optional.
-  industry    Industry?
+  industry Industry?
 
   // status is used to determine if the brand's account is active or deleted.
-  status      Status   @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   // createdAt and updatedAt are used to track when the brand was created and last updated.
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations to account 
   account   Account @relation(fields: [accountId], references: [id])
@@ -160,13 +161,13 @@ model Brand {
 
 model Creator {
   // id is the primary key for the creator, and is generated as a UUID.
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // fullName is the name of the creator, and is mapped to the full_name column in the database.
-  fullName  String   @map("full_name")
+  fullName String @map("full_name")
 
   // status is used to determine if the creator's account is active or deleted.
-  status    Status   @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   // createdAt and updatedAt are used to track when the creator was created and last updated.
   createdAt DateTime @default(now()) @map("created_at")
@@ -179,18 +180,21 @@ model Creator {
   // relation to submissions
   submissions Submission[]
 
+  // relation to social accounts
+  socialAccounts CreatorSocialAccount[]
+
   @@map("creators")
 }
 
 model Admin {
   // id is the primary key for the admin, and is generated as a UUID.
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // fullName is the name of the admin, and is mapped to the full_name column in the database.
-  fullName  String   @map("full_name")
+  fullName String @map("full_name")
 
   // status is used to determine if the admin's account is active or deleted.
-  status    Status   @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   // createdAt and updatedAt are used to track when the admin was created and last updated.
   createdAt DateTime @default(now()) @map("created_at")
@@ -205,77 +209,77 @@ model Admin {
 
 model Campaign {
   // id is the primary key for the campaign, and is generated as a UUID.
-  id           String         @id @default(uuid())
+  id String @id @default(uuid())
 
   // title is the title of the campaign, and is optional until the creation wizard fills it in.
-  title        String?
+  title String?
 
   // description is the description of the campaign, and is optional until the creation wizard fills it in.
-  description  String?
+  description String?
 
   // campaignType is the type of campaign, and is required. It is stored as an enum with the following values: PRODUCT, SERVICE, CONTENT.
-  campaignType CampaignType   @map("campaign_type") @default(PRODUCT)
+  campaignType CampaignType @default(PRODUCT) @map("campaign_type")
 
   // campaignCategory is the category of the campaign, and is required.
-  campaignCategory Category @map("category") @default(OTHER)
+  campaignCategory Category @default(OTHER) @map("category")
 
   // thumbnailUrl is the URL of the thumbnail for the campaign, and is optional.
-  thumbnailUrl String?        @map("thumbnail_url")
+  thumbnailUrl String? @map("thumbnail_url")
 
   // platform is the platform of the campaign, and is required. Currently only TIKTOK is supported.
-  platform     Platform       @default(TIKTOK)
+  platform Platform @default(TIKTOK)
 
   // mainMediaUrl is the URL of the main media for the campaign, and is optional. It can be a URL of a product, service or content.
-  mainMediaUrl String?        @map("main_media_url")  
-  
+  mainMediaUrl String? @map("main_media_url")
+
   // cpm is the cost per mille (CPM) of the campaign, and is optional. It is stored as a decimal with 12 digits and 2 decimal places.
-  cpm          Decimal?       @db.Decimal(12, 2)
+  cpm Decimal? @db.Decimal(12, 2)
 
   // minViews and maxViews are the minimum and maximum views for the campaign, and are optional.
-  minViews     Int?           @map("min_views")
-  maxViews     Int?           @map("max_views")
+  minViews Int? @map("min_views")
+  maxViews Int? @map("max_views")
 
   // budget is the total budget for the campaign, and is optional. It is stored as a decimal with 15 digits and 2 decimal places.
-  budget       Decimal?       @db.Decimal(15, 2)
+  budget Decimal? @db.Decimal(15, 2)
 
   // startDate and endDate are the start and end dates for the campaign, and are optional.
-  startDate    DateTime?      @map("start_date")
-  endDate      DateTime?      @map("end_date")
+  startDate DateTime? @map("start_date")
+  endDate   DateTime? @map("end_date")
 
   // status is used to determine if the campaign is active or deleted.
-  status         Status         @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   // campaignStatus is the lifecycle status of the campaign, and is required. It is stored as an enum with the following values: DRAFT, IN_REVIEW, REVISION, REJECTED, ACTIVE, FINISHED.
   campaignStatus CampaignStatus @default(DRAFT) @map("campaign_status")
 
   // adminNote is the feedback from the admin for revision or rejection, and is optional.
-  adminNote    String?        @map("admin_note") 
+  adminNote String? @map("admin_note")
 
   // isFeatured indicates if the campaign is pinned to the featured carousel.
-  isFeatured        Boolean   @default(false) @map("is_featured")
+  isFeatured Boolean @default(false) @map("is_featured")
 
   // featuredBannerUrl is the custom wide landscape banner for the featured hero carousel.
-  featuredBannerUrl String?   @map("featured_banner_url")
+  featuredBannerUrl String? @map("featured_banner_url")
 
   // featuredOrder controls the carousel slide sorting order.
-  featuredOrder     Int?      @map("featured_order")
+  featuredOrder Int? @map("featured_order")
 
   // featuredUntil defines the expiration timestamp of the featured placement.
-  featuredUntil     DateTime? @map("featured_until")
+  featuredUntil DateTime? @map("featured_until")
 
   // createdAt and updatedAt are used to track when the campaign was created and last updated.
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relation to brand  
-  brand       Brand              @relation(fields: [brandId], references: [id])
-  brandId     String             @map("brand_id")
+  brand   Brand  @relation(fields: [brandId], references: [id])
+  brandId String @map("brand_id")
 
   // relation to campaign brief
-  brief       CampaignBrief?
+  brief CampaignBrief?
 
   // relation to campaign materials
-  materials   CampaignMaterial[]
+  materials CampaignMaterial[]
 
   // relation to submissions
   submissions Submission[]
@@ -286,47 +290,47 @@ model Campaign {
 
 model CampaignBrief {
   // id is the primary key for the campaign brief, and is generated as a UUID.
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
   // purpose is the purpose of the campaign brief, and is optional.
-  purpose         String? 
+  purpose String?
 
   // keyMessage is the key message of the campaign brief, and is optional.
-  keyMessage      String?  @map("key_message") 
+  keyMessage String? @map("key_message")
 
   // narration is the narration of the campaign brief, and is optional.
-  narration       String? 
+  narration String?
 
   // impression is the impression of the campaign brief, and is optional.
-  impression      String? 
+  impression String?
 
   // callToAction is the call to action of the campaign brief, and is optional.
-  callToAction    String?  @map("call_to_action")
+  callToAction String? @map("call_to_action")
 
   // requiredCaption is the required caption of the campaign brief, and is optional.
-  requiredCaption String?  @map("required_caption") 
+  requiredCaption String? @map("required_caption")
 
   // hashtags is the list of hashtags of the campaign brief, and is optional.
-  hashtags        String[]
+  hashtags String[]
 
   // mentionTags is the list of mention tags of the campaign brief, and is optional.
-  mentionTags     String[] @map("mention_tags") 
+  mentionTags String[] @map("mention_tags")
 
   // dos is the list of dos of the campaign brief, and is optional.
-  dos             String[]
+  dos String[]
 
   // donts is the list of donts of the campaign brief, and is optional.
-  donts           String[]
+  donts String[]
 
   // guidelines is the free-form clipping brief of the campaign brief, and is optional.
-  guidelines      String? 
+  guidelines String?
 
   // status is used to determine if the campaign brief is active or deleted.
-  status          Status   @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   //  createdAt and updatedAt are used to track when the campaign brief was created and last updated.
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relation to campaign
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -337,24 +341,24 @@ model CampaignBrief {
 
 model CampaignMaterial {
   // id is the primary key for the campaign material, and is generated as a UUID.
-  id        String       @id @default(uuid())
+  id String @id @default(uuid())
 
   // name is the name of the campaign material, and is required.
-  name      String
+  name String
 
   // type is the type of the campaign material, and is required. It is stored as an enum with the following values: VIDEO, IMAGE, DOCUMENT, LINK.
-  type      MaterialType
+  type MaterialType
 
   // url is the URL of the campaign material, and is required.
-  url       String
+  url String
 
   // status is used to determine if the material is active or soft-deleted. Old materials are marked DELETED
   // instead of being removed, so any data still referencing them keeps working.
-  status    Status       @default(ACTIVE)
+  status Status @default(ACTIVE)
 
   // createdAt and updatedAt are used to track when the campaign material was created and last updated.
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relation to campaign
   campaign   Campaign @relation(fields: [campaignId], references: [id])
@@ -365,44 +369,124 @@ model CampaignMaterial {
 
 model Submission {
   // id is the primary key for the submission, and is generated as a UUID.
-  id               String           @id @default(uuid())
+  id String @id @default(uuid())
 
-  // draftVideoUrl is the URL of the draft video for the submission, and is required.
-  draftVideoUrl    String           @map("draft_video_url")
+  // draftVideoUrl is the URL of the draft video for the submission, and is optional.
+  draftVideoUrl String? @map("draft_video_url")
 
-  // liveVideoUrl is the URL of the live video for the submission, and is optional.
-  liveVideoUrl     String?          @map("live_video_url")
+  // liveVideoUrl is the URL of the live published video on TikTok, and is optional until submitted.
+  liveVideoUrl String? @map("live_video_url")
+
+  // thumbnailUrl is the preview thumbnail URL of the selected TikTok video.
+  thumbnailUrl String? @map("thumbnail_url")
+
+  // videoCaption is the caption of the selected TikTok video.
+  videoCaption String? @map("video_caption")
 
   // status is used to determine if the submission is active or deleted.
-  status           Status           @default(ACTIVE)
+  status Status @default(ACTIVE)
 
-  // submissionStatus is the lifecycle status of the submission, and is required. It is stored as an enum with the following values: PENDING_REVIEW, REVISION_REQUESTED, REJECTED, APPROVED, POSTED, VERIFIED.
-  submissionStatus SubmissionStatus @default(PENDING_REVIEW) @map("submission_status")
+  // submissionStatus is the lifecycle status of the submission.
+  submissionStatus SubmissionStatus @default(JOINED) @map("submission_status")
 
   // reviewNote is the feedback from the brand for revision or rejection, and is optional.
-  reviewNote       String?          @map("review_note") 
+  reviewNote String? @map("review_note")
 
   // verifiedViews is the number of verified views for the submission, and is required. It is stored as an integer with a default value of 0.
-  verifiedViews    Int              @default(0) @map("verified_views")
+  verifiedViews Int @default(0) @map("verified_views")
 
   // earnings is the earnings for the submission, and is required. It is stored as a decimal with 15 digits and 2 decimal places.
-  earnings         Decimal          @default(0) @db.Decimal(15, 2)
+  earnings Decimal @default(0) @db.Decimal(15, 2)
 
-  // submittedAt is the date and time when the submission was submitted, and is required. It is stored as a DateTime with a default value of now().
-  submittedAt      DateTime         @default(now()) @map("submitted_at")
+  // submittedAt is the date and time when the submission was submitted, and is stamped on final submit.
+  submittedAt DateTime? @map("submitted_at")
 
   // createdAt and updatedAt are used to track when the submission was created and last updated.
-  createdAt        DateTime         @default(now()) @map("created_at")
-  updatedAt        DateTime         @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relation to campaign
   campaign   Campaign @relation(fields: [campaignId], references: [id])
   campaignId String   @map("campaign_id")
 
   // relation to creator
-  creator    Creator  @relation(fields: [creatorId], references: [id])
-  creatorId  String   @map("creator_id")
+  creator   Creator @relation(fields: [creatorId], references: [id])
+  creatorId String  @map("creator_id")
 
-  @@unique([campaignId, creatorId]) 
+  // relation to connected social account
+  socialAccount   CreatorSocialAccount? @relation(fields: [socialAccountId], references: [id])
+  socialAccountId String?               @map("social_account_id")
+
+  @@unique([campaignId, creatorId])
   @@map("submissions")
+}
+
+model CreatorSocialAccount {
+  // id is the primary key for the creator social account, and is generated as a UUID.
+  id String @id @default(uuid())
+
+  // creatorId references the creator who owns this social account.
+  creatorId String @map("creator_id")
+
+  // platform is the social media platform (currently TIKTOK).
+  platform Platform @default(TIKTOK)
+
+  // username is the handle of the creator on the platform without '@'.
+  username String
+
+  // platformUserId is the unique numeric or ID of the user on the platform.
+  platformUserId String? @map("platform_user_id")
+
+  // avatarUrl is the profile picture of the creator on the platform.
+  avatarUrl String? @map("avatar_url")
+
+  // followersCount is the number of followers on the platform.
+  followersCount Int @default(0) @map("followers_count")
+
+  // isVerified indicates whether bio verification was successfully completed.
+  isVerified Boolean @default(false) @map("is_verified")
+
+  // verificationCode is the temporary one-time verification token (e.g. KD-8123).
+  verificationCode String? @map("verification_code")
+
+  // verificationExpiresAt is when the verificationCode expires.
+  verificationExpiresAt DateTime? @map("verification_expires_at")
+
+  // verifiedAt is the timestamp when the account was successfully verified.
+  verifiedAt DateTime? @map("verified_at")
+
+  // status is used for soft-delete.
+  status Status @default(ACTIVE)
+
+  // createdAt and updatedAt timestamps.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // relations
+  creator     Creator      @relation(fields: [creatorId], references: [id])
+  submissions Submission[]
+
+  @@unique([platform, username])
+  @@index([creatorId, platform])
+  @@map("creator_social_accounts")
+}
+
+model ErrorLog {
+  id           String  @id @default(uuid())
+  functionName String? @map("function_name")
+  statusCode   Int?    @map("status_code")
+  message      String  @db.Text
+  stackTrace   String? @map("stack_trace") @db.Text
+
+  // Context & Attribution
+  endpoint  String?
+  accountId String? @map("account_id")
+  metadata  Json?
+
+  // Timestamp
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt(sort: Desc)])
+  @@index([statusCode])
+  @@map("error_logs")
 }

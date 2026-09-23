@@ -1,19 +1,6 @@
-import type { Prisma } from '../../generated/prisma/client.js';
-
+import { CAMPAIGN_MESSAGES } from './campaign.constants.js';
 import { campaignEditSchema, campaignQuerySchema } from './campaign.schemas.js';
-
-import type { CampaignEditInput, CampaignQueryInput } from './campaign.types.js';
-
-export interface CampaignExistingFields {
-  minViews?: number | null;
-  maxViews?: number | null;
-  budget?: Prisma.Decimal | number | null;
-  cpm?: Prisma.Decimal | number | null;
-  startDate?: Date | string | null;
-  endDate?: Date | string | null;
-}
-
-export type CampaignExistingRewardFields = CampaignExistingFields;
+import type { CampaignEditInput, CampaignExistingFields, CampaignQueryInput, CampaignSubmitCheckRecord } from './campaign.types.js';
 
 /**
  * Validates the campaign edit request body against the edit schema.
@@ -27,7 +14,7 @@ export function ValidateCampaignEditBody(body: unknown): CampaignEditInput | str
   const result = campaignEditSchema.safeParse(body);
 
   if (!result.success) {
-    return result.error.issues[0]?.message ?? 'Invalid request body.';
+    return result.error.issues[0]?.message ?? CAMPAIGN_MESSAGES.INVALID_REQUEST_BODY;
   }
 
   return result.data;
@@ -46,14 +33,14 @@ export function ValidateCampaignRewardLogic(input: CampaignEditInput, existing?:
   const effectiveMaxViews = input.maxViews ?? existing?.maxViews ?? 0;
 
   if (effectiveMaxViews < effectiveMinViews) {
-    return 'Max views cannot be less than min views.';
+    return CAMPAIGN_MESSAGES.REWARD_MAX_LESS_THAN_MIN;
   }
 
   const effectiveBudget = input.budget ?? existing?.budget ?? 0;
   const effectiveCpm = input.cpm ?? existing?.cpm ?? 0;
 
   if (effectiveBudget < effectiveCpm) {
-    return 'Budget cannot be less than CPM.';
+    return CAMPAIGN_MESSAGES.REWARD_BUDGET_LESS_THAN_CPM;
   }
 
   return null;
@@ -68,7 +55,9 @@ export function ValidateCampaignRewardLogic(input: CampaignEditInput, existing?:
  * @returns An error message string if a rule is violated, otherwise null.
  */
 export function ValidateCampaignDateLogic(input: CampaignEditInput, existing?: CampaignExistingFields): string | null {
-  if (!input.startDate || !input.endDate) return null;
+  if (!input.startDate || !input.endDate) {
+    return null;
+  }
 
   const effectiveStartDate = new Date(input.startDate);
   const effectiveEndDate = new Date(input.endDate);
@@ -80,36 +69,14 @@ export function ValidateCampaignDateLogic(input: CampaignEditInput, existing?: C
   startDateOnly.setHours(0, 0, 0, 0);
 
   if (startDateOnly < today) {
-    return 'Start date cannot be less than today.';
+    return CAMPAIGN_MESSAGES.DATE_START_PAST;
   }
 
   if (effectiveEndDate <= effectiveStartDate) {
-    return 'End date must be greater than start date.';
+    return CAMPAIGN_MESSAGES.DATE_END_BEFORE_START;
   }
 
   return null;
-}
-
-export interface CampaignSubmitCheckRecord {
-  title?: string | null;
-  description?: string | null;
-  thumbnailUrl?: string | null;
-  mainMediaUrl?: string | null;
-  campaignType?: string | null;
-  campaignCategory?: string | null;
-  platform?: string | null;
-  cpm?: Prisma.Decimal | number | string | null;
-  budget?: Prisma.Decimal | number | string | null;
-  minViews?: number | null;
-  maxViews?: number | null;
-  startDate?: Date | string | null;
-  endDate?: Date | string | null;
-  materials?: Array<{ id: string; name: string; type: string; url: string; status: string }>;
-  brief?: {
-    purpose?: string | null;
-    keyMessage?: string | null;
-    callToAction?: string | null;
-  } | null;
 }
 
 /**
@@ -130,13 +97,14 @@ export function ValidateCampaignSubmitCompleteness(campaign: CampaignSubmitCheck
   const hasPlat = Boolean(campaign.platform);
 
   if (!hasTitle || !hasDesc || !hasThumb || !hasMedia || !hasType || !hasCat || !hasPlat) {
-    return 'Langkah 1 belum lengkap: Judul, deskripsi, kategori, platform, tautan media utama, dan thumbnail wajib diisi.';
+    return CAMPAIGN_MESSAGES.STEP_1_INCOMPLETE;
   }
 
   // Step 2: Materials & Assets
   const activeMaterials = campaign.materials?.filter((item) => item.status === 'ACTIVE') ?? [];
+
   if (activeMaterials.length === 0) {
-    return 'Langkah 2 belum lengkap: Minimal 1 materi kampanye aktif wajib diunggah.';
+    return CAMPAIGN_MESSAGES.STEP_2_NO_MATERIALS;
   }
 
   const allMaterialsValid = activeMaterials.every((item) => {
@@ -147,13 +115,13 @@ export function ValidateCampaignSubmitCompleteness(campaign: CampaignSubmitCheck
   });
 
   if (!allMaterialsValid) {
-    return 'Langkah 2 belum lengkap: Semua materi kampanye harus memiliki nama, jenis, dan URL yang valid.';
+    return CAMPAIGN_MESSAGES.STEP_2_INVALID_MATERIALS;
   }
 
   // Step 3: Brief & Guidelines
   const brief = campaign.brief;
   if (!brief) {
-    return 'Langkah 3 belum lengkap: Brief dan panduan kampanye wajib diisi.';
+    return CAMPAIGN_MESSAGES.STEP_3_NO_BRIEF;
   }
 
   const hasPurpose = Boolean(brief.purpose && brief.purpose.trim() !== '');
@@ -161,7 +129,7 @@ export function ValidateCampaignSubmitCompleteness(campaign: CampaignSubmitCheck
   const hasCta = Boolean(brief.callToAction && brief.callToAction.trim() !== '');
 
   if (!hasPurpose || !hasKeyMsg || !hasCta) {
-    return 'Langkah 3 belum lengkap: Tujuan, pesan utama, dan call-to-action wajib diisi.';
+    return CAMPAIGN_MESSAGES.STEP_3_INCOMPLETE_BRIEF;
   }
 
   // Step 4: Reward & Budget
@@ -171,26 +139,26 @@ export function ValidateCampaignSubmitCompleteness(campaign: CampaignSubmitCheck
   const maxViews = campaign.maxViews != null ? Number(campaign.maxViews) : 0;
 
   if (cpm <= 0) {
-    return 'Langkah 4 belum lengkap: Tarif CPM harus lebih besar dari 0.';
+    return CAMPAIGN_MESSAGES.STEP_4_INVALID_CPM;
   }
 
   if (budget <= 0 || budget < cpm) {
-    return 'Langkah 4 belum lengkap: Total anggaran harus lebih besar dari atau sama dengan tarif CPM.';
+    return CAMPAIGN_MESSAGES.STEP_4_INVALID_BUDGET;
   }
 
   if (minViews <= 0 || maxViews < minViews) {
-    return 'Langkah 4 belum lengkap: Batas penayangan minimum dan maksimum tidak valid.';
+    return CAMPAIGN_MESSAGES.STEP_4_INVALID_VIEWS;
   }
 
   if (!campaign.startDate || !campaign.endDate) {
-    return 'Langkah 4 belum lengkap: Jadwal tanggal mulai dan berakhir wajib diisi.';
+    return CAMPAIGN_MESSAGES.STEP_4_NO_DATES;
   }
 
   const startDate = new Date(campaign.startDate).getTime();
   const endDate = new Date(campaign.endDate).getTime();
 
   if (isNaN(startDate) || isNaN(endDate) || endDate <= startDate) {
-    return 'Langkah 4 belum lengkap: Tanggal berakhir harus lebih lambat dari tanggal mulai.';
+    return CAMPAIGN_MESSAGES.STEP_4_INVALID_DATES;
   }
 
   return null;
@@ -209,13 +177,9 @@ export function ValidateCampaignQuery(query: unknown): CampaignQueryInput | stri
 
   if (!parseResult.success) {
     const firstIssue = parseResult.error.issues[0];
-    const errorMessage = firstIssue?.message ?? 'Invalid query parameters.';
+    const errorMessage = firstIssue?.message ?? CAMPAIGN_MESSAGES.INVALID_QUERY_PARAMS;
     return errorMessage;
   }
 
-  const queryData = parseResult.data;
-  return queryData;
+  return parseResult.data;
 }
-
-
-

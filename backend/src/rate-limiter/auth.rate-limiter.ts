@@ -1,5 +1,4 @@
 import { rateLimit } from 'express-rate-limit';
-
 import { SendError } from '../utils/api-response.js';
 
 /**
@@ -12,6 +11,6 @@ export const AuthRateLimiter = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   handler: (_req, res) => {
-    SendError(res, 'Too many requests, please try again later.', 429);
+    SendError(res, 'Too many requests. Please try again later.', 429);
   },
 });

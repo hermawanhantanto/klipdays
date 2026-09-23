@@ -136,7 +136,7 @@ export function CampaignFormStep5() {
               <AlertDialogTitle>Konfirmasi Pengajuan Kampanye</AlertDialogTitle>
               <AlertDialogDescription>
                 Apakah Anda yakin seluruh rincian kampanye sudah sesuai? Status kampanye akan berubah menjadi{' '}
-                <strong className="text-foreground">IN REVIEW</strong> dan diteruskan ke tim kurasi Klipday.
+                <strong className="text-foreground">IN REVIEW</strong> dan diteruskan ke tim review Klipday.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

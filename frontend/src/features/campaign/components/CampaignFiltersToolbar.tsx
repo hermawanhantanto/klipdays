@@ -75,7 +75,7 @@ export function CampaignFiltersToolbar({
           onChange={HandleSearchChange}
           onKeyDown={HandleSearchKeyDown}
           placeholder={placeholder}
-          className="h-9 w-full pl-9 pr-8 rounded-xl bg-zinc-900/90 hover:bg-zinc-900 border-0 border-transparent text-zinc-100 placeholder:text-zinc-400 focus-visible:ring-1 focus-visible:ring-primary text-sm shadow-none transition-colors"
+          className="h-9 w-full pl-9 pr-8 rounded-xl bg-zinc-900/90 hover:bg-zinc-900 border border-border/40 hover:border-border/60 text-zinc-100 placeholder:text-zinc-400 focus-visible:border-zinc-500 focus-visible:ring-0 text-sm shadow-none transition-colors"
         />
         {searchTerm ? (
           <button
@@ -123,7 +123,7 @@ export function CampaignFiltersToolbar({
             variant="ghost"
             size="sm"
             onClick={ResetFilters}
-            className="h-9 gap-1.5 px-3 rounded-xl bg-zinc-900/70 hover:bg-zinc-800 border-0 border-transparent text-xs font-medium text-zinc-300 hover:text-white cursor-pointer transition-colors shadow-none">
+            className="h-9 gap-1.5 px-3 rounded-xl bg-zinc-900/70 hover:bg-zinc-800 border border-border/40 hover:border-border/60 text-xs font-medium text-zinc-300 hover:text-white cursor-pointer transition-colors shadow-none">
             <RotateCcw className="size-3.5" />
             <span>Reset</span>
           </Button>

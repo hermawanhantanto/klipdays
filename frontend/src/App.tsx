@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/features/authentication/components';
 import AuthLayout from '@/features/authentication/layouts/AuthLayout';
 import { CampaignWizardIndexRedirect } from '@/features/campaign/components';
 import CampaignWizardLayout from '@/features/campaign/layouts/CampaignWizardLayout';
+import { SubmissionWizardIndexRedirect } from '@/features/submission/components';
 import DashboardLayout from '@/features/dashboard/layouts/DashboardLayout';
 import { DashboardRoleRedirect } from '@/features/dashboard/components';
 
@@ -24,6 +25,7 @@ const CampaignStep3 = lazy(() => import('@/features/campaign/pages/steps/Campaig
 const CampaignStep4 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep4'));
 const CampaignStep5 = lazy(() => import('@/features/campaign/pages/steps/CampaignStep5'));
 const CampaignDetail = lazy(() => import('@/features/campaign/pages/CampaignDetail'));
+
 
 
 /**
@@ -62,6 +64,8 @@ const router = createBrowserRouter(
         </Route>
         <Route path="creator-campaigns" element={<Navigate to="/creator-dashboard/creator-campaigns" replace />} />
         <Route path="dashboard/campaigns" element={<Navigate to="/creator-dashboard/creator-campaigns" replace />} />
+        <Route path="campaigns/:id/submit/*" element={<SubmissionWizardIndexRedirect />} />
+        <Route path="campaigns/:id/submit" element={<SubmissionWizardIndexRedirect />} />
       </Route>
       <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
         <Route path="admin-dashboard" element={<DashboardLayout />}>

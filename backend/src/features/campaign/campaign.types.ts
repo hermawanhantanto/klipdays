@@ -1,5 +1,5 @@
 import type { Prisma } from '../../generated/prisma/client.js';
-import type { CampaignStatus } from '../../generated/prisma/enums.js';
+import type { CampaignStatus, CampaignType, Category, Industry, MaterialType, Platform, Status } from '../../generated/prisma/enums.js';
 import type {
   CampaignBriefInput,
   CampaignEditInput,
@@ -30,37 +30,21 @@ export interface CampaignPaginationMeta {
 export interface CampaignCardBrand {
   id: string;
   companyName: string;
-  industry: string | null;
+  industry: Industry | null;
 }
 
 export interface CampaignCardCount {
   submissions: number;
 }
 
-export interface CampaignCardMaterialItem {
-  id: string;
-  name: string;
-  type: string;
-  url: string;
-  status: string;
-}
-
-export interface CampaignCardBriefItem {
-  id: string;
-  purpose: string | null;
-  keyMessage: string | null;
-  callToAction: string | null;
-  status: string;
-}
-
 export interface CampaignCardItem {
   id: string;
   title: string | null;
   description: string | null;
-  campaignType: string;
-  campaignCategory: string;
+  campaignType: CampaignType;
+  campaignCategory: Category;
   thumbnailUrl: string | null;
-  platform: string;
+  platform: Platform;
   mainMediaUrl: string | null;
   cpm: Prisma.Decimal | number | null;
   minViews: number | null;
@@ -68,8 +52,8 @@ export interface CampaignCardItem {
   budget: Prisma.Decimal | number | null;
   startDate: Date | null;
   endDate: Date | null;
-  status: string;
-  campaignStatus: string;
+  status: Status;
+  campaignStatus: CampaignStatus;
   isFeatured?: boolean;
   featuredBannerUrl?: string | null;
   featuredOrder?: number | null;
@@ -78,9 +62,36 @@ export interface CampaignCardItem {
   updatedAt: Date;
   brandId: string;
   brand: CampaignCardBrand;
-  materials?: CampaignCardMaterialItem[];
-  brief?: CampaignCardBriefItem | null;
   _count?: CampaignCardCount;
+}
+
+export interface CampaignCardMaterialItem {
+  id: string;
+  name: string;
+  type: MaterialType;
+  url: string;
+  status: Status;
+}
+
+export interface CampaignCardBriefItem {
+  id: string;
+  purpose: string | null;
+  keyMessage: string | null;
+  narration?: string | null;
+  impression?: string | null;
+  callToAction: string | null;
+  requiredCaption?: string | null;
+  hashtags?: string[];
+  mentionTags?: string[];
+  dos?: string[];
+  donts?: string[];
+  guidelines?: string | null;
+  status: Status;
+}
+
+export interface CampaignDetailItem extends CampaignCardItem {
+  materials: CampaignCardMaterialItem[];
+  brief: CampaignCardBriefItem | null;
 }
 
 export interface CampaignsPaginatedData {
@@ -89,3 +100,36 @@ export interface CampaignsPaginatedData {
 }
 
 export type CampaignStatusCounts = Record<CampaignStatus, number>;
+
+export interface CampaignExistingFields {
+  minViews?: number | null;
+  maxViews?: number | null;
+  budget?: Prisma.Decimal | number | null;
+  cpm?: Prisma.Decimal | number | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+}
+
+export type CampaignExistingRewardFields = CampaignExistingFields;
+
+export interface CampaignSubmitCheckRecord {
+  title?: string | null;
+  description?: string | null;
+  thumbnailUrl?: string | null;
+  mainMediaUrl?: string | null;
+  campaignType?: CampaignType | string | null;
+  campaignCategory?: Category | string | null;
+  platform?: Platform | string | null;
+  cpm?: Prisma.Decimal | number | string | null;
+  budget?: Prisma.Decimal | number | string | null;
+  minViews?: number | null;
+  maxViews?: number | null;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
+  materials?: Array<{ id: string; name: string; type: string; url: string; status: string }>;
+  brief?: {
+    purpose?: string | null;
+    keyMessage?: string | null;
+    callToAction?: string | null;
+  } | null;
+}

@@ -1,7 +1,6 @@
 import type { Response } from 'express';
 
 export type ApiStatus = 'success' | 'error';
-
 export interface ApiResponse<T = unknown> {
   status: ApiStatus;
   data: T | null;

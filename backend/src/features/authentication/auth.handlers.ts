@@ -1,54 +1,53 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import type { NextFunction, Request, Response } from 'express';
-
-import { prisma } from '../../utils/prisma.js';
+import jwt from 'jsonwebtoken';
 import { Prisma } from '../../generated/prisma/client.js';
 import { Role, Status } from '../../generated/prisma/enums.js';
-
 import { SendError, SendSuccess } from '../../utils/api-response.js';
-
+import { prisma } from '../../utils/prisma.js';
+import {
+  AUTH_CLEAR_COOKIE_OPTIONS,
+  AUTH_COOKIE_NAME,
+  AUTH_COOKIE_OPTIONS,
+  AUTH_MESSAGES,
+  AUTH_SALT_ROUNDS,
+  AUTH_TOKEN_EXPIRES_IN,
+} from './auth.constants.js';
+import type { CurrentAccountProfile } from './auth.types.js';
 import { ValidateLoginBody, ValidateRegisterBody } from './auth.validators.js';
 
-const SALT_ROUNDS = 10;
-const TOKEN_EXPIRES_IN = '1d';
-const COOKIE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-
 /**
- * Handles `POST /auth/register`: validates the body, hashes the password, and
- * creates the account together with its brand or creator profile in one write.
- * Email verification is skipped for now and will be added later.
+ * Handles `POST /auth/register`: validates request payload, hashes password with
+ * standard salt rounds, and creates account along with its profile atomically.
  *
  * @param req - Express request with the register body.
  * @param res - Express response object.
- * @param next - Express next function, used to forward unexpected errors.
+ * @param next - Express next function to forward unhandled errors.
  */
 export async function RegisterAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const input = ValidateRegisterBody(req.body);
 
-    // The validator returns the error message as a string on failure and the
-    // parsed input object on success, so the typeof check tells the two apart.
     if (typeof input === 'string') {
       SendError(res, input, 400);
       return;
     }
 
-    // findFirst instead of findUnique so the filter can also exclude
-    // soft-deleted accounts; only active accounts count as registered.
-    const existingAccount = await prisma.account.findFirst({
+    const existingAccountQuery = {
       where: { email: input.email, status: Status.ACTIVE },
-    });
+    };
+
+    // findFirst instead of findUnique so the filter also excludes soft-deleted accounts
+    const existingAccount = await prisma.account.findFirst(existingAccountQuery);
 
     if (existingAccount) {
-      SendError(res, 'Email is already registered.', 409);
+      SendError(res, AUTH_MESSAGES.EMAIL_ALREADY_EXISTS, 409);
       return;
     }
 
-    const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
+    const passwordHash = await bcrypt.hash(input.password, AUTH_SALT_ROUNDS);
 
-    // Nested create keeps account + profile in a single atomic write, so a
-    // failed profile insert can never leave an orphaned account behind.
+    // Nested create keeps account + profile in a single atomic write
     const profileData =
       input.role === Role.BRAND
         ? {
@@ -68,7 +67,7 @@ export async function RegisterAccount(req: Request, res: Response, next: NextFun
             },
           };
 
-    const account = await prisma.account.create({
+    const createPayload = {
       data: {
         email: input.email,
         passwordHash,
@@ -76,14 +75,15 @@ export async function RegisterAccount(req: Request, res: Response, next: NextFun
         ...profileData,
       },
       select: { id: true, email: true, role: true, createdAt: true },
-    });
+    };
 
-    SendSuccess(res, account, 'Account registered successfully.', 201);
+    const account = await prisma.account.create(createPayload);
+
+    SendSuccess(res, account, AUTH_MESSAGES.REGISTER_SUCCESS, 201);
   } catch (err) {
-    // A soft-deleted account still holds its email, so the unique index can
-    // fire even after the findFirst check above; map it to the same 409.
+    // Unique index on email still exists for soft-deleted accounts; map P2002 to 409
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-      SendError(res, 'Email is already registered.', 409);
+      SendError(res, AUTH_MESSAGES.EMAIL_ALREADY_EXISTS, 409);
       return;
     }
 
@@ -92,91 +92,86 @@ export async function RegisterAccount(req: Request, res: Response, next: NextFun
 }
 
 /**
- * Handles `POST /auth/login`: validates the credentials, compares the password
- * against the stored bcrypt hash, requires a verified email, and issues a JWT
- * in an httpOnly cookie.
+ * Handles `POST /auth/login`: validates credentials, verifies bcrypt hash,
+ * and issues a JWT token inside an httpOnly cookie.
  *
  * @param req - Express request with the login body.
  * @param res - Express response object.
- * @param next - Express next function, used to forward unexpected errors.
+ * @param next - Express next function to forward unhandled errors.
  */
 export async function LoginAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const input = ValidateLoginBody(req.body);
 
-    // The validator returns the error message as a string on failure and the
-    // parsed input object on success, so the typeof check tells the two apart.
     if (typeof input === 'string') {
       SendError(res, input, 400);
       return;
     }
 
-    // Only active accounts can log in; soft-deleted accounts get the same
-    // generic response as unknown emails.
-    const account = await prisma.account.findFirst({
+    const findAccountQuery = {
       where: { email: input.email, status: Status.ACTIVE },
-    });
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        role: true,
+        isEmailVerified: true,
+      },
+    };
+
+    const account = await prisma.account.findFirst(findAccountQuery);
 
     if (!account) {
-      SendError(res, 'Invalid email or password.', 401);
+      SendError(res, AUTH_MESSAGES.INVALID_CREDENTIALS, 401);
       return;
     }
 
-    // Same message for unknown email and wrong password, so the response does
-    // not reveal whether the email is registered.
     const passwordMatches = await bcrypt.compare(input.password, account.passwordHash);
 
     if (!passwordMatches) {
-      SendError(res, 'Invalid email or password.', 401);
+      SendError(res, AUTH_MESSAGES.INVALID_CREDENTIALS, 401);
       return;
     }
 
-    if (!account.isEmailVerified) {
-      SendError(res, 'Please verify your email before logging in.', 403);
-      return;
-    }
-
+    // Email verification requirement is bypassed during MVP while email service is configured.
+    // When enabled in a later phase, accounts with !account.isEmailVerified will receive 403.
     const jwtSecret = process.env.JWT_SECRET;
 
     if (!jwtSecret) {
-      SendError(res, 'Authentication is not configured.', 500);
+      SendError(res, AUTH_MESSAGES.CONFIG_MISSING, 500);
       return;
     }
 
-    const token = jwt.sign({ sub: account.id, role: account.role }, jwtSecret, {
-      expiresIn: TOKEN_EXPIRES_IN,
+    const tokenPayload = { sub: account.id, role: account.role };
+    const token = jwt.sign(tokenPayload, jwtSecret, {
+      expiresIn: AUTH_TOKEN_EXPIRES_IN,
     });
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: COOKIE_MAX_AGE_MS,
-    });
+    res.cookie(AUTH_COOKIE_NAME, token, AUTH_COOKIE_OPTIONS);
 
-    SendSuccess(res, { id: account.id, email: account.email, role: account.role }, 'Logged in successfully.');
+    const loginResponseData = {
+      id: account.id,
+      email: account.email,
+      role: account.role,
+    };
+
+    SendSuccess(res, loginResponseData, AUTH_MESSAGES.LOGIN_SUCCESS);
   } catch (err) {
     next(err);
   }
 }
 
 /**
- * Handles `POST /auth/logout`: clears the JWT cookie. The cookie options must
- * match the ones used when it was set, otherwise the browser keeps it.
+ * Handles `POST /auth/logout`: clears the authentication JWT cookie.
  *
- * @param req - Express request object.
+ * @param _req - Express request object.
  * @param res - Express response object.
- * @param next - Express next function, used to forward unexpected errors.
+ * @param next - Express next function to forward unhandled errors.
  */
-export async function LogoutAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function LogoutAccount(_req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
-
-    SendSuccess(res, null, 'Logged out successfully.');
+    res.clearCookie(AUTH_COOKIE_NAME, AUTH_CLEAR_COOKIE_OPTIONS);
+    SendSuccess(res, null, AUTH_MESSAGES.LOGOUT_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -188,18 +183,18 @@ export async function LogoutAccount(req: Request, res: Response, next: NextFunct
  *
  * @param req - Express request with `req.account` populated by `RequireAuth`.
  * @param res - Express response object.
- * @param next - Express next function, used to forward unexpected errors.
+ * @param next - Express next function to forward unhandled errors.
  */
 export async function GetCurrentAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const accountPayload = req.account;
 
     if (!accountPayload?.sub) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, AUTH_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    const account = await prisma.account.findFirst({
+    const accountQuery = {
       where: { id: accountPayload.sub, status: Status.ACTIVE },
       select: {
         id: true,
@@ -227,10 +222,12 @@ export async function GetCurrentAccount(req: Request, res: Response, next: NextF
           },
         },
       },
-    });
+    };
+
+    const account = await prisma.account.findFirst(accountQuery);
 
     if (!account) {
-      SendError(res, 'Account not found.', 404);
+      SendError(res, AUTH_MESSAGES.ACCOUNT_NOT_FOUND, 404);
       return;
     }
 
@@ -243,7 +240,7 @@ export async function GetCurrentAccount(req: Request, res: Response, next: NextF
       displayName = account.admin.fullName;
     }
 
-    const profileData = {
+    const profileData: CurrentAccountProfile = {
       id: account.id,
       email: account.email,
       role: account.role,
@@ -254,7 +251,7 @@ export async function GetCurrentAccount(req: Request, res: Response, next: NextF
       admin: account.admin,
     };
 
-    SendSuccess(res, profileData, 'Account retrieved successfully.');
+    SendSuccess(res, profileData, AUTH_MESSAGES.ACCOUNT_LOADED);
   } catch (err) {
     next(err);
   }

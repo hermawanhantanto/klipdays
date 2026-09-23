@@ -66,30 +66,34 @@ This document defines the requirements for Klipday's MVP, covering the complete 
     - `CREATOR`: 'Video Kamu' (tracks personal draft submission, revision notes, view counts, and payout status).
     - `BRAND`: 'Pengajuan Klip' (management queue of creator draft submissions for approval or revision requests).
     - `ADMIN`: Unified view containing both submissions queue and clipper progress reviews.
-### 2.4 Clipper Account Linking
-Clippers link a TikTok account before joining campaigns:
+### 2.4 Clipper Account Linking & Bio Verification Handshake
+Clippers link a TikTok account before submitting videos:
 1. Clipper enters their TikTok username.
-2. Platform generates a unique verification code.
-3. Clipper places the code in their TikTok bio.
-4. Platform verifies the code.
+2. Platform generates a unique one-time verification token (`KD-XXXX`, 10-minute expiry, 60-second CDN propagation cooldown).
+3. Clipper places the code in their TikTok bio and saves the profile.
+4. Platform scrapes the live TikTok bio and confirms code match.
+5. Anti-hijacking security guard: each TikTok handle is strictly unique (`@@unique([platform, username])`) and cannot be claimed by multiple creators.
+6. Once verified, the account is permanently tied to the creator and the bio code may be removed immediately from TikTok.
+7. Architecture is modular (`ISocialScraperProvider`) supporting ScrapeCreators adapter and local mock provider.
 
-Additional rules:
-- No periodic re-verification; the bio code is checked once more by the admin at final settlement (see [2.7](#27-settlement-and-payouts)).
-- Architecture must not block adding Instagram Reels or YouTube Shorts in a later version.
-### 2.5 Two-Stage Clip Submission
+### 2.5 Pure Post-First Video Submission Workflow
+Klipday uses the pure **Post-First Model** (matching Konten.com & Clippo.id standards): creators produce and publish their video directly to TikTok first, then submit the live video link via a 4-step wizard with persistent draft recovery:
 
-**Stage 1: Draft review**
+- **Stage 0: Joining Campaign (`JOINED`)**
+  - Creator clicks "Gabung Kampanye" on the Campaign Detail page.
+  - Creates a placeholder `Submission` row with status `JOINED`, unlocking the "Kirim Video" button.
+  - Brand submission review queues exclude `JOINED` records to keep tables clean.
 
-1. Clipper uploads a draft video
-2. Brand reviews the draft: approve, reject with a reason, or request revision.
-3. Maximum 2 revision rounds per submission; after that the submission closes (the clipper may start a fresh submission).
-4. There is no auto-approve; pending drafts trigger reminder notifications to the brand after 24 and 48 hours.
+- **4-Step Video Submission Wizard (`/campaigns/:id/submit`):**
+  - **Step 1: Brief & Ketentuan**: Creative brief guidelines, required hashtags/mentions, dos & don'ts, and mandatory compliance agreement checkbox.
+  - **Step 2: Akun TikTok**: Account verification step. Automatically recognizes and presents already verified TikTok accounts with a one-click continuation button.
+  - **Step 3: Pilih Video**: Visual gallery of recent videos fetched directly from the linked TikTok account, plus a manual URL fallback accordion with author validation. Selection autosaves as a draft.
+  - **Step 4: Pratinjau & Kirim**: Overview screen displaying video thumbnail, caption, live TikTok link, and manual curation advisory. Submitting transitions status to `PENDING_REVIEW` and stamps `submittedAt`.
 
-**Stage 2: Post and verify**
-1. The approved clipper posts the video on their linked TikTok account.
-2. Clipper submits the live video URL.
-3. Platform verifies the URL belongs to the linked account.
-4. View tracking starts.
+- **Curation Review**:
+  - Brand reviews the live submitted video: approve, request revision, or reject.
+  - Maximum 2 revision rounds per submission.
+  - Approved submissions enter view tracking.
 
 **Limit:** one earning clip per clipper per campaign.
 
@@ -97,23 +101,24 @@ Additional rules:
 
 - View counts are collected daily via a third-party scraper API; the admin verifies final counts at settlement.
 - Earnings per clip = verified views × CPM, subject to three limits:
-  - Counting starts only above the campaign's min-views threshold.
-  - Earnings stop at the campaign's max-views cap.
-  - Earnings are capped by the campaign's remaining budget.
+  - Counting starts only above the campaign's min-views threshold.
+  - Earnings stop at the campaign's max-views cap.
+  - Earnings are capped by the campaign's remaining budget.
 - Views stop counting the moment the budget reaches zero (first come, first served) or the deadline passes, whichever comes first.
 - Campaign end triggers the final report and settlement (see [2.7](#27-settlement-and-payouts)).
 - Ledger edge cases (for example, an overnight view spike crossing the budget cutoff) will be resolved in the technical specification.
+
 ### 2.7 Settlement and Payouts
 
 **Step 1: Settlement (at campaign end)**
 
 1. System generates the campaign's final report: the list of accounts that successfully finished the campaign, each with final performance (verified views) and estimated earnings.
 2. Admin reviews each account in the report:
-   - Verifies the final view counts.
-   - Checks that the account's bio code still matches its linked account.
+   - Verifies the final view counts.
+   - Verifies video ownership matches the verified account.
 3. Per account, the review has two outcomes:
-   - `Approved`: earnings are finalized and credited to the clipper's wallet balance.
-   - `Rejected`: earnings are withheld and the clipper is notified with the reason (bio-code mismatch, invalid views, or other fraud flags).
+   - `Approved`: earnings are finalized and credited to the clipper's wallet balance.
+   - `Rejected`: earnings are withheld and the clipper is notified with the reason (invalid views, copyright issues, or other fraud flags).
 
 **Step 2: Payout (anytime, clipper-initiated)**
 

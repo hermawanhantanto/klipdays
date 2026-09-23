@@ -1,6 +1,7 @@
 import type { Prisma } from '../../generated/prisma/client.js';
 import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
 import type { AuthPayload } from '../../middleware/auth.middleware.js';
+import { SCALAR_FIELDS } from './campaign.constants.js';
 import type {
   CampaignBriefInput,
   CampaignEditInput,
@@ -9,13 +10,19 @@ import type {
   CampaignSortOption,
 } from './campaign.types.js';
 
-import { SCALAR_FIELDS } from './campaign.constants.js';
-
 /**
  * Copies `value` into `target[key]` when it is defined, so only the fields
- * the request actually sent end up in the update.
+ * the request actually sent end up in the update payload.
+ *
+ * @param target - The target object being populated.
+ * @param key - The property key on the target object.
+ * @param value - The value to assign if not undefined.
  */
-function SetField<Target, Key extends keyof Target>(target: Target, key: Key, value: Target[Key] | undefined): void {
+function SetField<Target, Key extends keyof Target>(
+  target: Target,
+  key: Key,
+  value: Target[Key] | undefined,
+): void {
   if (value !== undefined) {
     target[key] = value;
   }
@@ -29,7 +36,9 @@ function SetField<Target, Key extends keyof Target>(target: Target, key: Key, va
  * @param brief - The validated campaign brief input.
  * @returns The Prisma nested upsert input for the campaign brief relation.
  */
-export function BuildCampaignBriefUpsert(brief: CampaignBriefInput): Prisma.CampaignBriefUpsertWithoutCampaignInput {
+export function BuildCampaignBriefUpsert(
+  brief: CampaignBriefInput,
+): Prisma.CampaignBriefUpsertWithoutCampaignInput {
   const createData: Prisma.CampaignBriefCreateWithoutCampaignInput = {
     purpose: brief.purpose,
     keyMessage: brief.keyMessage,
@@ -50,7 +59,11 @@ export function BuildCampaignBriefUpsert(brief: CampaignBriefInput): Prisma.Camp
   };
 
   for (const [key, value] of Object.entries(createData)) {
-    SetField(updateData, key as keyof Prisma.CampaignBriefUpdateWithoutCampaignInput, value);
+    SetField(
+      updateData,
+      key as keyof Prisma.CampaignBriefUpdateWithoutCampaignInput,
+      value,
+    );
   }
 
   const upsert: Prisma.CampaignBriefUpsertWithoutCampaignInput = {
@@ -70,19 +83,20 @@ export function BuildCampaignBriefUpsert(brief: CampaignBriefInput): Prisma.Camp
  * @returns The Prisma nested update input for the campaign materials relation.
  */
 export function BuildCampaignMaterialsUpdate(
-  materials: CampaignMaterialsInput
+  materials: CampaignMaterialsInput,
 ): Prisma.CampaignMaterialUpdateManyWithoutCampaignNestedInput {
-  const materialsQuery: Prisma.CampaignMaterialUpdateManyWithoutCampaignNestedInput = {
-    updateMany: {
-      where: { status: Status.ACTIVE },
-      data: { status: Status.DELETED },
-    },
-    create: materials.map((material) => ({
-      type: material.type,
-      name: material.name,
-      url: material.url,
-    })),
-  };
+  const materialsQuery: Prisma.CampaignMaterialUpdateManyWithoutCampaignNestedInput =
+    {
+      updateMany: {
+        where: { status: Status.ACTIVE },
+        data: { status: Status.DELETED },
+      },
+      create: materials.map((material) => ({
+        type: material.type,
+        name: material.name,
+        url: material.url,
+      })),
+    };
 
   return materialsQuery;
 }
@@ -99,7 +113,9 @@ export function BuildCampaignMaterialsUpdate(
  * @param input - The validated edit body.
  * @returns The fields to update on the campaign.
  */
-export function BuildCampaignEditFields(input: CampaignEditInput): Prisma.CampaignUpdateInput {
+export function BuildCampaignEditFields(
+  input: CampaignEditInput,
+): Prisma.CampaignUpdateInput {
   const campaignQuery: Prisma.CampaignUpdateInput = {};
 
   for (const key of SCALAR_FIELDS) {
@@ -129,7 +145,10 @@ export function BuildCampaignEditFields(input: CampaignEditInput): Prisma.Campai
  * @param query - Validated campaign query parameters.
  * @returns The structured Prisma campaign `where` object.
  */
-export function BuildCampaignsWhereClause(account: AuthPayload, query: CampaignQueryInput): Prisma.CampaignWhereInput {
+export function BuildCampaignsWhereClause(
+  account: AuthPayload,
+  query: CampaignQueryInput,
+): Prisma.CampaignWhereInput {
   // Base soft-delete filter: both Campaign and Brand must have status ACTIVE across all roles
   const brandWhere: Prisma.BrandWhereInput = {
     status: Status.ACTIVE,
@@ -212,27 +231,44 @@ export function BuildCampaignsWhereClause(account: AuthPayload, query: CampaignQ
  * @param sort - The validated sort option key.
  * @returns An array of Prisma order criteria.
  */
-export function BuildCampaignsOrderBy(sort: CampaignSortOption): Prisma.CampaignOrderByWithRelationInput[] {
+export function BuildCampaignsOrderBy(
+  sort: CampaignSortOption,
+): Prisma.CampaignOrderByWithRelationInput[] {
   if (sort === 'highest_cpm') {
-    const orderByCpm: Prisma.CampaignOrderByWithRelationInput[] = [{ cpm: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    const orderByCpm: Prisma.CampaignOrderByWithRelationInput[] = [
+      { cpm: { sort: 'desc', nulls: 'last' } },
+      { createdAt: 'desc' },
+    ];
     return orderByCpm;
   }
 
   if (sort === 'lowest_cpm') {
-    const orderByLowestCpm: Prisma.CampaignOrderByWithRelationInput[] = [{ cpm: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }];
+    const orderByLowestCpm: Prisma.CampaignOrderByWithRelationInput[] = [
+      { cpm: { sort: 'asc', nulls: 'last' } },
+      { createdAt: 'desc' },
+    ];
     return orderByLowestCpm;
   }
 
   if (sort === 'highest_total_budget') {
-    const orderByBudget: Prisma.CampaignOrderByWithRelationInput[] = [{ budget: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    const orderByBudget: Prisma.CampaignOrderByWithRelationInput[] = [
+      { budget: { sort: 'desc', nulls: 'last' } },
+      { createdAt: 'desc' },
+    ];
     return orderByBudget;
   }
 
   if (sort === 'highest_maximum_views') {
-    const orderByViews: Prisma.CampaignOrderByWithRelationInput[] = [{ maxViews: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
+    const orderByViews: Prisma.CampaignOrderByWithRelationInput[] = [
+      { maxViews: { sort: 'desc', nulls: 'last' } },
+      { createdAt: 'desc' },
+    ];
     return orderByViews;
   }
 
-  const orderByLatest: Prisma.CampaignOrderByWithRelationInput[] = [{ createdAt: 'desc' }, { id: 'desc' }];
+  const orderByLatest: Prisma.CampaignOrderByWithRelationInput[] = [
+    { createdAt: 'desc' },
+    { id: 'desc' },
+  ];
   return orderByLatest;
 }

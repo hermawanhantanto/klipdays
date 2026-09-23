@@ -452,6 +452,7 @@ export interface CampaignDetailPageProps {
 export interface CampaignDetailHeaderProps {
   campaign: Campaign;
   userRole?: 'BRAND' | 'CREATOR' | 'ADMIN' | null;
+  onOpenSubmitDialog?: () => void;
   className?: string;
 }
 
@@ -522,6 +523,8 @@ export interface CampaignDetailErrorStateProps {
 export interface CampaignDetailSubmissionsPlaceholderProps {
   userRole?: 'BRAND' | 'CREATOR' | 'ADMIN' | null;
   activeTab: string;
+  campaignId?: string;
+  onOpenSubmitDialog?: () => void;
   className?: string;
 }
 

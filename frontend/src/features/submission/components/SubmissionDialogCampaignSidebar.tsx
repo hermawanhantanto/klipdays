@@ -1,0 +1,177 @@
+import { cn } from '@/lib/utils';
+import {
+  FormatCpmDisplay,
+  GetCampaignCategoryBadgeLabel,
+  GetCampaignTypeBadgeLabel,
+} from '@/features/campaign/utils';
+import type { SubmissionDialogCampaignSidebarProps } from '../types';
+
+/**
+ * Inline Instagram vector icon matching stroke styling.
+ *
+ * @param props - SVG element properties.
+ * @returns Rendered SVG Instagram icon.
+ */
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+/**
+ * Resolves the platform icon based on campaign configuration.
+ *
+ * @param platform - Campaign social platform string.
+ * @returns Rendered platform icon element.
+ */
+function RenderPlatformIcon(platform?: string) {
+  const normalized = (platform || 'TIKTOK').toUpperCase();
+  if (normalized === 'INSTAGRAM') {
+    return <InstagramIcon className="size-3.5 text-foreground opacity-90" />;
+  }
+  return <img src="/assets/icons/tiktok.svg" alt="TikTok" className="size-3.5 opacity-90 dark:invert" />;
+}
+
+/**
+ * Left sidebar column component for the Submission Dialog.
+ * Renders the atmospheric campaign preview card including poster banner,
+ * brand credentials, category/platform badges, CPM rate, and view threshold metrics.
+ *
+ * @param props - Component properties containing campaign data.
+ * @returns Rendered campaign overview sidebar.
+ */
+export function SubmissionDialogCampaignSidebar({
+  campaign,
+  className,
+}: SubmissionDialogCampaignSidebarProps) {
+  const brandName = campaign.brand?.companyName || 'Brand';
+  const brandInitial = brandName.charAt(0).toUpperCase();
+  const title = campaign.title?.trim() || 'Kampanye Tanpa Judul';
+  const cpmDisplay = FormatCpmDisplay(campaign.cpm);
+  const typeBadge = GetCampaignTypeBadgeLabel(campaign.campaignType);
+  const categoryBadge = GetCampaignCategoryBadgeLabel(campaign.campaignCategory);
+  const rawMinViews = campaign.minViews ? Number(campaign.minViews) : 10000;
+  const minViewsDisplay = `${rawMinViews.toLocaleString('id-ID')} Views`;
+
+  return (
+    <aside
+      className={cn(
+        'w-full md:w-[320px] lg:w-[350px] shrink-0 border-b md:border-b-0 md:border-r border-border/40 bg-card/60 p-5 flex flex-col justify-between overflow-y-auto max-h-[220px] md:max-h-none h-full',
+        className,
+      )}>
+      {/* Top Group: Media Banner, Brand & Campaign Core Details */}
+      <div className="space-y-3.5">
+        {/* Top Poster / Artwork Banner */}
+        <div className="relative aspect-16/10 w-full overflow-hidden rounded-xl border border-border/60 bg-muted/40 shadow-xs">
+          {campaign.thumbnailUrl ? (
+            <img
+              src={campaign.thumbnailUrl}
+              alt={title}
+              className="h-full w-full object-cover object-center"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-muted text-xs text-muted-foreground">
+              Banner Kampanye
+            </div>
+          )}
+
+          {/* Atmospheric gradient overlay at bottom of poster */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+
+          {/* Top-Right Pill Badge */}
+          <div className="absolute top-2.5 right-2.5 inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-black/75 text-amber-400 border border-amber-500/30 backdrop-blur-md shadow-xs">
+            <span>{typeBadge || 'CLIPPING'}</span>
+          </div>
+        </div>
+
+        {/* Brand Identity Row & Type Badge */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="size-6 rounded-full bg-muted text-foreground text-[10px] font-bold flex items-center justify-center uppercase shrink-0 border border-border/80">
+              {brandInitial}
+            </div>
+            <span className="text-xs font-semibold text-foreground truncate">
+              {brandName}
+            </span>
+          </div>
+
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border/60 shrink-0">
+            {typeBadge || 'CLIPPING'}
+          </span>
+        </div>
+
+        {/* Campaign Title */}
+        <h2 className="text-sm sm:text-base font-bold text-foreground leading-snug tracking-tight line-clamp-2" title={title}>
+          {title}
+        </h2>
+
+        {/* Prominent Rate / CPM */}
+        <div className="flex items-baseline gap-1.5 pt-0.5">
+          <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            {cpmDisplay}
+          </span>
+          <span className="text-xs font-medium text-muted-foreground">
+            / 1K views
+          </span>
+        </div>
+
+        {/* Platform & Category Indicator Row */}
+        <div className="flex items-center gap-2 text-xs pt-0.5">
+          <div
+            className="inline-flex items-center text-foreground text-xs font-medium"
+            title={campaign.platform || 'TikTok'}>
+            {RenderPlatformIcon(campaign.platform)}
+          </div>
+
+          <span className="text-muted-foreground/60 text-[10px]">•</span>
+
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {categoryBadge}
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom Group: Key Metric KPI Cards (Anchored to base matching Image 2) */}
+      <div className="mt-auto pt-4 border-t border-border/40">
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Min View to Claim */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block text-center">
+              Min View to Claim
+            </span>
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-2.5 py-2 text-center shadow-2xs">
+              <span className="text-xs sm:text-sm font-bold text-foreground truncate block">
+                {minViewsDisplay}
+              </span>
+            </div>
+          </div>
+
+          {/* CPM (Rate /1K Views) */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider block text-center">
+              CPM (Rate /1K Views)
+            </span>
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-2.5 py-2 text-center shadow-2xs">
+              <span className="text-xs sm:text-sm font-bold text-foreground truncate block">
+                {cpmDisplay}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}

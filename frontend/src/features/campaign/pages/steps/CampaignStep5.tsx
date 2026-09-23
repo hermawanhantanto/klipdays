@@ -13,7 +13,7 @@ function CampaignStep5() {
       <CardHeader className="pb-4">
         <CardTitle className="text-lg font-semibold tracking-tight">Review & Pengajuan Kampanye</CardTitle>
         <CardDescription className="text-xs sm:text-sm text-muted-foreground">
-          Tinjau kembali seluruh rincian kampanye Anda sebelum mengajukannya untuk proses kurasi admin.
+          Tinjau kembali seluruh rincian kampanye Anda sebelum mengajukannya untuk proses review admin.
         </CardDescription>
       </CardHeader>
 

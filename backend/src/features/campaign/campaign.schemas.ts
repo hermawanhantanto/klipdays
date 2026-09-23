@@ -1,81 +1,97 @@
 import { z } from 'zod';
 import { CampaignStatus, CampaignType, Category, MaterialType, Platform } from '../../generated/prisma/enums.js';
+import { CAMPAIGN_MESSAGES, CAMPAIGN_SORT_OPTIONS } from './campaign.constants.js';
 
-const titleField = z.string().trim().min(1, 'Title is required.');
+export { CAMPAIGN_SORT_OPTIONS };
+export type CampaignSortOption = (typeof CAMPAIGN_SORT_OPTIONS)[number];
 
-const descriptionField = z.string().trim().min(1, 'Description is required.');
+const titleField = z
+  .string({ error: CAMPAIGN_MESSAGES.TITLE_REQUIRED })
+  .trim()
+  .min(1, CAMPAIGN_MESSAGES.TITLE_REQUIRED);
+
+const descriptionField = z
+  .string({ error: CAMPAIGN_MESSAGES.DESCRIPTION_REQUIRED })
+  .trim()
+  .min(1, CAMPAIGN_MESSAGES.DESCRIPTION_REQUIRED);
 
 const thumbnailUrlField = z
-  .string()
+  .string({ error: CAMPAIGN_MESSAGES.THUMBNAIL_URL_INVALID })
   .trim()
-  .pipe(z.url({ error: 'A valid thumbnail URL is required.' }));
+  .pipe(z.url({ error: CAMPAIGN_MESSAGES.THUMBNAIL_URL_INVALID }));
 
 const mainMediaUrlField = z
-  .string()
+  .string({ error: CAMPAIGN_MESSAGES.MAIN_MEDIA_URL_INVALID })
   .trim()
-  .pipe(z.url({ error: 'A valid main media URL is required.' }));
+  .pipe(z.url({ error: CAMPAIGN_MESSAGES.MAIN_MEDIA_URL_INVALID }));
 
-const cpmField = z.number({ error: 'CPM must be a number.' }).positive('CPM must be greater than 0.');
+const cpmField = z
+  .number({ error: CAMPAIGN_MESSAGES.CPM_NUMBER_REQUIRED })
+  .positive(CAMPAIGN_MESSAGES.CPM_POSITIVE);
 
 const minViewsField = z
-  .number({ error: 'Min views must be a number.' })
-  .int('Min views must be an integer.')
-  .positive('Min views must be greater than 0.');
+  .number({ error: CAMPAIGN_MESSAGES.MIN_VIEWS_NUMBER_REQUIRED })
+  .int(CAMPAIGN_MESSAGES.MIN_VIEWS_INTEGER)
+  .positive(CAMPAIGN_MESSAGES.MIN_VIEWS_POSITIVE);
 
 const maxViewsField = z
-  .number({ error: 'Max views must be a number.' })
-  .int('Max views must be an integer.')
-  .positive('Max views must be greater than 0.');
+  .number({ error: CAMPAIGN_MESSAGES.MAX_VIEWS_NUMBER_REQUIRED })
+  .int(CAMPAIGN_MESSAGES.MAX_VIEWS_INTEGER)
+  .positive(CAMPAIGN_MESSAGES.MAX_VIEWS_POSITIVE);
 
-const budgetField = z.number({ error: 'Budget must be a number.' }).positive('Budget must be greater than 0.');
+const budgetField = z
+  .number({ error: CAMPAIGN_MESSAGES.BUDGET_NUMBER_REQUIRED })
+  .positive(CAMPAIGN_MESSAGES.BUDGET_POSITIVE);
 
 const startDateField = z.union(
   [
     z.date(),
     z
-      .string({ error: 'A valid start date is required.' })
+      .string({ error: CAMPAIGN_MESSAGES.START_DATE_REQUIRED })
       .trim()
-      .min(1, 'Start date cannot be empty.')
-      .pipe(z.coerce.date({ error: 'A valid start date is required.' })),
+      .min(1, CAMPAIGN_MESSAGES.START_DATE_EMPTY)
+      .pipe(z.coerce.date({ error: CAMPAIGN_MESSAGES.START_DATE_REQUIRED })),
   ],
-  { error: 'A valid start date is required.' }
+  { error: CAMPAIGN_MESSAGES.START_DATE_REQUIRED }
 );
 
 const endDateField = z.union(
   [
     z.date(),
     z
-      .string({ error: 'A valid end date is required.' })
+      .string({ error: CAMPAIGN_MESSAGES.END_DATE_REQUIRED })
       .trim()
-      .min(1, 'End date cannot be empty.')
-      .pipe(z.coerce.date({ error: 'A valid end date is required.' })),
+      .min(1, CAMPAIGN_MESSAGES.END_DATE_EMPTY)
+      .pipe(z.coerce.date({ error: CAMPAIGN_MESSAGES.END_DATE_REQUIRED })),
   ],
-  { error: 'A valid end date is required.' }
+  { error: CAMPAIGN_MESSAGES.END_DATE_REQUIRED }
 );
 
 export const campaignMaterialItemSchema = z.object({
-  type: z.enum(MaterialType, { error: 'Invalid material type selected.' }),
-  name: z.string().trim().min(1, 'Material name is required.'),
+  type: z.enum(MaterialType, { error: CAMPAIGN_MESSAGES.MATERIAL_TYPE_INVALID }),
+  name: z.string({ error: CAMPAIGN_MESSAGES.MATERIAL_NAME_REQUIRED }).trim().min(1, CAMPAIGN_MESSAGES.MATERIAL_NAME_REQUIRED),
   url: z
-    .string()
+    .string({ error: CAMPAIGN_MESSAGES.MATERIAL_URL_INVALID })
     .trim()
-    .pipe(z.url({ error: 'A valid material URL is required.' })),
+    .pipe(z.url({ error: CAMPAIGN_MESSAGES.MATERIAL_URL_INVALID })),
 });
 
-export const campaignMaterialsSchema = z.array(campaignMaterialItemSchema).min(1, 'At least one material is required.');
+export const campaignMaterialsSchema = z
+  .array(campaignMaterialItemSchema)
+  .min(1, CAMPAIGN_MESSAGES.MATERIALS_REQUIRED);
 
 export const campaignBriefSchema = z.object({
-  purpose: z.string().trim().min(1, 'Purpose cannot be empty.').optional(),
-  keyMessage: z.string().trim().min(1, 'Key message cannot be empty.').optional(),
-  narration: z.string().trim().min(1, 'Narration cannot be empty.').optional(),
-  impression: z.string().trim().min(1, 'Impression cannot be empty.').optional(),
-  callToAction: z.string().trim().min(1, 'Call to action cannot be empty.').optional(),
-  requiredCaption: z.string().trim().min(1, 'Required caption cannot be empty.').optional(),
-  hashtags: z.array(z.string().trim().min(1, 'Hashtag item cannot be empty.')).optional(),
-  mentionTags: z.array(z.string().trim().min(1, 'Mention tag cannot be empty.')).optional(),
-  dos: z.array(z.string().trim().min(1, 'Do guideline cannot be empty.')).optional(),
-  donts: z.array(z.string().trim().min(1, "Don't guideline cannot be empty.")).optional(),
-  guidelines: z.string().trim().min(1, 'Guidelines cannot be empty.').optional(),
+  purpose: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_PURPOSE_EMPTY).optional(),
+  keyMessage: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_KEY_MESSAGE_EMPTY).optional(),
+  narration: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_NARRATION_EMPTY).optional(),
+  impression: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_IMPRESSION_EMPTY).optional(),
+  callToAction: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_CALL_TO_ACTION_EMPTY).optional(),
+  requiredCaption: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_REQUIRED_CAPTION_EMPTY).optional(),
+  hashtags: z.array(z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_HASHTAG_EMPTY)).optional(),
+  mentionTags: z.array(z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_MENTION_TAG_EMPTY)).optional(),
+  dos: z.array(z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_DO_GUIDELINE_EMPTY)).optional(),
+  donts: z.array(z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_DONT_GUIDELINE_EMPTY)).optional(),
+  guidelines: z.string().trim().min(1, CAMPAIGN_MESSAGES.BRIEF_GUIDELINES_EMPTY).optional(),
 });
 
 // Single edit schema for the creation wizard: every field is optional, so a
@@ -85,10 +101,10 @@ export const campaignBriefSchema = z.object({
 export const campaignEditSchema = z.object({
   title: titleField.optional(),
   description: descriptionField.optional(),
-  campaignType: z.enum(CampaignType, { error: 'Invalid campaign type selected.' }).optional(),
-  campaignCategory: z.enum(Category, { error: 'Invalid campaign category selected.' }).optional(),
+  campaignType: z.enum(CampaignType, { error: CAMPAIGN_MESSAGES.CAMPAIGN_TYPE_INVALID }).optional(),
+  campaignCategory: z.enum(Category, { error: CAMPAIGN_MESSAGES.CAMPAIGN_CATEGORY_INVALID }).optional(),
   thumbnailUrl: thumbnailUrlField.optional(),
-  platform: z.enum(Platform, { error: 'Invalid platform selected.' }).optional(),
+  platform: z.enum(Platform, { error: CAMPAIGN_MESSAGES.PLATFORM_INVALID }).optional(),
   mainMediaUrl: mainMediaUrlField.optional(),
   materials: campaignMaterialsSchema.optional(),
   brief: campaignBriefSchema.optional(),
@@ -100,37 +116,37 @@ export const campaignEditSchema = z.object({
   endDate: endDateField.optional(),
 });
 
-export const CAMPAIGN_SORT_OPTIONS = ['latest', 'highest_cpm', 'lowest_cpm', 'highest_total_budget', 'highest_maximum_views'] as const;
-
-export type CampaignSortOption = (typeof CAMPAIGN_SORT_OPTIONS)[number];
-
 const pageQueryField = z.coerce
-  .number({ error: 'Page must be a number.' })
-  .int('Page must be an integer.')
-  .positive('Page must be greater than 0.')
+  .number({ error: CAMPAIGN_MESSAGES.PAGE_NUMBER_REQUIRED })
+  .int(CAMPAIGN_MESSAGES.PAGE_INTEGER)
+  .positive(CAMPAIGN_MESSAGES.PAGE_POSITIVE)
   .optional();
 
 const limitQueryField = z.coerce
-  .number({ error: 'Limit must be a number.' })
-  .int('Limit must be an integer.')
-  .positive('Limit must be greater than 0.')
-  .max(100, 'Limit cannot exceed 100.')
+  .number({ error: CAMPAIGN_MESSAGES.LIMIT_NUMBER_REQUIRED })
+  .int(CAMPAIGN_MESSAGES.LIMIT_INTEGER)
+  .positive(CAMPAIGN_MESSAGES.LIMIT_POSITIVE)
+  .max(100, CAMPAIGN_MESSAGES.LIMIT_MAX_EXCEEDED)
   .optional();
 
-const searchQueryField = z.string().trim().max(100, 'Search query cannot exceed 100 characters.').optional();
+const searchQueryField = z
+  .string()
+  .trim()
+  .max(100, CAMPAIGN_MESSAGES.SEARCH_MAX_EXCEEDED)
+  .optional();
 
 export const campaignQuerySortEnum = z.enum(CAMPAIGN_SORT_OPTIONS, {
-  error: 'Invalid sort parameter. Allowed values: latest, highest_cpm, lowest_cpm, highest_total_budget, highest_maximum_views.',
+  error: CAMPAIGN_MESSAGES.SORT_INVALID,
 });
 
 export const campaignQuerySchema = z.object({
   page: pageQueryField,
   limit: limitQueryField,
   search: searchQueryField,
-  category: z.enum(Category, { error: 'Invalid category filter selected.' }).optional(),
-  campaignType: z.enum(CampaignType, { error: 'Invalid campaign type filter selected.' }).optional(),
-  platform: z.enum(Platform, { error: 'Invalid platform filter selected.' }).optional(),
-  campaignStatus: z.enum(CampaignStatus, { error: 'Invalid campaign status filter selected.' }).optional(),
+  category: z.enum(Category, { error: CAMPAIGN_MESSAGES.CATEGORY_FILTER_INVALID }).optional(),
+  campaignType: z.enum(CampaignType, { error: CAMPAIGN_MESSAGES.CAMPAIGN_TYPE_FILTER_INVALID }).optional(),
+  platform: z.enum(Platform, { error: CAMPAIGN_MESSAGES.PLATFORM_FILTER_INVALID }).optional(),
+  campaignStatus: z.enum(CampaignStatus, { error: CAMPAIGN_MESSAGES.CAMPAIGN_STATUS_FILTER_INVALID }).optional(),
   sort: campaignQuerySortEnum.optional(),
 });
 

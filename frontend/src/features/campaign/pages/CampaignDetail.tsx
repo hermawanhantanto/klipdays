@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Navigate, useParams } from 'react-router';
+import { Navigate, useParams, useSearchParams } from 'react-router';
 import { cn } from '@/lib/utils';
 import { UseCurrentAccountQuery } from '@/features/authentication/hooks';
+import { SubmissionDialog } from '@/features/submission/components';
+import { UseMyCampaignSubmissionQuery } from '@/features/submission/hooks';
 import {
   CampaignDetailAbout,
   CampaignDetailBriefSections,
@@ -29,12 +31,31 @@ import { ResolveCampaignWizardStepPath } from '../utils';
  */
 function CampaignDetailPage({ className }: CampaignDetailPageProps) {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState<string>('detail');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'detail';
 
-  const { data: userProfile } = UseCurrentAccountQuery();
-  const { data: campaign, isLoading, isError, error, refetch } = UseCampaignQuery(id);
+  const HandleTabChange = (newTab: string) => {
+    const updatedParams = new URLSearchParams(searchParams);
+    if (newTab === 'detail') {
+      updatedParams.delete('tab');
+    } else {
+      updatedParams.set('tab', newTab);
+    }
+    setSearchParams(updatedParams, { replace: true });
+  };
 
-  if (isLoading) {
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+  const { data: userProfile, isLoading: isProfileLoading } = UseCurrentAccountQuery();
+  const { data: campaign, isLoading: isCampaignLoading, isError, error, refetch } = UseCampaignQuery(id);
+
+  const isCreator = userProfile?.role === 'CREATOR';
+  const { isLoading: isSubmissionLoading } = UseMyCampaignSubmissionQuery(
+    isCreator && id ? id : undefined,
+  );
+
+  const isPageLoading = isCampaignLoading || isProfileLoading || (isCreator && isSubmissionLoading);
+
+  if (isPageLoading) {
     return <CampaignDetailSkeleton className={className} />;
   }
 
@@ -42,7 +63,7 @@ function CampaignDetailPage({ className }: CampaignDetailPageProps) {
     return (
       <CampaignDetailErrorState
         error={error}
-        message={!campaign && !isLoading ? 'Kampanye tidak ditemukan.' : undefined}
+        message={!campaign && !isPageLoading ? 'Kampanye tidak ditemukan.' : undefined}
         onRetry={() => void refetch()}
         className={className}
       />
@@ -73,6 +94,7 @@ function CampaignDetailPage({ className }: CampaignDetailPageProps) {
       <CampaignDetailHeader
         campaign={campaign}
         userRole={userProfile?.role}
+        onOpenSubmitDialog={() => setIsSubmitDialogOpen(true)}
       />
 
       {/* Main Campaign Content Container spanning full available space */}
@@ -80,7 +102,7 @@ function CampaignDetailPage({ className }: CampaignDetailPageProps) {
         {/* Dynamic Role-Aware Tabs */}
         <CampaignDetailTabs
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={HandleTabChange}
           userRole={userProfile?.role}
         />
 
@@ -105,9 +127,18 @@ function CampaignDetailPage({ className }: CampaignDetailPageProps) {
           <CampaignDetailSubmissionsPlaceholder
             userRole={userProfile?.role}
             activeTab={activeTab}
+            campaignId={campaign.id}
+            onOpenSubmitDialog={() => setIsSubmitDialogOpen(true)}
           />
         )}
       </div>
+
+      {/* Modern 2-Column Submission Modal Dialog */}
+      <SubmissionDialog
+        campaign={campaign}
+        open={isSubmitDialogOpen}
+        onOpenChange={setIsSubmitDialogOpen}
+      />
     </div>
   );
 }

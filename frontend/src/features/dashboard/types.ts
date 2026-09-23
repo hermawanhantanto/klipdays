@@ -92,3 +92,18 @@ export interface UserNavProps {
   role?: string | null;
   avatarUrl?: string | null;
 }
+
+/**
+ * Props for the sidebar footer section containing profile and logout actions.
+ */
+export interface SidebarFooterProps {
+  collapsed: boolean;
+}
+
+/**
+ * Props for the sidebar logout action button.
+ */
+export interface SidebarLogoutButtonProps {
+  collapsed: boolean;
+  onItemClick?: () => void;
+}

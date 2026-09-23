@@ -1,5 +1,43 @@
-import { z } from 'zod';
-import { registerSchema, loginSchema } from './auth.schemas.js';
+import type { Industry, Role } from '../../generated/prisma/enums.js';
+import type { LoginInput, RegisterInput } from './auth.schemas.js';
 
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
+export type { LoginInput, RegisterInput };
+
+export interface AuthSessionPayload {
+  sub: string;
+  role: Role;
+}
+
+export interface AuthResponseData {
+  id: string;
+  email: string;
+  role: Role;
+}
+
+export interface BrandProfileDto {
+  id: string;
+  companyName: string;
+  phoneNumber: string | null;
+  industry: Industry | null;
+}
+
+export interface CreatorProfileDto {
+  id: string;
+  fullName: string;
+}
+
+export interface AdminProfileDto {
+  id: string;
+  fullName: string;
+}
+
+export interface CurrentAccountProfile {
+  id: string;
+  email: string;
+  role: Role;
+  name: string;
+  isEmailVerified: boolean;
+  brand: BrandProfileDto | null;
+  creator: CreatorProfileDto | null;
+  admin: AdminProfileDto | null;
+}

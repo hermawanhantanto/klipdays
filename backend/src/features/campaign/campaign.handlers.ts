@@ -2,10 +2,24 @@ import { Readable } from 'node:stream';
 import { TransformStream } from 'node:stream/web';
 import type { NextFunction, Request, Response } from 'express';
 import type { Prisma } from '../../generated/prisma/client.js';
-import { prisma } from '../../utils/prisma.js';
 import { CampaignStatus, Role, Status } from '../../generated/prisma/enums.js';
-import { CAMPAIGN_CARD_SELECT } from './campaign.constants.js';
+import { SendError, SendSuccess } from '../../utils/api-response.js';
+import { prisma } from '../../utils/prisma.js';
+import {
+  ALLOWED_THUMBNAIL_MIME_TYPES,
+  CAMPAIGN_CARD_SELECT,
+  CAMPAIGN_DETAIL_SELECT,
+  CAMPAIGN_MESSAGES,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+  FEATURED_CAMPAIGNS_LIMIT,
+  FEATURED_CAMPAIGNS_MIN_COUNT,
+  MAX_LIMIT,
+  MAX_THUMBNAIL_SIZE_BYTES,
+  SUBMITTABLE_CAMPAIGN_STATUSES,
+} from './campaign.constants.js';
 import { BuildCampaignEditFields, BuildCampaignsOrderBy, BuildCampaignsWhereClause } from './campaign.helper.js';
+import type { CampaignsPaginatedData, CampaignStatusCounts } from './campaign.types.js';
 import {
   ValidateCampaignDateLogic,
   ValidateCampaignEditBody,
@@ -13,8 +27,6 @@ import {
   ValidateCampaignRewardLogic,
   ValidateCampaignSubmitCompleteness,
 } from './campaign.validators.js';
-import { SendError, SendSuccess } from '../../utils/api-response.js';
-import type { CampaignCardItem, CampaignsPaginatedData, CampaignStatusCounts } from './campaign.types.js';
 
 /**
  * Handles `POST /campaigns`: creates an empty draft campaign for the
@@ -30,40 +42,39 @@ export async function InitializeCampaign(req: Request, res: Response, next: Next
     const account = req.account;
 
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast fail on role: the JWT role is checked before any database query,
-    // so creator and admin accounts never get further.
     if (account.role !== Role.BRAND) {
-      SendError(res, 'Only brands can create campaigns.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.ONLY_BRANDS_CAN_CREATE, 403);
       return;
     }
 
-    // The brand row supplies the brandId the campaign needs. A BRAND account
-    // without an active brand row is a data-integrity gap, so still guard
-    // against it. findFirst instead of findUnique so the filter can also
-    // exclude soft-deleted brands.
-    const brand = await prisma.brand.findFirst({
+    const findBrandQuery = {
       where: { accountId: account.sub, status: Status.ACTIVE },
-    });
+      select: { id: true },
+    };
+
+    const brand = await prisma.brand.findFirst(findBrandQuery);
 
     if (!brand) {
-      SendError(res, 'Only brands can create campaigns.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.ONLY_BRANDS_CAN_CREATE, 403);
       return;
     }
 
-    const campaign = await prisma.campaign.create({
+    const createCampaignPayload = {
       data: {
         brandId: brand.id,
         status: Status.ACTIVE,
         campaignStatus: CampaignStatus.DRAFT,
       },
       select: { id: true },
-    });
+    };
 
-    SendSuccess(res, { id: campaign.id }, 'Campaign initialized successfully.', 201);
+    const campaign = await prisma.campaign.create(createCampaignPayload);
+
+    SendSuccess(res, { id: campaign.id }, CAMPAIGN_MESSAGES.INITIALIZE_SUCCESS, 201);
   } catch (err) {
     next(err);
   }
@@ -84,24 +95,18 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
     const account = req.account;
 
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast fail on role: the JWT role is checked before anything else, so
-    // non-brand accounts never reach a database query.
     if (account.role !== Role.BRAND) {
-      SendError(res, 'Only brands can edit campaigns.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.ONLY_BRANDS_CAN_EDIT, 403);
       return;
     }
 
-    // The route pattern `/:id/edit` guarantees a single string id.
     const campaignId = req.params.id as string;
 
-    // Ownership check right after auth: one query for existence + ownership
-    // via a relation filter. 404 (not 403) when it does not match, so the
-    // response does not reveal whether the id exists.
-    const ownedCampaign = await prisma.campaign.findFirst({
+    const findCampaignQuery = {
       where: {
         id: campaignId,
         status: Status.ACTIVE,
@@ -116,52 +121,43 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
         startDate: true,
         endDate: true,
       },
-    });
+    };
+
+    const ownedCampaign = await prisma.campaign.findFirst(findCampaignQuery);
 
     if (!ownedCampaign) {
-      SendError(res, 'Campaign not found.', 404);
+      SendError(res, CAMPAIGN_MESSAGES.CAMPAIGN_NOT_FOUND, 404);
       return;
     }
 
-    // Validate schema and get parsed input
     const input = ValidateCampaignEditBody(req.body);
     if (typeof input === 'string') {
       SendError(res, input, 400);
       return;
     }
 
-    // Validate reward and pricing rules
     const rewardError = ValidateCampaignRewardLogic(input, ownedCampaign);
     if (rewardError) {
       SendError(res, rewardError, 400);
       return;
     }
 
-    // Validate date and schedule rules
     const dateError = ValidateCampaignDateLogic(input, ownedCampaign);
     if (dateError) {
       SendError(res, dateError, 400);
       return;
     }
 
-    // Build fields for update
-    const fields = BuildCampaignEditFields(input);
-
-    // Update campaign
-    const updated = await prisma.campaign.update({
+    const updateFields = BuildCampaignEditFields(input);
+    const updateQuery = {
       where: { id: ownedCampaign.id },
-      data: fields,
-      include: {
-        materials: {
-          where: { status: Status.ACTIVE },
-        },
-        brief: {
-          where: { status: Status.ACTIVE },
-        },
-      },
-    });
+      data: updateFields,
+      select: CAMPAIGN_DETAIL_SELECT,
+    };
 
-    SendSuccess(res, updated, 'Campaign updated successfully.');
+    const updated = await prisma.campaign.update(updateQuery);
+
+    SendSuccess(res, updated, CAMPAIGN_MESSAGES.UPDATE_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -172,7 +168,7 @@ export async function EditCampaign(req: Request, res: Response, next: NextFuncti
  * keyword search, filters (category, campaign type, platform, status), and sorting.
  *
  * Role boundaries:
- * - Brand: sees their own campaigns across all lifecycle statuses (with optional status filter).
+ * - Brand: sees their own campaigns across all lifecycle statuses.
  * - Creator: sees only campaigns with active lifecycle status and active brand.
  * - Admin: sees all active campaigns with optional status filter.
  *
@@ -184,19 +180,16 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
   try {
     const account = req.account;
 
-    // Fast-fail: authentication check
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast-fail: role boundary check
     if (account.role !== Role.BRAND && account.role !== Role.CREATOR && account.role !== Role.ADMIN) {
-      SendError(res, 'Unauthorized role.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.UNAUTHORIZED_ROLE, 403);
       return;
     }
 
-    // Input validation
     const queryValidationResult = ValidateCampaignQuery(req.query);
     if (typeof queryValidationResult === 'string') {
       SendError(res, queryValidationResult, 400);
@@ -204,16 +197,15 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
     }
 
     const queryInput = queryValidationResult;
-    const page = queryInput.page ?? 1;
-    const limit = queryInput.limit ?? 10;
+    const page = queryInput.page ?? DEFAULT_PAGE;
+    const rawLimit = queryInput.limit ?? DEFAULT_LIMIT;
+    const limit = Math.min(rawLimit, MAX_LIMIT);
     const sort = queryInput.sort ?? 'latest';
     const skip = (page - 1) * limit;
 
-    // Query reconstruction
     const whereClause = BuildCampaignsWhereClause(account, queryInput);
     const orderByClause = BuildCampaignsOrderBy(sort);
 
-    // Parallel database execution via transaction
     const [campaigns, totalCount] = await prisma.$transaction([
       prisma.campaign.findMany({
         where: whereClause,
@@ -222,7 +214,6 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
         take: limit,
         select: CAMPAIGN_CARD_SELECT,
       }),
-
       prisma.campaign.count({
         where: whereClause,
       }),
@@ -233,7 +224,7 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
     const hasPrevPage = page > 1;
 
     const responsePayload: CampaignsPaginatedData = {
-      items: campaigns,
+      items: campaigns as never,
       pagination: {
         page,
         limit,
@@ -244,7 +235,7 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
       },
     };
 
-    SendSuccess(res, responsePayload, 'Campaigns retrieved successfully.');
+    SendSuccess(res, responsePayload, CAMPAIGN_MESSAGES.RETRIEVED_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -252,11 +243,7 @@ export async function GetCampaigns(req: Request, res: Response, next: NextFuncti
 
 /**
  * Handles `GET /campaigns/featured`: retrieves a list of 3-5 featured campaigns for the hero carousel.
- * Executes a hybrid query: first pulls actively featured campaigns (isFeatured: true, featuredUntil > now or null).
- * If fewer than 3 items exist, automatically backfills with top active campaigns sorted by CPM and budget.
- *
- * Role boundaries:
- * - Brand, Creator, Admin can all access featured campaigns.
+ * Pulls actively featured campaigns, backfilling with top active campaigns if fewer than 3 exist.
  *
  * @param req - Express request with the authenticated account.
  * @param res - Express response object.
@@ -266,15 +253,13 @@ export async function GetFeaturedCampaigns(req: Request, res: Response, next: Ne
   try {
     const account = req.account;
 
-    // Fast-fail: authentication check
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast-fail: role boundary check
     if (account.role !== Role.BRAND && account.role !== Role.CREATOR && account.role !== Role.ADMIN) {
-      SendError(res, 'Unauthorized role.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.UNAUTHORIZED_ROLE, 403);
       return;
     }
 
@@ -292,47 +277,43 @@ export async function GetFeaturedCampaigns(req: Request, res: Response, next: Ne
       { createdAt: 'desc' },
     ];
 
-    const featuredCampaigns = await prisma.campaign.findMany({
+    const primaryQuery = {
       where: featuredWhereClause,
       orderBy: featuredOrderByClause,
-      take: 5,
+      take: FEATURED_CAMPAIGNS_LIMIT,
       select: CAMPAIGN_CARD_SELECT,
-    });
+    };
 
-    // If fewer than 3 campaigns, backfill with top active campaigns
-    if (featuredCampaigns.length < 3) {
+    const featuredCampaigns = await prisma.campaign.findMany(primaryQuery);
 
+    if (featuredCampaigns.length < FEATURED_CAMPAIGNS_MIN_COUNT) {
       const existingIds = featuredCampaigns.map((campaign) => campaign.id);
+      const backfillTake = FEATURED_CAMPAIGNS_LIMIT - featuredCampaigns.length;
 
-      const backfillWhereClause: Prisma.CampaignWhereInput = {
-        status: Status.ACTIVE,
-        campaignStatus: CampaignStatus.ACTIVE,
-        brand: { status: Status.ACTIVE },
-        id: { notIn: existingIds },
-      };
-
-      const backfillOrderByClause: Prisma.CampaignOrderByWithRelationInput[] = [
-        { cpm: { sort: 'desc', nulls: 'last' } },
-        { budget: { sort: 'desc', nulls: 'last' } },
-        { createdAt: 'desc' },
-      ];
-
-      const backfillTake = 5 - featuredCampaigns.length;
-
-      const backfillCampaigns = await prisma.campaign.findMany({
-        where: backfillWhereClause,
-        orderBy: backfillOrderByClause,
+      const backfillQuery = {
+        where: {
+          status: Status.ACTIVE,
+          campaignStatus: CampaignStatus.ACTIVE,
+          brand: { status: Status.ACTIVE },
+          id: { notIn: existingIds },
+        },
+        orderBy: [
+          { cpm: { sort: 'desc' as const, nulls: 'last' as const } },
+          { budget: { sort: 'desc' as const, nulls: 'last' as const } },
+          { createdAt: 'desc' as const },
+        ],
         take: backfillTake,
         select: CAMPAIGN_CARD_SELECT,
-      });
+      };
 
+      const backfillCampaigns = await prisma.campaign.findMany(backfillQuery);
       const combinedCampaigns = [...featuredCampaigns, ...backfillCampaigns];
-      
-      SendSuccess(res, combinedCampaigns, 'Featured campaigns retrieved successfully.');
+
+      SendSuccess(res, combinedCampaigns, CAMPAIGN_MESSAGES.FEATURED_RETRIEVED_SUCCESS);
       return;
     }
 
-    SendSuccess(res, featuredCampaigns, 'Featured campaigns retrieved successfully.');
+    SendSuccess(res, featuredCampaigns, CAMPAIGN_MESSAGES.FEATURED_RETRIEVED_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -341,12 +322,6 @@ export async function GetFeaturedCampaigns(req: Request, res: Response, next: Ne
 /**
  * Handles `GET /campaigns/counts`: aggregates total campaign count grouped by
  * lifecycle status (`campaignStatus`) for the authenticated brand or admin.
- * Only active (non-soft-deleted) campaigns belonging to active brands are counted.
- *
- * Fast-fail guard order:
- * 1. Auth check (401)
- * 2. Role boundary check (403): Only brands or admins can view status counts
- * 3. Database aggregation query via prisma.campaign.groupBy
  *
  * @param req - Express request with the authenticated account.
  * @param res - Express response object.
@@ -356,15 +331,13 @@ export async function GetCampaignStatusCounts(req: Request, res: Response, next:
   try {
     const account = req.account;
 
-    // Fast-fail: authentication check
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast-fail: role boundary check
     if (account.role !== Role.BRAND && account.role !== Role.ADMIN) {
-      SendError(res, 'Unauthorized role.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.UNAUTHORIZED_ROLE, 403);
       return;
     }
 
@@ -395,10 +368,10 @@ export async function GetCampaignStatusCounts(req: Request, res: Response, next:
     };
 
     for (const group of groupedCounts) {
-      statusCounts[group.campaignStatus] = group._count._all;
+      statusCounts[group.campaignStatus] = group._count?._all ?? 0;
     }
 
-    SendSuccess(res, statusCounts, 'Campaign status counts retrieved successfully.');
+    SendSuccess(res, statusCounts, CAMPAIGN_MESSAGES.STATUS_COUNTS_RETRIEVED_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -406,9 +379,7 @@ export async function GetCampaignStatusCounts(req: Request, res: Response, next:
 
 /**
  * Handles `GET /campaigns/:id`: retrieves campaign details (including active
- * materials and brief) for display. Brands can view their own campaigns across
- * any status or publicly active campaigns. Clippers (creators) can view active or
- * finished campaigns. Admins can view any campaign.
+ * materials and brief) for display.
  *
  * @param req - Express request with the authenticated account and campaign id parameter.
  * @param res - Express response object.
@@ -419,7 +390,7 @@ export async function GetCampaignById(req: Request, res: Response, next: NextFun
     const account = req.account;
 
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
@@ -434,41 +405,24 @@ export async function GetCampaignById(req: Request, res: Response, next: NextFun
     if (account.role === Role.BRAND) {
       whereClause.brand = { accountId: account.sub, status: Status.ACTIVE };
     } else if (account.role === Role.CREATOR) {
-      whereClause.campaignStatus = { in: [CampaignStatus.ACTIVE, CampaignStatus.FINISHED] };
+      whereClause.campaignStatus = {
+        in: [CampaignStatus.ACTIVE, CampaignStatus.FINISHED],
+      };
     }
 
-    const campaign = await prisma.campaign.findFirst({
+    const findDetailQuery = {
       where: whereClause,
-      include: {
-        materials: {
-          where: { status: Status.ACTIVE },
-        },
-        brief: {
-          where: { status: Status.ACTIVE },
-        },
-        brand: {
-          select: {
-            id: true,
-            companyName: true,
-            industry: true,
-          },
-        },
-        _count: {
-          select: {
-            submissions: {
-              where: { status: Status.ACTIVE },
-            },
-          },
-        },
-      },
-    });
+      select: CAMPAIGN_DETAIL_SELECT,
+    };
+
+    const campaign = await prisma.campaign.findFirst(findDetailQuery);
 
     if (!campaign) {
-      SendError(res, 'Campaign not found.', 404);
+      SendError(res, CAMPAIGN_MESSAGES.CAMPAIGN_NOT_FOUND, 404);
       return;
     }
 
-    SendSuccess(res, campaign, 'Campaign retrieved successfully.');
+    SendSuccess(res, campaign, CAMPAIGN_MESSAGES.DETAIL_RETRIEVED_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -476,8 +430,7 @@ export async function GetCampaignById(req: Request, res: Response, next: NextFun
 
 /**
  * Handles `POST /campaigns/:id/submit`: verifies that all wizard steps are
- * complete and valid (no broken or missing data), then transitions the campaign
- * status from DRAFT or REVISION to IN_REVIEW.
+ * complete and valid, then transitions the campaign status from DRAFT or REVISION to IN_REVIEW.
  *
  * @param req - Express request with the authenticated account and campaign id parameter.
  * @param res - Express response object.
@@ -488,20 +441,18 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
     const account = req.account;
 
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast fail on role: only brands can submit campaigns
     if (account.role !== Role.BRAND) {
-      SendError(res, 'Only brands can submit campaigns.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.ONLY_BRANDS_CAN_SUBMIT, 403);
       return;
     }
 
     const campaignId = req.params.id as string;
 
-    // Single query for existence + ownership via relation filter with related materials and brief
-    const ownedCampaign = await prisma.campaign.findFirst({
+    const findCampaignQuery = {
       where: {
         id: campaignId,
         status: Status.ACTIVE,
@@ -515,41 +466,35 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
           where: { status: Status.ACTIVE },
         },
       },
-    });
+    };
+
+    const ownedCampaign = await prisma.campaign.findFirst(findCampaignQuery);
 
     if (!ownedCampaign) {
-      SendError(res, 'Campaign not found.', 404);
+      SendError(res, CAMPAIGN_MESSAGES.CAMPAIGN_NOT_FOUND, 404);
       return;
     }
 
-    // Fast fail if campaign is not in a submittable lifecycle status
-    if (ownedCampaign.campaignStatus !== CampaignStatus.DRAFT && ownedCampaign.campaignStatus !== CampaignStatus.REVISION) {
-      SendError(res, 'Campaign cannot be submitted in its current status.', 400);
+    if (!SUBMITTABLE_CAMPAIGN_STATUSES.includes(ownedCampaign.campaignStatus as (typeof SUBMITTABLE_CAMPAIGN_STATUSES)[number])) {
+      SendError(res, CAMPAIGN_MESSAGES.CANNOT_SUBMIT_CURRENT_STATUS, 400);
       return;
     }
 
-    // Validate mandatory data completeness across wizard steps before submission
     const completenessError = ValidateCampaignSubmitCompleteness(ownedCampaign);
     if (completenessError) {
       SendError(res, completenessError, 400);
       return;
     }
 
-    const updateData = { campaignStatus: CampaignStatus.IN_REVIEW };
-    const updated = await prisma.campaign.update({
+    const updateQuery = {
       where: { id: ownedCampaign.id },
-      data: updateData,
-      include: {
-        materials: {
-          where: { status: Status.ACTIVE },
-        },
-        brief: {
-          where: { status: Status.ACTIVE },
-        },
-      },
-    });
+      data: { campaignStatus: CampaignStatus.IN_REVIEW },
+      select: CAMPAIGN_DETAIL_SELECT,
+    };
 
-    SendSuccess(res, updated, 'Campaign submitted for review successfully.');
+    const updated = await prisma.campaign.update(updateQuery);
+
+    SendSuccess(res, updated, CAMPAIGN_MESSAGES.SUBMIT_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -558,7 +503,6 @@ export async function SubmitCampaign(req: Request, res: Response, next: NextFunc
 /**
  * Handles `POST /campaigns/:id/thumbnail`: streams the raw binary image payload
  * directly to Supabase Storage and returns the public asset URL without updating the database.
- * The database record is persisted when the user submits the step form.
  *
  * @param req - Express request with the authenticated account from `RequireAuth`.
  * @param res - Express response object.
@@ -569,58 +513,50 @@ export async function UploadCampaignThumbnail(req: Request, res: Response, next:
     const account = req.account;
 
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
     if (account.role !== Role.BRAND) {
-      SendError(res, 'Only brands can upload campaign thumbnails.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.ONLY_BRANDS_CAN_UPLOAD_THUMBNAIL, 403);
       return;
     }
 
     const campaignId = req.params.id as string;
 
-    const ownedCampaign = await prisma.campaign.findFirst({
+    const findQuery = {
       where: {
         id: campaignId,
         status: Status.ACTIVE,
         brand: { accountId: account.sub, status: Status.ACTIVE },
       },
-      select: {
-        id: true,
-      },
-    });
+      select: { id: true },
+    };
+
+    const ownedCampaign = await prisma.campaign.findFirst(findQuery);
 
     if (!ownedCampaign) {
-      SendError(res, 'Campaign not found.', 404);
+      SendError(res, CAMPAIGN_MESSAGES.CAMPAIGN_NOT_FOUND, 404);
       return;
     }
 
-    const allowedMimeTypes: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/jpg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-    };
-
-    const rawContentType = req.headers['content-type']?.split(';')[0].trim().toLowerCase() ?? '';
-    const fileExtension = allowedMimeTypes[rawContentType];
+    const rawContentType = req.headers['content-type']?.split(';')[0]?.trim().toLowerCase() ?? '';
+    const fileExtension = ALLOWED_THUMBNAIL_MIME_TYPES[rawContentType as keyof typeof ALLOWED_THUMBNAIL_MIME_TYPES];
 
     if (!fileExtension) {
-      SendError(res, 'Format file tidak didukung. Harap unggah gambar JPG, PNG, atau WEBP.', 400);
+      SendError(res, CAMPAIGN_MESSAGES.UNSUPPORTED_FILE_TYPE, 400);
       return;
     }
 
     const contentLength = Number(req.headers['content-length']);
-    const maxFileSize = 5 * 1024 * 1024; // 5 MB
 
     if (!contentLength || Number.isNaN(contentLength)) {
-      SendError(res, 'Header Content-Length diperlukan.', 411);
+      SendError(res, CAMPAIGN_MESSAGES.CONTENT_LENGTH_REQUIRED, 411);
       return;
     }
 
-    if (contentLength > maxFileSize) {
-      SendError(res, 'Ukuran file tidak boleh melebihi 5MB.', 400);
+    if (contentLength > MAX_THUMBNAIL_SIZE_BYTES) {
+      SendError(res, CAMPAIGN_MESSAGES.FILE_SIZE_EXCEEDED, 400);
       return;
     }
 
@@ -629,7 +565,7 @@ export async function UploadCampaignThumbnail(req: Request, res: Response, next:
     const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'campaign-thumbnails';
 
     if (!supabaseUrl || !serviceRoleKey) {
-      SendError(res, 'Layanan penyimpanan Supabase belum dikonfigurasi di server.', 500);
+      SendError(res, CAMPAIGN_MESSAGES.STORAGE_CONFIG_MISSING, 500);
       return;
     }
 
@@ -637,7 +573,7 @@ export async function UploadCampaignThumbnail(req: Request, res: Response, next:
     const sizeLimiter = new TransformStream<Uint8Array, Uint8Array>({
       transform(chunk, controller) {
         bytesReceived += chunk.byteLength;
-        if (bytesReceived > maxFileSize) {
+        if (bytesReceived > MAX_THUMBNAIL_SIZE_BYTES) {
           controller.error(new Error('FILE_SIZE_EXCEEDED'));
         } else {
           controller.enqueue(chunk);
@@ -664,18 +600,19 @@ export async function UploadCampaignThumbnail(req: Request, res: Response, next:
     if (!supabaseResponse.ok) {
       const errorDetail = await supabaseResponse.text();
       console.error('[Supabase Storage Upload Error]', supabaseResponse.status, errorDetail);
-      SendError(res, 'Gagal mengunggah thumbnail ke penyimpanan cloud.', 502);
+      SendError(res, CAMPAIGN_MESSAGES.STORAGE_UPLOAD_FAILED, 502);
       return;
     }
 
     const publicUrl = `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/${bucket}/${storagePath}`;
 
-    SendSuccess(res, { url: publicUrl }, 'Thumbnail berhasil diunggah.');
+    SendSuccess(res, { url: publicUrl }, CAMPAIGN_MESSAGES.THUMBNAIL_UPLOAD_SUCCESS);
   } catch (error) {
     if (error instanceof Error && error.message === 'FILE_SIZE_EXCEEDED') {
-      SendError(res, 'Ukuran file tidak boleh melebihi 5MB.', 400);
+      SendError(res, CAMPAIGN_MESSAGES.FILE_SIZE_EXCEEDED, 400);
       return;
     }
+
     next(error);
   }
 }
@@ -685,12 +622,6 @@ export async function UploadCampaignThumbnail(req: Request, res: Response, next:
  * soft-deletion to all associated materials, brief, and submissions by updating
  * their `status` to `Status.DELETED` in an atomic database transaction.
  *
- * Fast-fail guard order:
- * 1. Auth check (401)
- * 2. Role boundary check (403): Only brands or admins can delete campaigns
- * 3. Existence & tenant ownership check in a single query (404)
- * 4. Atomic database soft-delete write
- *
  * @param req - Express request with the authenticated account and campaign id parameter.
  * @param res - Express response object.
  * @param next - Express next function.
@@ -699,15 +630,13 @@ export async function DeleteCampaign(req: Request, res: Response, next: NextFunc
   try {
     const account = req.account;
 
-    // Fast-fail: authentication check
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, CAMPAIGN_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    // Fast-fail: role boundary check
     if (account.role !== Role.BRAND && account.role !== Role.ADMIN) {
-      SendError(res, 'Unauthorized role.', 403);
+      SendError(res, CAMPAIGN_MESSAGES.UNAUTHORIZED_ROLE, 403);
       return;
     }
 
@@ -723,18 +652,18 @@ export async function DeleteCampaign(req: Request, res: Response, next: NextFunc
       whereClause.brand = { accountId: account.sub, status: Status.ACTIVE };
     }
 
-    // Single-query existence & tenant ownership check
-    const ownedCampaign = await prisma.campaign.findFirst({
+    const findQuery = {
       where: whereClause,
       select: { id: true },
-    });
+    };
+
+    const ownedCampaign = await prisma.campaign.findFirst(findQuery);
 
     if (!ownedCampaign) {
-      SendError(res, 'Campaign not found.', 404);
+      SendError(res, CAMPAIGN_MESSAGES.CAMPAIGN_NOT_FOUND, 404);
       return;
     }
 
-    // Atomic cascade soft-delete
     await prisma.$transaction([
       prisma.campaign.update({
         where: { id: ownedCampaign.id },
@@ -754,7 +683,7 @@ export async function DeleteCampaign(req: Request, res: Response, next: NextFunc
       }),
     ]);
 
-    SendSuccess(res, null, 'Campaign successfully deleted.');
+    SendSuccess(res, null, CAMPAIGN_MESSAGES.DELETE_SUCCESS);
   } catch (err) {
     next(err);
   }

@@ -11,7 +11,7 @@ export function GetEmptyStateForStatus(status?: string): CampaignEmptyStateConfi
     case 'IN_REVIEW':
       return {
         title: 'Tidak Ada Kampanye Dalam Review',
-        description: 'Semua pengajuan kampanye telah selesai ditinjau. Kampanye yang Anda ajukan akan muncul di sini selama proses review kurasi admin.',
+        description: 'Semua pengajuan kampanye telah selesai ditinjau. Kampanye yang Anda ajukan akan muncul di sini selama proses review admin.',
       };
 
     case 'REVISION':

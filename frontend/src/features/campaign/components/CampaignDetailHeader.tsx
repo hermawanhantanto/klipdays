@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Check, Copy, Share2, Users, Video } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Loader2, Share2, Users, Video } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { UseJoinCampaignMutation, UseMyCampaignSubmissionQuery } from '@/features/submission/hooks';
 import type { CampaignDetailHeaderProps } from '../types';
 import {
   CalculateDaysRemaining,
@@ -27,7 +29,12 @@ import { CampaignDetailHeroMedia } from './CampaignDetailHeroMedia';
  * @param props - Component properties containing campaign data and authenticated user role.
  * @returns The rendered campaign detail header element.
  */
-export function CampaignDetailHeader({ campaign, userRole, className }: CampaignDetailHeaderProps) {
+export function CampaignDetailHeader({
+  campaign,
+  userRole,
+  onOpenSubmitDialog,
+  className,
+}: CampaignDetailHeaderProps) {
   const navigate = useNavigate();
   const [hasCopiedLink, setHasCopiedLink] = useState(false);
 
@@ -65,8 +72,23 @@ export function CampaignDetailHeader({ campaign, userRole, className }: Campaign
     }
   };
 
-  const HandleJoinClick = () => {
-    toast.info('Pendaftaran kampanye berhasil. Silakan baca brief dan unggah draf video Anda.');
+  const { data: mySubmissionData, isLoading: isSubmissionLoading } = UseMyCampaignSubmissionQuery(
+    userRole === 'CREATOR' ? campaign.id : undefined,
+  );
+  const joinMutation = UseJoinCampaignMutation();
+
+  const isJoined = Boolean(mySubmissionData?.submission);
+  const submissionStatus = mySubmissionData?.submission?.submissionStatus;
+
+  const HandleJoinClick = async () => {
+    try {
+      await joinMutation.mutateAsync(campaign.id);
+      toast.success('Berhasil bergabung dengan kampanye! Silakan kirim video Anda.');
+      onOpenSubmitDialog?.();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Gagal bergabung dengan kampanye.';
+      toast.error(msg);
+    }
   };
 
   return (
@@ -199,23 +221,77 @@ export function CampaignDetailHeader({ campaign, userRole, className }: Campaign
             <div className="flex flex-wrap items-center gap-3 pt-3">
               {userRole === 'CREATOR' && (
                 <>
-                  <Button
-                    type="button"
-                    size="default"
-                    onClick={HandleJoinClick}
-                    className="bg-primary text-primary-foreground font-semibold px-5 shadow-xs hover:bg-primary/90 rounded-xl h-10 text-xs sm:text-sm cursor-pointer">
-                    Gabung Kampanye
-                  </Button>
+                  {isSubmissionLoading ? (
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-36 rounded-xl" />
+                      <Skeleton className="h-10 w-28 rounded-xl" />
+                    </div>
+                  ) : !isJoined ? (
+                    <>
+                      <Button
+                        type="button"
+                        size="default"
+                        disabled={joinMutation.isPending}
+                        onClick={HandleJoinClick}
+                        className="bg-primary text-primary-foreground font-semibold px-5 shadow-xs hover:bg-primary/90 rounded-xl h-10 text-xs sm:text-sm cursor-pointer gap-2">
+                        {joinMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+                        <span>Gabung Kampanye</span>
+                      </Button>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="default"
-                    onClick={() => toast.info('Fitur unggah video akan segera aktif.')}
-                    className="h-10 px-4 rounded-xl gap-2 text-xs sm:text-sm border-border/60 bg-background/40 backdrop-blur-xs hover:bg-background/80 cursor-pointer">
-                    <Video className="size-4" />
-                    <span>Kirim Video</span>
-                  </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="default"
+                        disabled
+                        title="Silakan gabung kampanye terlebih dahulu untuk mulai mengirim video."
+                        className="h-10 px-4 rounded-xl gap-2 text-xs sm:text-sm border-border/60 bg-background/40 backdrop-blur-xs opacity-50 cursor-not-allowed">
+                        <Video className="size-4" />
+                        <span>Kirim Video</span>
+                      </Button>
+                    </>
+                  ) : submissionStatus === 'JOINED' ? (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-muted/70 border border-border/60 text-foreground text-xs sm:text-sm font-semibold select-none">
+                        <Check className="size-4 text-emerald-500" />
+                        <span>Tergabung</span>
+                      </div>
+
+                      <Button
+                        type="button"
+                        size="default"
+                        onClick={onOpenSubmitDialog}
+                        className="bg-primary text-primary-foreground font-semibold px-5 shadow-xs hover:bg-primary/90 rounded-xl h-10 text-xs sm:text-sm cursor-pointer gap-2">
+                        <Video className="size-4" />
+                        <span>Kirim Video</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm font-semibold select-none">
+                        <Check className="size-4" />
+                        <span>
+                          {submissionStatus === 'PENDING_REVIEW'
+                            ? 'Video Sedang Ditinjau'
+                            : submissionStatus === 'APPROVED'
+                              ? 'Video Disetujui'
+                              : submissionStatus === 'REVISION_REQUESTED'
+                                ? 'Perlu Revisi Video'
+                                : 'Video Terkirim'}
+                        </span>
+                      </div>
+
+                      {submissionStatus === 'REVISION_REQUESTED' && (
+                        <Button
+                          type="button"
+                          size="default"
+                          onClick={onOpenSubmitDialog}
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-4 rounded-xl h-10 text-xs sm:text-sm cursor-pointer gap-2">
+                          <Video className="size-4" />
+                          <span>Perbaiki Video</span>
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </>
               )}
 

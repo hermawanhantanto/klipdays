@@ -27,7 +27,7 @@ export function CampaignFilterSelect({
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger
         className={cn(
-          'h-9 w-auto rounded-xl bg-zinc-900/90 hover:bg-zinc-800/90 border-0 border-transparent text-zinc-200 hover:text-white text-xs font-medium shadow-none transition-colors focus-visible:ring-1 focus-visible:ring-primary',
+          'h-9 w-auto rounded-xl bg-zinc-900/90 hover:bg-zinc-800/90 border border-border/40 hover:border-border/60 text-zinc-200 hover:text-white text-xs font-medium shadow-none transition-colors focus-visible:border-zinc-500 focus-visible:ring-0',
           className
         )}>
         <SelectValue placeholder={placeholder} />

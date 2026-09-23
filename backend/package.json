@@ -7,6 +7,8 @@
     "dev": "tsx watch --env-file=.env src/index.ts",
     "build": "tsc",
     "start": "node --env-file=.env dist/index.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:watch": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -26,10 +28,16 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
+    "@types/supertest": "^7.2.1",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
+    "jest": "^30.5.2",
     "prisma": "^7.9.1",
+    "supertest": "^7.3.0",
+    "ts-jest": "^29.4.12",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   }

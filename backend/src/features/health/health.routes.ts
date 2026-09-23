@@ -1,5 +1,4 @@
 import { Router } from 'express';
-
 import { SendSuccess } from '../../utils/api-response.js';
 
 export const healthRouter = Router();

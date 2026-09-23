@@ -1,10 +1,20 @@
-import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen, User, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { UseLogoutMutation } from '@/features/authentication/hooks';
 import { UseNavbar } from '../hooks';
-import type { DashboardSidebarProps, SidebarContentProps, SidebarHeaderProps, SidebarNavItemProps, SidebarNavListProps } from '../types';
+import type {
+  DashboardNavItem,
+  DashboardSidebarProps,
+  SidebarContentProps,
+  SidebarFooterProps,
+  SidebarHeaderProps,
+  SidebarLogoutButtonProps,
+  SidebarNavItemProps,
+  SidebarNavListProps,
+} from '../types';
 import { GetNavItemsForRole, IsRouteActive } from '../utils';
 
 /**
@@ -137,11 +147,92 @@ function SidebarNavList({ role, collapsed }: SidebarNavListProps) {
 }
 
 /**
- * Composed layout combining the sidebar header and scrollable navigation links.
+ * Sidebar logout button adhering strictly to navigation item dimensions and styling.
+ * Supports collapsed icon tooltip and expanded text display with subtle destructive hover styling.
+ *
+ * @param props - Collapsed state and optional click callback to dismiss mobile menu.
+ * @returns The rendered logout action button.
+ */
+function SidebarLogoutButton({ collapsed, onItemClick }: SidebarLogoutButtonProps) {
+  const logoutMutation = UseLogoutMutation();
+
+  const HandleLogout = () => {
+    onItemClick?.();
+    logoutMutation.mutate();
+  };
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={HandleLogout}
+            disabled={logoutMutation.isPending}
+            className="flex size-11 items-center justify-center rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+            aria-label="Keluar">
+            <LogOut className="h-5 w-5 shrink-0" />
+            <span className="sr-only">Keluar</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="right" sideOffset={12}>
+          Keluar
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={HandleLogout}
+      disabled={logoutMutation.isPending}
+      className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer text-left">
+      <LogOut className="h-5 w-5 shrink-0" />
+      <span className="truncate">Keluar</span>
+    </button>
+  );
+}
+
+/**
+ * Footer section of the dashboard sidebar.
+ * Displays the Profile Account navigation link and Logout action button with matching navigation styling.
+ *
+ * @param props - Footer configuration including collapsed state.
+ * @returns The rendered sidebar footer.
+ */
+function SidebarFooter({ collapsed }: SidebarFooterProps) {
+  const location = useLocation();
+  const { CloseMobileMenu } = UseNavbar();
+  const isProfileActive = IsRouteActive(location.pathname, '/dashboard/profile');
+
+  const profileItem: DashboardNavItem = {
+    title: 'Profil Akun',
+    href: '/dashboard/profile',
+    icon: User,
+  };
+
+  return (
+    <div className={cn('shrink-0 border-t border-border/40', collapsed ? 'p-3' : 'p-4 sm:p-5')}>
+      <div className={cn('space-y-1.5', collapsed && 'flex flex-col items-center')}>
+        <SidebarNavItem
+          item={profileItem}
+          collapsed={collapsed}
+          isActive={isProfileActive}
+          onItemClick={CloseMobileMenu}
+        />
+        <SidebarLogoutButton collapsed={collapsed} onItemClick={CloseMobileMenu} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Composed layout combining the sidebar header, scrollable navigation links, and fixed footer.
  * Wraps content in TooltipProvider for icon tooltips when collapsed.
  *
  * @param props - Component properties including role, collapsed state, and drawer mode.
- * @returns The inner sidebar header and navigation menu structure.
+ * @returns The inner sidebar header, navigation menu, and footer structure.
  */
 function SidebarContent({ role, collapsed, isDrawer = false }: SidebarContentProps) {
   return (
@@ -149,6 +240,7 @@ function SidebarContent({ role, collapsed, isDrawer = false }: SidebarContentPro
       <div className="flex h-full flex-col">
         <SidebarHeader collapsed={collapsed} isDrawer={isDrawer} />
         <SidebarNavList role={role} collapsed={collapsed} />
+        <SidebarFooter collapsed={collapsed} />
       </div>
     </TooltipProvider>
   );

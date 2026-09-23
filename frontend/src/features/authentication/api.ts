@@ -1,4 +1,5 @@
 import { apiClient, ExtractApiError } from '@/lib/api-client';
+import { TranslateAuthError } from './utils';
 import type { ApiResponse, CurrentAccountProfile, LoggedInAccount, LoginInput, RegisteredAccount, RegisterInput } from './types';
 export type {
   ApiResponse,
@@ -27,7 +28,9 @@ export async function RegisterAccount(input: RegisterInput): Promise<RegisteredA
     const result = response.data.data;
     return result;
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Registrasi gagal. Coba lagi.');
+    const rawError = ExtractApiError(error, 'Registrasi gagal. Coba lagi.');
+    const translatedMessage = TranslateAuthError(rawError.message, 'Registrasi gagal. Coba lagi.');
+    const apiError = new Error(translatedMessage);
     throw apiError;
   }
 }
@@ -45,7 +48,9 @@ export async function LoginAccount(input: LoginInput): Promise<LoggedInAccount> 
     const result = response.data.data;
     return result;
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Masuk gagal. Coba lagi.');
+    const rawError = ExtractApiError(error, 'Masuk gagal. Coba lagi.');
+    const translatedMessage = TranslateAuthError(rawError.message, 'Masuk gagal. Coba lagi.');
+    const apiError = new Error(translatedMessage);
     throw apiError;
   }
 }
@@ -63,7 +68,9 @@ export async function GetCurrentAccount(): Promise<CurrentAccountProfile> {
     const result = response.data.data;
     return result;
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Gagal memuat profil akun.');
+    const rawError = ExtractApiError(error, 'Gagal memuat profil akun.');
+    const translatedMessage = TranslateAuthError(rawError.message, 'Gagal memuat profil akun.');
+    const apiError = new Error(translatedMessage);
     throw apiError;
   }
 }
@@ -78,7 +85,9 @@ export async function LogoutAccount(): Promise<void> {
   try {
     await apiClient.post('/auth/logout');
   } catch (error) {
-    const apiError = ExtractApiError(error, 'Gagal keluar.');
+    const rawError = ExtractApiError(error, 'Gagal keluar.');
+    const translatedMessage = TranslateAuthError(rawError.message, 'Gagal keluar.');
+    const apiError = new Error(translatedMessage);
     throw apiError;
   }
 }

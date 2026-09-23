@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
 
 /**
  * Shared Axios instance configured with base URL, credentials, and default headers
