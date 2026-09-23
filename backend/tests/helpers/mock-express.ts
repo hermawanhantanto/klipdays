@@ -1,5 +1,11 @@
 import { jest } from '@jest/globals';
 import type { NextFunction, Request, Response } from 'express';
+import type { AuthPayload } from '../../src/middleware/auth.middleware.js';
+
+export interface MockRequestOverrides extends Partial<Request> {
+  account?: AuthPayload;
+  [key: string]: unknown;
+}
 
 export interface MockResponseResult {
   res: Response;
@@ -15,7 +21,7 @@ export interface MockResponseResult {
  * @param overrides - Partial Request properties to override default state.
  * @returns A mocked Express Request object.
  */
-export function CreateMockRequest(overrides: Partial<Request> = {}): Request {
+export function CreateMockRequest(overrides: MockRequestOverrides = {}): Request {
   const req = {
     body: {},
     params: {},

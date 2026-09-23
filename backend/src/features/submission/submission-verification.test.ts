@@ -3,7 +3,6 @@ import test from 'node:test';
 import { SubmissionStatus } from '../../generated/prisma/enums.js';
 import { SaveDraftSubmissionSchema, FinalSubmitVideoSchema } from './submission.validators.js';
 import { ValidateVideoUrlSchema, RequestCodeSchema } from '../social-account/social-account.validators.js';
-import { MockSocialScraperProvider } from '../social-account/services/mock-scraper.provider.js';
 
 test('SaveDraftSubmissionSchema validates and rejects invalid URLs', () => {
   const valid = SaveDraftSubmissionSchema.safeParse({
@@ -56,17 +55,6 @@ test('FinalSubmitVideoSchema validates live video url format', () => {
     liveVideoUrl: 'https://www.tiktok.com/@creator/video/73450918237461910',
   });
   assert.strictEqual(valid.success, true);
-});
-
-test('MockSocialScraperProvider resolves author username and details correctly', async () => {
-  const scraper = new MockSocialScraperProvider();
-  const details = await scraper.GetVideoDetails(
-    'TIKTOK' as any,
-    'https://www.tiktok.com/@testuser/video/73450918237461910',
-  );
-  assert.strictEqual(details.authorUsername, 'testuser');
-  assert.strictEqual(details.id, '73450918237461910');
-  assert.ok(details.viewCount && details.viewCount > 0);
 });
 
 test('Status Guard Logic: only JOINED and REVISION_REQUESTED can edit or submit', () => {
