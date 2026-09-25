@@ -2,53 +2,21 @@ import type { NextFunction, Request, Response } from 'express';
 import { CampaignStatus, Platform, Role, Status, SubmissionStatus } from '../../generated/prisma/enums.js';
 import { prisma } from '../../utils/prisma.js';
 import { SendError, SendSuccess } from '../../utils/api-response.js';
-import { FinalSubmitVideoSchema, SaveDraftSubmissionSchema } from './submission.validators.js';
-import type { MySubmissionResponseData, SubmissionDetailDto } from './submission.types.js';
-
-/**
- * Maps a Prisma submission row to a clean, strongly-typed SubmissionDetailDto.
- * Ensures Decimal earnings are consistently converted to strings.
- *
- * @param submission - Prisma submission row with optional relations.
- * @returns Serialized SubmissionDetailDto.
- */
-function FormatSubmissionResponse(submission: {
-  id: string;
-  campaignId: string;
-  creatorId: string;
-  draftVideoUrl?: string | null;
-  liveVideoUrl?: string | null;
-  thumbnailUrl?: string | null;
-  videoCaption?: string | null;
-  submissionStatus: SubmissionStatus;
-  reviewNote?: string | null;
-  verifiedViews: number;
-  earnings: { toString(): string } | number | string;
-  submittedAt?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  socialAccount?: any;
-}): SubmissionDetailDto {
-  const earningsString = submission.earnings.toString();
-  const formatted: SubmissionDetailDto = {
-    id: submission.id,
-    campaignId: submission.campaignId,
-    creatorId: submission.creatorId,
-    draftVideoUrl: submission.draftVideoUrl,
-    liveVideoUrl: submission.liveVideoUrl,
-    thumbnailUrl: submission.thumbnailUrl,
-    videoCaption: submission.videoCaption,
-    submissionStatus: submission.submissionStatus,
-    reviewNote: submission.reviewNote,
-    verifiedViews: submission.verifiedViews,
-    earnings: earningsString,
-    submittedAt: submission.submittedAt,
-    createdAt: submission.createdAt,
-    updatedAt: submission.updatedAt,
-    socialAccount: submission.socialAccount ?? null,
-  };
-  return formatted;
-}
+import {
+  BUDGET_DECIMAL_PLACES,
+  CPM_VIEW_DIVISOR,
+  DEFAULT_LIMIT,
+  DEFAULT_PAGE,
+  SUBMISSION_MESSAGES,
+} from './submission.constants.js';
+import { FinalSubmitVideoSchema, SaveDraftSubmissionSchema, SubmissionQuerySchema } from './submission.validators.js';
+import type { CampaignSubmissionsPaginatedData, MySubmissionResponseData, SubmissionDetailDto } from './submission.types.js';
+import {
+  BuildSubmissionsOrderBy,
+  BuildSubmissionsWhereClause,
+  FormatCampaignSubmissionReviewItem,
+  FormatSubmissionResponse,
+} from './submission.helper.js';
 
 /**
  * Handles `POST /campaigns/:id/join`:
@@ -58,99 +26,87 @@ function FormatSubmissionResponse(submission: {
  * @param res - Express response object.
  * @param next - Express next function.
  */
-export async function JoinCampaign(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
+export async function JoinCampaign(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const account = req.account;
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, SUBMISSION_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
     if (account.role !== Role.CREATOR) {
-      SendError(res, 'Only creators can join campaigns.', 403);
+      SendError(res, SUBMISSION_MESSAGES.ONLY_CREATORS_CAN_JOIN, 403);
       return;
     }
 
     const campaignId = req.params.id as string;
 
-    const campaign = await prisma.campaign.findFirst({
+    const findCampaignQuery = {
       where: {
         id: campaignId,
         status: Status.ACTIVE,
         campaignStatus: CampaignStatus.ACTIVE,
       },
-    });
+    };
+    const campaign = await prisma.campaign.findFirst(findCampaignQuery);
 
     if (!campaign) {
-      SendError(res, 'Kampanye tidak ditemukan atau belum aktif.', 404);
+      SendError(res, SUBMISSION_MESSAGES.CAMPAIGN_NOT_FOUND_OR_INACTIVE, 404);
       return;
     }
 
     if (campaign.endDate && new Date(campaign.endDate) < new Date()) {
-      SendError(res, 'Kampanye ini telah berakhir dan tidak lagi menerima pendaftaran baru.', 400);
+      SendError(res, SUBMISSION_MESSAGES.CAMPAIGN_ENDED, 400);
       return;
     }
 
-    const creator = await prisma.creator.findFirst({
+    const cpm = campaign.cpm ? Number(campaign.cpm) : 0;
+    const minViews = campaign.minViews ?? 0;
+    const minimumBudgetExists = Number(((minViews / CPM_VIEW_DIVISOR) * cpm).toFixed(BUDGET_DECIMAL_PLACES));
+    const currentBudget = campaign.budget ? Number(campaign.budget) : 0;
+
+    if (currentBudget < minimumBudgetExists) {
+      SendError(res, SUBMISSION_MESSAGES.BUDGET_BELOW_MINIMUM, 400);
+      return;
+    }
+
+    const findCreatorQuery = {
       where: {
         accountId: account.sub,
         status: Status.ACTIVE,
       },
-    });
+    };
+    const creator = await prisma.creator.findFirst(findCreatorQuery);
 
     if (!creator) {
-      SendError(res, 'Profil kreator tidak ditemukan.', 404);
+      SendError(res, SUBMISSION_MESSAGES.CREATOR_NOT_FOUND, 404);
       return;
     }
 
-    // Check if a submission row already exists (including soft-deleted)
-    let submission = await prisma.submission.findFirst({
+    // Check if an active submission row already exists
+    const findExistingSubmissionQuery = {
       where: {
         campaignId: campaign.id,
         creatorId: creator.id,
+        status: Status.ACTIVE,
       },
-      include: {
-        socialAccount: {
-          where: { status: Status.ACTIVE },
-        },
-      },
-    });
+      select: { id: true },
+    };
+    const existingSubmission = await prisma.submission.findFirst(findExistingSubmissionQuery);
 
-    if (!submission) {
-      submission = await prisma.submission.create({
+    if (!existingSubmission) {
+      const createSubmissionPayload = {
         data: {
           campaignId: campaign.id,
           creatorId: creator.id,
           submissionStatus: SubmissionStatus.JOINED,
           status: Status.ACTIVE,
         },
-        include: {
-          socialAccount: {
-            where: { status: Status.ACTIVE },
-          },
-        },
-      });
-    } else if (submission.status !== Status.ACTIVE) {
-      submission = await prisma.submission.update({
-        where: { id: submission.id },
-        data: {
-          status: Status.ACTIVE,
-          submissionStatus: SubmissionStatus.JOINED,
-        },
-        include: {
-          socialAccount: {
-            where: { status: Status.ACTIVE },
-          },
-        },
-      });
+      };
+      await prisma.submission.create(createSubmissionPayload);
     }
 
-    const formattedSubmission = FormatSubmissionResponse(submission);
-    SendSuccess(res, formattedSubmission, 'Berhasil bergabung dengan kampanye.');
+    SendSuccess(res, null, SUBMISSION_MESSAGES.JOIN_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -164,38 +120,35 @@ export async function JoinCampaign(
  * @param res - Express response object.
  * @param next - Express next function.
  */
-export async function GetMyCampaignSubmission(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
+export async function GetMyCampaignSubmission(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const account = req.account;
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, SUBMISSION_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
-    if (account.role !== Role.CREATOR && account.role !== Role.ADMIN) {
-      SendError(res, 'Only creators can access their campaign submissions.', 403);
+    if (account.role !== Role.CREATOR) {
+      SendError(res, SUBMISSION_MESSAGES.ONLY_CREATORS_CAN_ACCESS_SUBMISSIONS, 403);
       return;
     }
 
     const campaignId = req.params.id as string;
 
-    const creator = await prisma.creator.findFirst({
+    const findCreatorQuery = {
       where: {
         accountId: account.sub,
         status: Status.ACTIVE,
       },
-    });
+    };
+    const creator = await prisma.creator.findFirst(findCreatorQuery);
 
     if (!creator) {
-      SendError(res, 'Profil kreator tidak ditemukan.', 404);
+      SendError(res, SUBMISSION_MESSAGES.CREATOR_NOT_FOUND, 404);
       return;
     }
 
-    const rawSubmission = await prisma.submission.findFirst({
+    const findSubmissionQuery = {
       where: {
         campaignId,
         creatorId: creator.id,
@@ -206,9 +159,10 @@ export async function GetMyCampaignSubmission(
           where: { status: Status.ACTIVE },
         },
       },
-    });
+    };
+    const rawSubmission = await prisma.submission.findFirst(findSubmissionQuery);
 
-    const verifiedSocialAccount = await prisma.creatorSocialAccount.findFirst({
+    const findVerifiedSocialAccountQuery = {
       where: {
         creatorId: creator.id,
         platform: Platform.TIKTOK,
@@ -216,21 +170,26 @@ export async function GetMyCampaignSubmission(
         status: Status.ACTIVE,
       },
       orderBy: {
-        verifiedAt: 'desc',
+        verifiedAt: 'desc' as const,
       },
-    });
+    };
+    const verifiedSocialAccount = await prisma.creatorSocialAccount.findFirst(findVerifiedSocialAccountQuery);
 
     let mappedSubmission: SubmissionDetailDto | null = null;
     if (rawSubmission) {
       mappedSubmission = FormatSubmissionResponse(rawSubmission);
     }
 
+    // Prioritize the social account already bound to this submission;
+    // fallback to the creator's currently active verified TikTok account.
+    const effectiveSocialAccount = rawSubmission?.socialAccount ?? verifiedSocialAccount;
+
     const responsePayload: MySubmissionResponseData = {
       submission: mappedSubmission,
-      socialAccount: verifiedSocialAccount,
+      socialAccount: effectiveSocialAccount,
     };
 
-    SendSuccess(res, responsePayload, 'Data pengajuan kampanye berhasil diambil.');
+    SendSuccess(res, responsePayload, SUBMISSION_MESSAGES.GET_MY_SUBMISSION_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -244,47 +203,52 @@ export async function GetMyCampaignSubmission(
  * @param res - Express response object.
  * @param next - Express next function.
  */
-export async function SaveDraftSubmission(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
+export async function SaveDraftSubmission(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const account = req.account;
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, SUBMISSION_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
     if (account.role !== Role.CREATOR) {
-      SendError(res, 'Only creators can save submission drafts.', 403);
+      SendError(res, SUBMISSION_MESSAGES.ONLY_CREATORS_CAN_DRAFT, 403);
+      return;
+    }
+
+    const validation = SaveDraftSubmissionSchema.safeParse(req.body);
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]?.message ?? SUBMISSION_MESSAGES.INVALID_PAYLOAD;
+      SendError(res, firstError, 400);
       return;
     }
 
     const campaignId = req.params.id as string;
 
-    const creator = await prisma.creator.findFirst({
+    const findCreatorQuery = {
       where: {
         accountId: account.sub,
         status: Status.ACTIVE,
       },
-    });
+    };
+    const creator = await prisma.creator.findFirst(findCreatorQuery);
 
     if (!creator) {
-      SendError(res, 'Profil kreator tidak ditemukan.', 404);
+      SendError(res, SUBMISSION_MESSAGES.CREATOR_NOT_FOUND, 404);
       return;
     }
 
-    const existingSubmission = await prisma.submission.findFirst({
+    const findExistingSubmissionQuery = {
       where: {
         campaignId,
         creatorId: creator.id,
         status: Status.ACTIVE,
       },
-    });
+    };
+    const existingSubmission = await prisma.submission.findFirst(findExistingSubmissionQuery);
 
     if (!existingSubmission) {
-      SendError(res, 'Anda belum bergabung dengan kampanye ini.', 404);
+      SendError(res, SUBMISSION_MESSAGES.NOT_JOINED, 404);
       return;
     }
 
@@ -293,41 +257,50 @@ export async function SaveDraftSubmission(
       existingSubmission.submissionStatus !== SubmissionStatus.REVISION_REQUESTED
     ) {
       if (existingSubmission.submissionStatus === SubmissionStatus.PENDING_REVIEW) {
-        SendError(res, 'Pengajuan video Anda sedang ditinjau dan draf tidak dapat diubah.', 400);
+        SendError(res, SUBMISSION_MESSAGES.CANNOT_MODIFY_UNDER_REVIEW, 400);
         return;
       }
       if (existingSubmission.submissionStatus === SubmissionStatus.APPROVED) {
-        SendError(res, 'Pengajuan video Anda telah disetujui.', 400);
+        SendError(res, SUBMISSION_MESSAGES.ALREADY_APPROVED, 400);
         return;
       }
-      SendError(res, 'Status pengajuan saat ini tidak memungkinkan perubahan draf.', 400);
+
+      SendError(res, SUBMISSION_MESSAGES.STATUS_NOT_ALLOW_DRAFT, 400);
       return;
     }
 
-    const validation = SaveDraftSubmissionSchema.safeParse(req.body);
-    if (!validation.success) {
-      const firstError = validation.error.issues[0]?.message ?? 'Invalid request payload.';
-      SendError(res, firstError, 400);
+    const findOwnedSocialAccountQuery = {
+      where: {
+        id: validation.data.socialAccountId,
+        creatorId: creator.id,
+        status: Status.ACTIVE,
+      },
+    };
+    const ownedSocialAccount = await prisma.creatorSocialAccount.findFirst(findOwnedSocialAccountQuery);
+
+    if (!ownedSocialAccount) {
+      SendError(res, SUBMISSION_MESSAGES.SOCIAL_ACCOUNT_INVALID, 400);
       return;
     }
 
-    const updatedSubmission = await prisma.submission.update({
+    const updateDraftPayload = {
       where: { id: existingSubmission.id },
       data: {
-        liveVideoUrl: validation.data.liveVideoUrl ?? existingSubmission.liveVideoUrl,
-        thumbnailUrl: validation.data.thumbnailUrl ?? existingSubmission.thumbnailUrl,
-        videoCaption: validation.data.videoCaption ?? existingSubmission.videoCaption,
-        socialAccountId: validation.data.socialAccountId ?? existingSubmission.socialAccountId,
+        liveVideoUrl: validation.data.liveVideoUrl,
+        thumbnailUrl: validation.data.thumbnailUrl,
+        videoCaption: validation.data.videoCaption,
+        socialAccountId: validation.data.socialAccountId,
       },
       include: {
         socialAccount: {
           where: { status: Status.ACTIVE },
         },
       },
-    });
+    };
+    const updatedSubmission = await prisma.submission.update(updateDraftPayload);
 
     const formattedSubmission = FormatSubmissionResponse(updatedSubmission);
-    SendSuccess(res, formattedSubmission, 'Draf pengajuan video berhasil disimpan.');
+    SendSuccess(res, formattedSubmission, SUBMISSION_MESSAGES.DRAFT_SAVED);
   } catch (err) {
     next(err);
   }
@@ -341,47 +314,52 @@ export async function SaveDraftSubmission(
  * @param res - Express response object.
  * @param next - Express next function.
  */
-export async function FinalSubmitVideo(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
+export async function FinalSubmitVideo(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const account = req.account;
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, SUBMISSION_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
     if (account.role !== Role.CREATOR) {
-      SendError(res, 'Only creators can submit videos.', 403);
+      SendError(res, SUBMISSION_MESSAGES.ONLY_CREATORS_CAN_SUBMIT, 403);
+      return;
+    }
+
+    const validation = FinalSubmitVideoSchema.safeParse(req.body);
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]?.message ?? SUBMISSION_MESSAGES.INVALID_PAYLOAD;
+      SendError(res, firstError, 400);
       return;
     }
 
     const campaignId = req.params.id as string;
 
-    const creator = await prisma.creator.findFirst({
+    const findCreatorQuery = {
       where: {
         accountId: account.sub,
         status: Status.ACTIVE,
       },
-    });
+    };
+    const creator = await prisma.creator.findFirst(findCreatorQuery);
 
     if (!creator) {
-      SendError(res, 'Profil kreator tidak ditemukan.', 404);
+      SendError(res, SUBMISSION_MESSAGES.CREATOR_NOT_FOUND, 404);
       return;
     }
 
-    const existingSubmission = await prisma.submission.findFirst({
+    const findExistingSubmissionQuery = {
       where: {
         campaignId,
         creatorId: creator.id,
         status: Status.ACTIVE,
       },
-    });
+    };
+    const existingSubmission = await prisma.submission.findFirst(findExistingSubmissionQuery);
 
     if (!existingSubmission) {
-      SendError(res, 'Data pendaftaran kampanye tidak ditemukan.', 404);
+      SendError(res, SUBMISSION_MESSAGES.SUBMISSION_NOT_FOUND, 404);
       return;
     }
 
@@ -390,67 +368,40 @@ export async function FinalSubmitVideo(
       existingSubmission.submissionStatus !== SubmissionStatus.REVISION_REQUESTED
     ) {
       if (existingSubmission.submissionStatus === SubmissionStatus.PENDING_REVIEW) {
-        SendError(res, 'Pengajuan video Anda sedang dalam proses peninjauan oleh brand.', 400);
+        SendError(res, SUBMISSION_MESSAGES.UNDER_REVIEW_BY_BRAND, 400);
         return;
       }
+
       if (existingSubmission.submissionStatus === SubmissionStatus.APPROVED) {
-        SendError(res, 'Pengajuan video Anda telah disetujui sebelumnya.', 400);
+        SendError(res, SUBMISSION_MESSAGES.ALREADY_APPROVED, 400);
         return;
       }
-      SendError(res, 'Status pengajuan saat ini tidak dapat dikirimkan ulang.', 400);
+
+      SendError(res, SUBMISSION_MESSAGES.SUBMISSION_STATUS_NOT_RESUBMITTABLE, 400);
       return;
     }
 
-    const validation = FinalSubmitVideoSchema.safeParse(req.body);
-    if (!validation.success) {
-      const firstError = validation.error.issues[0]?.message ?? 'Invalid request payload.';
-      SendError(res, firstError, 400);
+    const findOwnedSocialAccountQuery = {
+      where: {
+        id: validation.data.socialAccountId,
+        creatorId: creator.id,
+        status: Status.ACTIVE,
+      },
+    };
+    const ownedSocialAccount = await prisma.creatorSocialAccount.findFirst(findOwnedSocialAccountQuery);
+
+    if (!ownedSocialAccount) {
+      SendError(res, SUBMISSION_MESSAGES.SOCIAL_ACCOUNT_INVALID, 400);
       return;
     }
 
-    const finalLiveVideoUrl = validation.data.liveVideoUrl || existingSubmission.liveVideoUrl;
-    if (!finalLiveVideoUrl) {
-      SendError(res, 'URL video TikTok wajib diisi untuk menyelesaikan pengajuan.', 400);
-      return;
-    }
-
-    let finalSocialAccountId: string | undefined = validation.data.socialAccountId;
-    if (finalSocialAccountId) {
-      const ownedSocialAccount = await prisma.creatorSocialAccount.findFirst({
-        where: {
-          id: finalSocialAccountId,
-          creatorId: creator.id,
-          status: Status.ACTIVE,
-        },
-      });
-      if (!ownedSocialAccount) {
-        SendError(res, 'Akun media sosial tidak valid atau tidak dimiliki oleh profil Anda.', 400);
-        return;
-      }
-    } else {
-      const verifiedSocialAccount = await prisma.creatorSocialAccount.findFirst({
-        where: {
-          creatorId: creator.id,
-          platform: Platform.TIKTOK,
-          isVerified: true,
-          status: Status.ACTIVE,
-        },
-        orderBy: {
-          verifiedAt: 'desc',
-        },
-      });
-      if (verifiedSocialAccount) {
-        finalSocialAccountId = verifiedSocialAccount.id;
-      }
-    }
-
-    const finalizedSubmission = await prisma.submission.update({
+    const finalizeSubmissionPayload = {
       where: { id: existingSubmission.id },
       data: {
-        liveVideoUrl: finalLiveVideoUrl,
-        thumbnailUrl: validation.data.thumbnailUrl ?? existingSubmission.thumbnailUrl,
-        videoCaption: validation.data.videoCaption ?? existingSubmission.videoCaption,
-        socialAccountId: finalSocialAccountId,
+        liveVideoUrl: validation.data.liveVideoUrl,
+        thumbnailUrl: validation.data.thumbnailUrl,
+        videoCaption: validation.data.videoCaption,
+        socialAccountId: validation.data.socialAccountId,
         submissionStatus: SubmissionStatus.PENDING_REVIEW,
         submittedAt: new Date(),
       },
@@ -459,10 +410,11 @@ export async function FinalSubmitVideo(
           where: { status: Status.ACTIVE },
         },
       },
-    });
+    };
+    const finalizedSubmission = await prisma.submission.update(finalizeSubmissionPayload);
 
     const formattedSubmission = FormatSubmissionResponse(finalizedSubmission);
-    SendSuccess(res, formattedSubmission, 'Pengajuan video berhasil dikirim untuk ditinjau.');
+    SendSuccess(res, formattedSubmission, SUBMISSION_MESSAGES.SUBMIT_SUCCESS);
   } catch (err) {
     next(err);
   }
@@ -470,35 +422,39 @@ export async function FinalSubmitVideo(
 
 /**
  * Handles `GET /campaigns/:id/submissions`:
- * Retrieves all submitted videos for a campaign (excluding creators in JOINED state without videos).
+ * Retrieves paginated, filtered, searched, and sorted submitted videos for a campaign.
  * Strictly guarded: only the owning brand or platform admins can view campaign submissions.
  *
- * @param req - Express request with authenticated account and campaign id parameter.
+ * @param req - Express request with authenticated account, campaign id parameter, and query parameters.
  * @param res - Express response object.
  * @param next - Express next function.
  */
-export async function GetCampaignSubmissions(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
+export async function GetCampaignSubmissions(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const account = req.account;
     if (!account) {
-      SendError(res, 'Authentication required.', 401);
+      SendError(res, SUBMISSION_MESSAGES.AUTH_REQUIRED, 401);
       return;
     }
 
     if (account.role !== Role.BRAND && account.role !== Role.ADMIN) {
-      SendError(res, 'Only brands and admins can review campaign submissions.', 403);
+      SendError(res, SUBMISSION_MESSAGES.ONLY_BRANDS_AND_ADMINS_CAN_REVIEW, 403);
       return;
     }
 
+    const validation = SubmissionQuerySchema.safeParse(req.query);
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]?.message ?? SUBMISSION_MESSAGES.INVALID_PAYLOAD;
+      SendError(res, firstError, 400);
+      return;
+    }
+
+    const query = validation.data;
     const campaignId = req.params.id as string;
 
     // Tenant ownership check: Brand must own campaign; return 404 for mismatches
     if (account.role === Role.BRAND) {
-      const brandCampaign = await prisma.campaign.findFirst({
+      const findBrandCampaignQuery = {
         where: {
           id: campaignId,
           status: Status.ACTIVE,
@@ -507,20 +463,29 @@ export async function GetCampaignSubmissions(
             status: Status.ACTIVE,
           },
         },
-      });
+        select: { id: true },
+      };
+      const brandCampaign = await prisma.campaign.findFirst(findBrandCampaignQuery);
 
       if (!brandCampaign) {
-        SendError(res, 'Kampanye tidak ditemukan.', 404);
+        SendError(res, SUBMISSION_MESSAGES.CAMPAIGN_NOT_FOUND, 404);
         return;
       }
     }
 
-    const submissions = await prisma.submission.findMany({
-      where: {
-        campaignId,
-        status: Status.ACTIVE,
-        submissionStatus: { not: SubmissionStatus.JOINED },
-      },
+    const where = BuildSubmissionsWhereClause(campaignId, query);
+    const orderBy = BuildSubmissionsOrderBy(query.sort);
+
+    const page = query.page ?? DEFAULT_PAGE;
+    const limit = query.limit ?? DEFAULT_LIMIT;
+    const skip = (page - 1) * limit;
+
+    const countQuery = { where };
+    const findSubmissionsQuery = {
+      where,
+      orderBy,
+      skip,
+      take: limit,
       include: {
         creator: {
           select: {
@@ -537,34 +502,27 @@ export async function GetCampaignSubmissions(
           },
         },
       },
-      orderBy: {
-        submittedAt: 'desc',
+    };
+
+    const [total, submissions] = await Promise.all([
+      prisma.submission.count(countQuery),
+      prisma.submission.findMany(findSubmissionsQuery),
+    ]);
+
+    const items = submissions.map(FormatCampaignSubmissionReviewItem);
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    const responsePayload: CampaignSubmissionsPaginatedData = {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
       },
-    });
+    };
 
-    const formattedSubmissions = submissions.map((item) => {
-      const earningsString = item.earnings.toString();
-      return {
-        id: item.id,
-        campaignId: item.campaignId,
-        creatorId: item.creatorId,
-        draftVideoUrl: item.draftVideoUrl,
-        liveVideoUrl: item.liveVideoUrl,
-        thumbnailUrl: item.thumbnailUrl,
-        videoCaption: item.videoCaption,
-        submissionStatus: item.submissionStatus,
-        reviewNote: item.reviewNote,
-        verifiedViews: item.verifiedViews,
-        earnings: earningsString,
-        submittedAt: item.submittedAt,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        creator: item.creator,
-        socialAccount: item.socialAccount,
-      };
-    });
-
-    SendSuccess(res, formattedSubmissions, 'Daftar pengajuan video kampanye berhasil diambil.');
+    SendSuccess(res, responsePayload, SUBMISSION_MESSAGES.GET_SUBMISSIONS_SUCCESS);
   } catch (err) {
     next(err);
   }
